@@ -7,7 +7,8 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
-        "dist"
+        "dist",
+        "README.md"
     ],
     "scripts": {
         "build": "tsc",
@@ -57,5 +58,8 @@
     "bugs": {
         "url": "https://github.com/mussnad/frappe-next-sdk/issues"
     },
-    "homepage": "https://github.com/mussnad/frappe-next-sdk#readme"
+    "homepage": "https://github.com/mussnad/frappe-next-sdk#readme",
+    "publishConfig": {
+        "access": "public"
+    }
 }
