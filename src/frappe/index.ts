@@ -125,7 +125,7 @@ export class FrappeApp {
      * await auth.login('username', 'password');
      * ```
      */
-    auth() {
+    auth(): FrappeAuth {
         return new FrappeAuth(this.url, this.axios, this.useToken, this.token, this.tokenType)
     }
 
@@ -140,7 +140,7 @@ export class FrappeApp {
      * const user = await db.getDoc('User', 'administrator');
      * ```
      */
-    db() {
+    db(): FrappeDB {
         return new FrappeDB(this.url, this.axios, this.useToken, this.token, this.tokenType)
     }
 
@@ -158,7 +158,7 @@ export class FrappeApp {
      * });
      * ```
      */
-    file() {
+    file(): FrappeFileUpload {
         return new FrappeFileUpload(this.url, this.axios, this.useToken, this.token, this.tokenType, this.customHeaders)
     }
 
@@ -173,7 +173,7 @@ export class FrappeApp {
      * const response = await call.get('api/method/frappe.ping');
      * ```
      */
-    call() {
+    call(): FrappeCall {
         return new FrappeCall(this.url, this.axios, this.useToken, this.token, this.tokenType)
     }
 }

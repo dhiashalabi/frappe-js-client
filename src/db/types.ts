@@ -38,7 +38,7 @@ type MultiValueFilter<T> = [FilterVar<T>, MultiValueFilterOperator, Value[]]
  * const statusFilter: Filter<Task> = ['status', 'in', ['Open', 'In Progress']];
  * ```
  */
-export type Filter<T = FrappeDoc<{}>> = SingleValueFilter<T> | MultiValueFilter<T>
+export type Filter<T = FrappeDoc<object>> = SingleValueFilter<T> | MultiValueFilter<T>
 
 /**
  * Base interface for all Frappe documents.
@@ -80,11 +80,11 @@ export type FrappeDoc<T> = T & {
     /** Document status: 0 - Saved, 1 - Submitted, 2 - Cancelled */
     docstatus: 0 | 1 | 2
     /** Parent document name for child tables */
-    parent?: any
+    parent?: string
     /** Parent field name for child tables */
-    parentfield?: any
+    parentfield?: string
     /** Parent document type for child tables */
-    parenttype?: any
+    parenttype?: string
     /** The primary key of the DocType table */
     name: string
 }
@@ -106,7 +106,7 @@ export type FrappeDoc<T> = T & {
  * };
  * ```
  */
-export interface GetLastDocArgs<T = any> {
+export interface GetLastDocArgs<T = FrappeDoc<object>> {
     /** Filters to be applied - SQL AND operation */
     filters?: Filter<T>[]
     /** Filters to be applied - SQL OR operation */
@@ -139,7 +139,7 @@ export interface GetLastDocArgs<T = any> {
  * };
  * ```
  */
-export interface GetDocListArgs<T = any> {
+export interface GetDocListArgs<T = FrappeDoc<object>> {
     /** Fields to be fetched */
     fields?: (keyof T | '*')[]
     /** Filters to be applied - SQL AND operation */

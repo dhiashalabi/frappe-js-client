@@ -140,3 +140,17 @@ export function getRequestHeaders(
         ...(customHeaders ?? {}),
     }
 }
+
+export function getCSRFToken(): string | undefined {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+        return undefined
+    }
+
+    const meta = document.querySelector('meta[name="csrf_token"]')
+    if (meta) {
+        const content = meta.getAttribute('content')
+        return content ?? undefined
+    }
+
+    return undefined
+}

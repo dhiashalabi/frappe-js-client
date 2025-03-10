@@ -157,9 +157,9 @@ export class FrappeFileUpload {
      * );
      * ```
      */
-    async uploadFile<T>(
+    async uploadFile(
         file: File,
-        args: FileArgs<T>,
+        args: FileArgs,
         onProgress?: (bytesUploaded: number, totalBytes?: number, progress?: AxiosProgressEvent) => void,
         apiPath: string = 'upload_file',
     ) {
@@ -186,8 +186,8 @@ export class FrappeFileUpload {
         }
 
         if (otherData) {
-            Object.keys(otherData).forEach((key: string) => {
-                const v = otherData[key as keyof T] as string | Blob
+            Object.keys(otherData).forEach((key) => {
+                const v = otherData[key]
                 formData.append(key, v)
             })
         }
