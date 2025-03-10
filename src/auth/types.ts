@@ -55,7 +55,11 @@ export interface AuthResponse {
     /** Temporary ID for two-factor authentication */
     tmp_id?: string
     /** Verification details if additional authentication is required */
-    verification?: any
+    verification?: {
+        method: string
+        message?: string
+        status?: boolean
+    }
     /** Type of exception if authentication fails */
     exc_type?: string
 }

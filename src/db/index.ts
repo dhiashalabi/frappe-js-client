@@ -60,6 +60,7 @@ import { Filter, FrappeDoc, GetDocListArgs, GetLastDocArgs } from './types'
  */
 export class FrappeDB {
     /** URL of the Frappe App instance */
+    // @ts-expect-error - This is a private property that is not used in the class
     private readonly appURL: string
 
     /** Axios instance for making HTTP requests */
@@ -127,7 +128,7 @@ export class FrappeDB {
      * const task = await db.getDoc('Task', 'TASK-001');
      * ```
      */
-    async getDoc<T = any>(doctype: string, docname: string = ''): Promise<FrappeDoc<T>> {
+    async getDoc<T = object>(doctype: string, docname: string = ''): Promise<FrappeDoc<T>> {
         return this.axios
             .get(`/api/resource/${doctype}/${encodeURIComponent(docname)}`)
             .then((res) => res.data.data)
@@ -168,7 +169,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    async getDocList<T = any, K = FrappeDoc<T>>(doctype: string, args?: GetDocListArgs<K>) {
+    async getDocList<T = object, K = FrappeDoc<T>>(doctype: string, args?: GetDocListArgs<K>) {
         let params = {}
 
         if (args) {
@@ -226,7 +227,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    async createDoc<T = any>(doctype: string, value: T): Promise<FrappeDoc<T>> {
+    async createDoc<T = object>(doctype: string, value: T): Promise<FrappeDoc<T>> {
         return this.axios
             .post(`/api/resource/${doctype}`, { ...value })
             .then((res) => res.data.data)
@@ -266,7 +267,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    async updateDoc<T = any>(doctype: string, docname: string | null, value: Partial<T>): Promise<FrappeDoc<T>> {
+    async updateDoc<T = object>(doctype: string, docname: string | null, value: Partial<T>): Promise<FrappeDoc<T>> {
         return this.axios
             .put(`/api/resource/${doctype}/${docname ? encodeURIComponent(docname) : docname}`, { ...value })
             .then((res) => res.data.data)
@@ -338,13 +339,13 @@ export class FrappeDB {
      * );
      * ```
      */
-    async getCount<T = any>(
+    async getCount<T = object>(
         doctype: string,
         filters?: Filter<T>[],
         cache: boolean = false,
         debug: boolean = false,
     ): Promise<number> {
-        const params: any = {
+        const params: Record<string, unknown> = {
             doctype,
             filters: [],
         }
@@ -395,7 +396,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    async getLastDoc<T = any>(doctype: string, args?: GetLastDocArgs<FrappeDoc<T>>): Promise<FrappeDoc<T>> {
+    async getLastDoc<T = object>(doctype: string, args?: GetLastDocArgs<FrappeDoc<T>>): Promise<FrappeDoc<T>> {
         let queryArgs: GetLastDocArgs<FrappeDoc<T>> = {
             orderBy: {
                 field: 'creation',
