@@ -1,3 +1,9 @@
+## [1.3.2](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.1...v1.3.2) (2025-03-10)
+
+### Bug Fixes
+
+- Make package publicly publishable by removing private flag ([8dbd723](https://github.com/mussnad/frappe-next-sdk/commit/8dbd7232c275c47474503a401ce1f03823626a38))
+
 ## [1.3.1](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.0...v1.3.1) (2025-03-10)
 
 ### Bug Fixes
