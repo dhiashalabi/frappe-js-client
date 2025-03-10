@@ -60,7 +60,7 @@ const { data, isLoading, error } = useFrappeQuery('your.frappe.method', {
 
 ## 📚 Documentation
 
-For detailed documentation and examples, please visit our [documentation](link-to-documentation).
+For detailed documentation and examples, please visit our [documentation](https://frappe-next-sdk.mussnad.dev).
 
 ## 🤝 Contributing
 
