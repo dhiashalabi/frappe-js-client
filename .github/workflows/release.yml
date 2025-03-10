@@ -29,6 +29,12 @@ jobs:
             - name: Install dependencies 📥
               run: npm install
 
+            - name: Build package 🔨
+              run: npm run build
+
+            - name: Audit dependencies 🔍
+              run: npm audit signature
+
             - name: Run Semantic Release 🚀
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
