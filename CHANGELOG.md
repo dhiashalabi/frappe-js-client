@@ -1,3 +1,9 @@
+## [1.2.1](https://github.com/mussnad/frappe-next-sdk/compare/v1.2.0...v1.2.1) (2025-03-10)
+
+### Bug Fixes
+
+- Simplify GitHub Actions release trigger configuration ([0a0d1c8](https://github.com/mussnad/frappe-next-sdk/commit/0a0d1c8c22dc6e6a2632fab1afbc6ef8fea98bfd))
+
 # [1.2.0](https://github.com/mussnad/frappe-next-sdk/compare/v1.1.1...v1.2.0) (2025-03-10)
 
 ### Bug Fixes
