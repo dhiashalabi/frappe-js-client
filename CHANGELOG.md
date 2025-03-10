@@ -1,3 +1,9 @@
+# [1.3.0](https://github.com/mussnad/frappe-next-sdk/compare/v1.2.2...v1.3.0) (2025-03-10)
+
+### Features
+
+- Restore semantic-release configuration ([6808712](https://github.com/mussnad/frappe-next-sdk/commit/680871288a0cd49b5e583f91af2f8dc23582277d))
+
 ## [1.2.1](https://github.com/mussnad/frappe-next-sdk/compare/v1.2.0...v1.2.1) (2025-03-10)
 
 ### Bug Fixes
