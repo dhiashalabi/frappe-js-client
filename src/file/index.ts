@@ -29,9 +29,9 @@
 
 import { AxiosInstance, AxiosProgressEvent } from 'axios'
 
-import { Error } from '../frappe/types'
-import { FileArgs } from './types'
-import { getRequestHeaders } from '../utils/axios'
+import { Error } from '@/frappe/types'
+import { FileArgs } from '@/file/types'
+import { getRequestHeaders } from '@/utils/axios'
 
 /**
  * Handles file upload operations for Frappe.

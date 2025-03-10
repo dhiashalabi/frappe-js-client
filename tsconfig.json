@@ -20,6 +20,12 @@
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
 
+        /* Path Aliases */
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        },
+
         /* Module interop */
         "esModuleInterop": true
     },
