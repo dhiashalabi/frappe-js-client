@@ -1,5 +1,5 @@
 {
-    "name": "frappe-next-sdk",
+    "name": "@mussnad/frappe-next-sdk",
     "version": "1.1.0",
     "private": true,
     "type": "module",
