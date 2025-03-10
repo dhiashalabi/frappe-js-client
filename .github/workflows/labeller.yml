@@ -10,9 +10,9 @@ jobs:
     labeler:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout
+            - name: Checkout 🛎️
               uses: actions/checkout@v4
-            - name: Labeler
+            - name: Labeler 🔖
               uses: actions/labeler@v4
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
