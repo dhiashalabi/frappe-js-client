@@ -1,3 +1,14 @@
+# [1.2.0](https://github.com/mussnad/frappe-next-sdk/compare/v1.1.1...v1.2.0) (2025-03-10)
+
+### Bug Fixes
+
+- Remove NPM package publishing configuration from semantic-release ([1e1f21f](https://github.com/mussnad/frappe-next-sdk/commit/1e1f21ff4746d33de331afd4e20243705e0061e7))
+
+### Features
+
+- Configure semantic-release for automated package publishing ([293eb8a](https://github.com/mussnad/frappe-next-sdk/commit/293eb8a8b1ce6fb188e2a41330a6c4bf82eda644))
+- Update package name for NPM scoped package ([b58e483](https://github.com/mussnad/frappe-next-sdk/commit/b58e48320d6b8ac09035010777b7e94176b0f7cd))
+
 ## [1.1.1](https://github.com/mussnad/frappe-next-sdk/compare/v1.1.0...v1.1.1) (2025-03-10)
 
 ### Bug Fixes
