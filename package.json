@@ -1,7 +1,6 @@
 {
     "name": "@mussnad/frappe-next-sdk",
     "version": "1.1.1",
-    "private": true,
     "type": "module",
     "description": "Next-generation TypeScript client for Frappe REST APIs, built on axios for robust, type-safe integration.",
     "main": "dist/index.js",
