@@ -10,9 +10,7 @@
         "dist"
     ],
     "scripts": {
-        "dev": "vite",
         "build": "tsc",
-        "preview": "vite preview",
         "prepare": "husky",
         "lint": "eslint src/ --ext .ts",
         "test": "jest --config jest.config.js",

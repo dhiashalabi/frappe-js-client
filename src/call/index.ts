@@ -70,6 +70,7 @@ export type ApiParams = Record<string, string | number | boolean | object>
  */
 export class FrappeCall {
     /** URL of the Frappe App instance */
+    // @ts-expect-error - This is a private property that is not used in the class
     private readonly appURL: string
 
     /** Axios instance for making HTTP requests */
