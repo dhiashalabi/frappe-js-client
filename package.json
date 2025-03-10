@@ -4,10 +4,10 @@
     "private": true,
     "type": "module",
     "description": "Next-generation TypeScript client for Frappe REST APIs, built on axios for robust, type-safe integration.",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "main": "index.js",
     "files": [
-        "dist"
+        "dist",
+        "README.md"
     ],
     "scripts": {
         "build": "tsc",
@@ -57,5 +57,8 @@
     "bugs": {
         "url": "https://github.com/mussnad/frappe-next-sdk/issues"
     },
-    "homepage": "https://github.com/mussnad/frappe-next-sdk#readme"
+    "homepage": "https://github.com/mussnad/frappe-next-sdk#readme",
+    "publishConfig": {
+        "access": "public"
+    }
 }
