@@ -27,6 +27,26 @@ import { AxiosInstance } from 'axios'
 
 import { Error } from '../frappe/types'
 
+/** Base response type for Frappe API calls */
+export interface FrappeResponse {
+    message: unknown
+}
+
+/**
+ * Typed response for Frappe API calls
+ * @template T - The type of the message data
+ */
+export interface TypedResponse<T> extends FrappeResponse {
+    message: T
+}
+
+/**
+ * Generic parameter type for API calls
+ * @template K - Key type, must be string
+ * @template V - Value type, must be string, number, boolean, or object
+ */
+export type ApiParams = Record<string, string | number | boolean | object>
+
 /**
  * Handles HTTP API calls to Frappe endpoints.
  *
@@ -118,24 +138,20 @@ export class FrappeCall {
      * });
      * ```
      */
-    async get<T = any>(path: string, params?: Record<string, any>): Promise<T> {
+    async get<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
         const encodedParams = new URLSearchParams()
-        // TEMP Fix Issue #50
         if (params) {
-            Object.entries(params).forEach((param) => {
-                const [key, value] = param
+            Object.entries(params).forEach(([key, value]) => {
                 if (value !== null && value !== undefined) {
-                    const val = typeof value === 'object' ? JSON.stringify(value) : value
+                    const val = typeof value === 'object' ? JSON.stringify(value) : String(value)
                     encodedParams.set(key, val)
                 }
             })
         }
 
         return this.axios
-            .get(`/api/method/${path}`, {
-                params: encodedParams,
-            })
-            .then((res) => res.data as T)
+            .get(`/api/method/${path}`, { params: encodedParams })
+            .then((res) => res.data)
             .catch((error) => {
                 throw {
                     ...error.response.data,
@@ -174,10 +190,10 @@ export class FrappeCall {
      * });
      * ```
      */
-    async post<T = any>(path: string, params?: any): Promise<T> {
+    async post<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
         return this.axios
-            .post(`/api/method/${path}`, { ...params })
-            .then((res) => res.data as T)
+            .post(`/api/method/${path}`, params)
+            .then((res) => res.data)
             .catch((error) => {
                 throw {
                     ...error.response.data,
@@ -209,10 +225,10 @@ export class FrappeCall {
      * });
      * ```
      */
-    async put<T = any>(path: string, params?: any): Promise<T> {
+    async put<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
         return this.axios
-            .put(`/api/method/${path}`, { ...params })
-            .then((res) => res.data as T)
+            .put(`/api/method/${path}`, params)
+            .then((res) => res.data)
             .catch((error) => {
                 throw {
                     ...error.response.data,
@@ -241,10 +257,10 @@ export class FrappeCall {
      * });
      * ```
      */
-    async delete<T = any>(path: string, params?: any): Promise<T> {
+    async delete<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
         return this.axios
             .delete(`/api/method/${path}`, { params })
-            .then((res) => res.data as T)
+            .then((res) => res.data)
             .catch((error) => {
                 throw {
                     ...error.response.data,

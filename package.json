@@ -1,18 +1,25 @@
 {
     "name": "frappe-next-sdk",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "private": true,
     "type": "module",
     "description": "Next-generation TypeScript client for Frappe REST APIs, built on axios for robust, type-safe integration.",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "dev": "vite",
-        "build": "tsc && vite build",
+        "build": "tsc",
         "preview": "vite preview",
         "prepare": "husky",
-        "lint": "eslint .",
-        "test": "jest",
+        "lint": "eslint src/ --ext .ts",
+        "test": "jest --config jest.config.js",
         "test:watch": "jest --watch",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "coverage": "jest --config jest.config.js --coverage",
+        "prepublishOnly": "npm run build"
     },
     "dependencies": {
         "axios": "^1.8.2"

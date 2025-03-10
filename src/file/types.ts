@@ -7,33 +7,16 @@
  */
 
 /**
- * Configuration options for file upload operations.
- *
- * @interface FileArgs
- * @description Defines the structure for configuring file uploads in Frappe.
- * Supports generic type T for additional custom data that may be required during upload.
- *
- * @template T - Type of additional data to be sent with the file upload
- *
- * @example
- * ```typescript
- * interface CustomData {
- *   description: string;
- *   tags: string[];
- * }
- *
- * const args: FileArgs<CustomData> = {
- *   isPrivate: true,
- *   folder: "Home/Documents",
- *   doctype: "File",
- *   otherData: {
- *     description: "Important document",
- *     tags: ["important", "document"]
- *   }
- * };
- * ```
+ * Additional metadata that can be sent with file uploads
  */
-export interface FileArgs<T> {
+export interface FileMetadata {
+    description?: string
+    tags?: string[]
+    [key: string]: unknown
+}
+
+/** Configuration options for file upload operations */
+export type FileArgs = {
     /** If the file access is private then set to TRUE */
     isPrivate?: boolean
     /** Folder the file exists in */
@@ -47,5 +30,5 @@ export interface FileArgs<T> {
     /** Field to be linked in the Document */
     fieldname?: string
     /** Additional data to be sent along with the file */
-    otherData?: T
+    otherData?: { [key: string]: string | Blob }
 }
