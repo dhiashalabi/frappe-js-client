@@ -1,7 +1,9 @@
 {
     "compilerOptions": {
-        /* Output configuration */
-        "noEmit": false,
+        /* Target */
+        "target": "es5",
+        "module": "commonjs",
+        "lib": ["es2017", "DOM"],
         "outDir": "./dist",
         "declaration": true,
 
