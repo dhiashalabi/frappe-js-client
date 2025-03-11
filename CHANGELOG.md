@@ -1,3 +1,9 @@
+# [1.4.0](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.7...v1.4.0) (2025-03-11)
+
+### Features
+
+- Update package configuration and TypeScript settings ([c8beca3](https://github.com/mussnad/frappe-next-sdk/commit/c8beca3cb8a857e6845b3ea101743a4fe76923ec))
+
 ## [1.3.7](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.6...v1.3.7) (2025-03-11)
 
 ### Bug Fixes
