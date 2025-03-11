@@ -1,3 +1,9 @@
+## [1.4.1](https://github.com/mussnad/frappe-js-client/compare/v1.4.0...v1.4.1) (2025-03-11)
+
+### Bug Fixes
+
+- Clean up yarn.lock dependencies ([90f158f](https://github.com/mussnad/frappe-js-client/commit/90f158fed1dc04d06f89d694f4d311fc3070ccb5))
+
 # [1.4.0](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.7...v1.4.0) (2025-03-11)
 
 ### Features
