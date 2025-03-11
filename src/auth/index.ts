@@ -26,8 +26,8 @@
 
 import { AxiosInstance } from 'axios'
 
-import { Error } from '@/frappe/types'
-import { AuthCredentials, AuthResponse, OTPCredentials, UserPassCredentials } from '@/auth/types'
+import { AuthCredentials, AuthResponse, OTPCredentials, UserPassCredentials } from './types'
+import { Error } from '../frappe/types'
 
 /**
  * Handles authentication operations for Frappe.

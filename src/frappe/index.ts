@@ -22,12 +22,12 @@
  */
 
 import { AxiosInstance } from 'axios'
-import { FrappeAuth } from '@/auth'
-import { FrappeCall } from '@/call'
-import { FrappeDB } from '@/db'
-import { FrappeFileUpload } from '@/file'
-import { getAxiosClient } from '@/utils/axios'
-import { TokenParams } from '@/frappe/types'
+import { FrappeAuth } from '../auth'
+import { FrappeCall } from '../call'
+import { FrappeDB } from '../db'
+import { FrappeFileUpload } from '../file'
+import { getAxiosClient } from '../utils/axios'
+import { TokenParams } from './types'
 
 /**
  * Main class for interacting with a Frappe instance.

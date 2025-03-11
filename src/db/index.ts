@@ -26,8 +26,8 @@
 
 import { AxiosInstance } from 'axios'
 
-import { Error } from '@/frappe/types'
-import { Filter, FrappeDoc, GetDocListArgs, GetLastDocArgs } from '@/db/types'
+import { Error } from '../frappe/types'
+import { Filter, FrappeDoc, GetDocListArgs, GetLastDocArgs } from './types'
 
 /**
  * Main class for database operations in Frappe.

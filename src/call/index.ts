@@ -25,7 +25,7 @@
 
 import { AxiosInstance } from 'axios'
 
-import { Error } from '@/frappe/types'
+import { Error } from '../frappe/types'
 
 /** Base response type for Frappe API calls */
 export interface FrappeResponse {
