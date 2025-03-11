@@ -1,3 +1,9 @@
+## [1.3.4](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.3...v1.3.4) (2025-03-11)
+
+### Bug Fixes
+
+- Remove npm test from prepublishOnly script ([9d01e02](https://github.com/mussnad/frappe-next-sdk/commit/9d01e027254aec6982ed12e2649d50d0fc9a95b8))
+
 ## [1.3.3](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.2...v1.3.3) (2025-03-11)
 
 ### Bug Fixes
