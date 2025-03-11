@@ -1,5 +1,5 @@
 /**
- * @module frappe-next-sdk
+ * @module frappe-js-client
  * @description A modern TypeScript SDK for Frappe Framework, providing strongly-typed
  * interfaces and utilities for interacting with Frappe-based applications.
  *
@@ -8,7 +8,7 @@
  *
  * @example
  * ```typescript
- * import { FrappeApp, Auth, DB } from 'frappe-next-sdk';
+ * import { FrappeApp, Auth, DB } from 'frappe-js-client';
  *
  * // Initialize the Frappe application
  * const frappe = new FrappeApp({

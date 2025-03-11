@@ -26,11 +26,11 @@ This SDK provides a seamless integration between Frappe/ERPNext backend and JS/T
 ### Installation
 
 ```bash
-npm install frappe-next-sdk
+npm install frappe-js-client
 # or
-yarn add frappe-next-sdk
+yarn add frappe-js-client
 # or
-pnpm add frappe-next-sdk
+pnpm add frappe-js-client
 ```
 
 ## 🔧 Configuration
@@ -39,7 +39,7 @@ Create a configuration file in your JS/TS project:
 
 ```typescript
 // lib/frappe.ts
-import { createFrappeClient } from 'frappe-next-sdk'
+import { createFrappeClient } from 'frappe-js-client'
 
 export const frappeClient = createFrappeClient({
     baseUrl: process.env.FRAPPE_URL,
@@ -50,7 +50,7 @@ export const frappeClient = createFrappeClient({
 ## 💡 Usage
 
 ```typescript
-import { useFrappeQuery } from 'frappe-next-sdk'
+import { useFrappeQuery } from 'frappe-js-client'
 
 // In your component
 const { data, isLoading, error } = useFrappeQuery('your.frappe.method', {
@@ -60,7 +60,7 @@ const { data, isLoading, error } = useFrappeQuery('your.frappe.method', {
 
 ## 📚 Documentation
 
-For detailed documentation and examples, please visit our [documentation](https://frappe-next-sdk.mussnad.dev).
+For detailed documentation and examples, please visit our [documentation](https://frappe-js-client.mussnad.dev).
 
 ## 🤝 Contributing
 

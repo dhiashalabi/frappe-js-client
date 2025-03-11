@@ -1,7 +1,21 @@
 {
-    "name": "@mussnad/frappe-next-sdk",
+    "name": "@mussnad/frappe-js-client",
     "version": "1.4.0",
-    "description": "Next-generation TypeScript client for Frappe REST APIs, built on axios for robust, type-safe integration.",
+    "description": "Next-generation TS/JS client for Frappe REST APIs, built on axios for robust, type-safe integration.",
+    "author": "Mussnad",
+    "license": "MIT",
+    "keywords": [
+        "frappe",
+        "sdk"
+    ],
+    "homepage": "https://github.com/mussnad/frappe-js-client#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mussnad/frappe-js-client.git"
+    },
+    "bugs": {
+        "url": "https://github.com/mussnad/frappe-js-client/issues"
+    },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
@@ -12,12 +26,12 @@
     "scripts": {
         "build": "tsc",
         "prepare": "husky",
-        "lint": "eslint src/ --ext .ts",
+        "prepublishOnly": "npm run build",
         "test": "jest --config jest.config.js",
         "test:watch": "jest --watch",
-        "format": "prettier --write .",
         "coverage": "jest --config jest.config.js --coverage",
-        "prepublishOnly": "npm run build"
+        "lint": "eslint src/ --ext .ts",
+        "format": "prettier --write ."
     },
     "dependencies": {
         "axios": "^1.8.2"
@@ -44,20 +58,6 @@
     "lint-staged": {
         "**/*": "prettier --write --ignore-unknown"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/mussnad/frappe-next-sdk.git"
-    },
-    "keywords": [
-        "frappe",
-        "sdk"
-    ],
-    "author": "Mussnad",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/mussnad/frappe-next-sdk/issues"
-    },
-    "homepage": "https://github.com/mussnad/frappe-next-sdk#readme",
     "publishConfig": {
         "access": "public"
     }
