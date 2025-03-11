@@ -1,3 +1,9 @@
+## [1.3.7](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.6...v1.3.7) (2025-03-11)
+
+### Bug Fixes
+
+- Remove organization scope from package name ([6a8753d](https://github.com/mussnad/frappe-next-sdk/commit/6a8753d33476c98848ce2f381bddddf752104f10))
+
 ## [1.3.6](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.5...v1.3.6) (2025-03-11)
 
 ### Bug Fixes
