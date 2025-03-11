@@ -1,3 +1,9 @@
+## [1.3.3](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.2...v1.3.3) (2025-03-11)
+
+### Bug Fixes
+
+- Update package scripts and configuration ([6366055](https://github.com/mussnad/frappe-next-sdk/commit/636605574065672bb08cc44d1aee90a2fc2eb9c9))
+
 ## [1.3.2](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.1...v1.3.2) (2025-03-10)
 
 ### Bug Fixes
