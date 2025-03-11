@@ -1,3 +1,9 @@
+## [1.3.6](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.5...v1.3.6) (2025-03-11)
+
+### Bug Fixes
+
+- Simplify TypeScript and build configuration ([2441d21](https://github.com/mussnad/frappe-next-sdk/commit/2441d21b47a4d74adb430ff4d1b9109120f7da74))
+
 ## [1.3.5](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.4...v1.3.5) (2025-03-11)
 
 ### Bug Fixes
