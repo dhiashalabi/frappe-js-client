@@ -1,3 +1,9 @@
+## [1.3.5](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.4...v1.3.5) (2025-03-11)
+
+### Bug Fixes
+
+- Update import paths to use relative imports ([8df6190](https://github.com/mussnad/frappe-next-sdk/commit/8df61905d42b642e561db62791ee9df475d1b498))
+
 ## [1.3.4](https://github.com/mussnad/frappe-next-sdk/compare/v1.3.3...v1.3.4) (2025-03-11)
 
 ### Bug Fixes
