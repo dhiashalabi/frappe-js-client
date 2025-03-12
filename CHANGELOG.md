@@ -1,3 +1,9 @@
+# [1.5.0](https://github.com/mussnad/frappe-js-client/compare/v1.4.1...v1.5.0) (2025-03-12)
+
+### Features
+
+- Comprehensive README update with new client features and usage examples ([f970665](https://github.com/mussnad/frappe-js-client/commit/f970665bd92501be4aaf94f93e568e3cd8240593))
+
 ## [1.4.1](https://github.com/mussnad/frappe-js-client/compare/v1.4.0...v1.4.1) (2025-03-11)
 
 ### Bug Fixes
