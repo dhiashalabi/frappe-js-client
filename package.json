@@ -1,6 +1,6 @@
 {
     "name": "@mussnad/frappe-js-client",
-    "version": "1.6.3",
+    "version": "1.6.4",
     "description": "Next-generation TS/JS client for Frappe REST APIs, built on axios for robust, type-safe integration.",
     "author": "Mussnad",
     "license": "MIT",

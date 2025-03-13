@@ -1,3 +1,9 @@
+## [1.6.4](https://github.com/mussnad/frappe-js-client/compare/v1.6.3...v1.6.4) (2025-03-13)
+
+### Bug Fixes
+
+- Remove withCredentials parameter from getLoggedInUser method ([4c0086c](https://github.com/mussnad/frappe-js-client/commit/4c0086c8aca4862f29c4c7b7c58043f970f79d77))
+
 ## [1.6.3](https://github.com/mussnad/frappe-js-client/compare/v1.6.2...v1.6.3) (2025-03-13)
 
 ### Bug Fixes
