@@ -13,13 +13,11 @@
  * const app = new FrappeApp('https://erp.example.com');
  * const auth = app.auth();
  *
- * // Login with username/password
  * await auth.loginWithUsernamePassword({
  *   username: 'admin',
  *   password: 'admin'
  * });
  *
- * // Get logged in user
  * const user = await auth.getLoggedInUser();
  * ```
  */
@@ -152,6 +150,8 @@ export class FrappeAuth {
     /**
      * Retrieves the currently logged-in user.
      *
+     * @param method - The method to use to get the logged in user
+     * @param withCredentials - Whether to include credentials in the request
      * @returns Promise resolving to the username of the logged-in user
      * @throws {Error} If the request fails or no user is logged in
      *
@@ -161,9 +161,11 @@ export class FrappeAuth {
      * console.log(`Logged in as: ${username}`);
      * ```
      */
-    async getLoggedInUser(): Promise<string> {
+    async getLoggedInUser(method: 'frappe.auth.get_logged_user', withCredentials?: boolean): Promise<string> {
         return this.axios
-            .get('/api/method/frappe.auth.get_logged_user')
+            .get(`/api/method/${method}`, {
+                withCredentials: withCredentials ?? false,
+            })
             .then((res) => res.data.message)
             .catch((error) => {
                 throw {
