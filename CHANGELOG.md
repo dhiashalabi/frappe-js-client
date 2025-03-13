@@ -1,3 +1,9 @@
+## [1.6.1](https://github.com/mussnad/frappe-js-client/compare/v1.6.0...v1.6.1) (2025-03-13)
+
+### Bug Fixes
+
+- Remove semantic-release and clean up dependencies ([11213da](https://github.com/mussnad/frappe-js-client/commit/11213daa82fefb8649e9efe218fe0a4281361286))
+
 # [1.6.0](https://github.com/mussnad/frappe-js-client/compare/v1.5.0...v1.6.0) (2025-03-13)
 
 ### Bug Fixes
