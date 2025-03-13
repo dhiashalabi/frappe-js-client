@@ -1,3 +1,9 @@
+## [1.6.2](https://github.com/mussnad/frappe-js-client/compare/v1.6.1...v1.6.2) (2025-03-13)
+
+### Bug Fixes
+
+- Update getLoggedInUser method to accept optional method parameter ([7b96dd6](https://github.com/mussnad/frappe-js-client/commit/7b96dd6954cb937a14c3b032c6084c5b3d479e3f))
+
 ## [1.6.1](https://github.com/mussnad/frappe-js-client/compare/v1.6.0...v1.6.1) (2025-03-13)
 
 ### Bug Fixes
