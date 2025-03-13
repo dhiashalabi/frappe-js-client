@@ -4,6 +4,7 @@
     "description": "Next-generation TS/JS client for Frappe REST APIs, built on axios for robust, type-safe integration.",
     "author": "Mussnad",
     "license": "MIT",
+    "type": "module",
     "keywords": [
         "Frappe",
         "sdk"
