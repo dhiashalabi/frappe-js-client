@@ -1,3 +1,15 @@
+# [1.6.0](https://github.com/mussnad/frappe-js-client/compare/v1.5.0...v1.6.0) (2025-03-13)
+
+### Bug Fixes
+
+- Add semantic-release and update dependencies in package.json and yarn.lock ([998600c](https://github.com/mussnad/frappe-js-client/commit/998600c85875011307ea5391240ef476eb2ac742))
+
+### Features
+
+- Add module type to package.json for ES module support ([80f0b1d](https://github.com/mussnad/frappe-js-client/commit/80f0b1d28646a745fd2920215d30dcbb58e13408))
+- Enhance getLoggedInUser method with parameters for flexibility ([b0c62d8](https://github.com/mussnad/frappe-js-client/commit/b0c62d8acbf8aab6649123302dc72142352f12e4))
+- Update dependencies and fix package.json metadata ([1cde140](https://github.com/mussnad/frappe-js-client/commit/1cde140163dd978819eff71229ee3daf51c32d29))
+
 # [1.5.0](https://github.com/mussnad/frappe-js-client/compare/v1.4.1...v1.5.0) (2025-03-12)
 
 ### Features
