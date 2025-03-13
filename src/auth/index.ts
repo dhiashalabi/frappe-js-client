@@ -151,7 +151,6 @@ export class FrappeAuth {
      * Retrieves the currently logged-in user.
      *
      * @param method - The method to use to get the logged in user
-     * @param withCredentials - Whether to include credentials in the request
      * @returns Promise resolving to the username of the logged-in user
      * @throws {Error} If the request fails or no user is logged in
      *
@@ -161,11 +160,9 @@ export class FrappeAuth {
      * console.log(`Logged in as: ${username}`);
      * ```
      */
-    async getLoggedInUser(method?: string, withCredentials?: boolean): Promise<string> {
+    async getLoggedInUser(method?: string): Promise<string> {
         return this.axios
-            .get(`/api/method/${method ?? 'frappe.auth.get_logged_user'}`, {
-                withCredentials: withCredentials ?? false,
-            })
+            .get(`/api/method/${method ?? 'frappe.auth.get_logged_user'}`)
             .then((res) => res.data.message)
             .catch((error) => {
                 throw {
