@@ -161,9 +161,9 @@ export class FrappeAuth {
      * console.log(`Logged in as: ${username}`);
      * ```
      */
-    async getLoggedInUser(method: 'frappe.auth.get_logged_user', withCredentials?: boolean): Promise<string> {
+    async getLoggedInUser(method?: string, withCredentials?: boolean): Promise<string> {
         return this.axios
-            .get(`/api/method/${method}`, {
+            .get(`/api/method/${method ?? 'frappe.auth.get_logged_user'}`, {
                 withCredentials: withCredentials ?? false,
             })
             .then((res) => res.data.message)
