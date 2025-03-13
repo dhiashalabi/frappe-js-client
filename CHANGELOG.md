@@ -1,3 +1,9 @@
+## [1.6.3](https://github.com/mussnad/frappe-js-client/compare/v1.6.2...v1.6.3) (2025-03-13)
+
+### Bug Fixes
+
+- Remove "type" field from package.json to simplify configuration ([bfd8ba4](https://github.com/mussnad/frappe-js-client/commit/bfd8ba4ceb461aa92a2a684f8d2ef89b1c5918e7))
+
 ## [1.6.2](https://github.com/mussnad/frappe-js-client/compare/v1.6.1...v1.6.2) (2025-03-13)
 
 ### Bug Fixes
