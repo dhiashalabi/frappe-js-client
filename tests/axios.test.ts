@@ -15,13 +15,13 @@ describe('Axios Utils', () => {
                 hostname: 'test.example.com',
             },
             csrf_token: 'test-csrf-token',
-        } as unknown as Window & typeof globalThis
+        } as any as Window & typeof globalThis
 
         global.document = {
             querySelector: jest.fn(() => ({
                 getAttribute: jest.fn().mockReturnValue('test-csrf-token'),
             })),
-        } as unknown as Document
+        } as any as Document
     })
 
     describe('getAxiosClient', () => {
@@ -85,7 +85,7 @@ describe('Axios Utils', () => {
                     hostname: 'test.example.com',
                 },
                 csrf_token: 'test-csrf-token',
-            } as unknown as Window & typeof globalThis
+            } as any as Window & typeof globalThis
         })
 
         afterEach(() => {
@@ -139,7 +139,7 @@ describe('Axios Utils', () => {
         })
 
         it('should return undefined when document is not defined', () => {
-            global.document = undefined as unknown as Document
+            global.document = undefined as any as Document
             expect(getCSRFToken()).toBeUndefined()
         })
 
@@ -149,7 +149,7 @@ describe('Axios Utils', () => {
             }
             global.document = {
                 querySelector: jest.fn().mockReturnValue(mockMetaElement),
-            } as unknown as Document
+            } as any as Document
 
             expect(getCSRFToken()).toBe('test-csrf-token')
         })
@@ -157,7 +157,7 @@ describe('Axios Utils', () => {
         it('should return undefined when meta tag is not found', () => {
             global.document = {
                 querySelector: jest.fn().mockReturnValue(null),
-            } as unknown as Document
+            } as any as Document
 
             expect(getCSRFToken()).toBeUndefined()
         })
@@ -168,7 +168,7 @@ describe('Axios Utils', () => {
             }
             global.document = {
                 querySelector: jest.fn().mockReturnValue(mockMetaElement),
-            } as unknown as Document
+            } as any as Document
 
             expect(getCSRFToken()).toBeUndefined()
         })

@@ -128,7 +128,7 @@ export class FrappeDB {
      * const task = await db.getDoc('Task', 'TASK-001');
      * ```
      */
-    async getDoc<T = object>(doctype: string, docname: string = ''): Promise<FrappeDoc<T>> {
+    async getDoc<T = object>(doctype: string, docname = ''): Promise<FrappeDoc<T>> {
         return this.axios
             .get(`/api/resource/${doctype}/${encodeURIComponent(docname)}`)
             .then((res) => res.data.data)
@@ -339,13 +339,8 @@ export class FrappeDB {
      * );
      * ```
      */
-    async getCount<T = object>(
-        doctype: string,
-        filters?: Filter<T>[],
-        cache: boolean = false,
-        debug: boolean = false,
-    ): Promise<number> {
-        const params: Record<string, unknown> = {
+    async getCount<T = object>(doctype: string, filters?: Filter<T>[], cache = false, debug = false): Promise<number> {
+        const params: Record<string, any> = {
             doctype,
             filters: [],
         }

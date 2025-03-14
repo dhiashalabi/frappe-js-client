@@ -106,7 +106,7 @@ export function getAxiosClient(
  * @internal
  */
 export function getRequestHeaders(
-    useToken: boolean = false,
+    useToken = false,
     tokenType?: 'Bearer' | 'token',
     token?: () => string,
     appURL?: string,
