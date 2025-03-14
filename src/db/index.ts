@@ -24,7 +24,7 @@
  * ```
  */
 
-import { AxiosInstance } from 'axios'
+import { AxiosError, AxiosInstance } from 'axios'
 
 import { Error } from '../frappe/types'
 import { Filter, FrappeDoc, GetDocListArgs, GetLastDocArgs } from './types'
@@ -355,18 +355,21 @@ export class FrappeDB {
         if (filters) {
             params.filters = filters ? JSON.stringify(filters) : undefined
         }
-        return this.axios
-            .get('/api/method/frappe.client.get_count', { params })
-            .then((res) => res.data.message)
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: 'There was an error while getting the count.',
-                    exception: error.response.data.exception ?? error.response.data.exc_type ?? '',
-                } as Error
-            })
+
+        try {
+            const res = await this.axios.get('/api/method/frappe.client.get_count', { params })
+            return res.data.message
+        } catch (error) {
+            const axiosError = error as AxiosError<{ exception?: string; exc_type?: string }>
+
+            throw {
+                ...axiosError.response?.data,
+                httpStatus: axiosError.response?.status,
+                httpStatusText: axiosError.response?.statusText,
+                message: 'There was an error while getting the count.',
+                exception: axiosError.response?.data?.exception ?? axiosError.response?.data?.exc_type ?? '',
+            } as Error
+        }
     }
 
     /**
