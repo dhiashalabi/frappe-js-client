@@ -355,7 +355,6 @@ export class FrappeDB {
         if (filters) {
             params.filters = filters ? JSON.stringify(filters) : undefined
         }
-
         return this.axios
             .get('/api/method/frappe.client.get_count', { params })
             .then((res) => res.data.message)
