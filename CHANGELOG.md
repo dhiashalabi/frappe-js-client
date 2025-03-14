@@ -1,3 +1,13 @@
+## [1.6.5](https://github.com/mussnad/frappe-js-client/compare/v1.6.4...v1.6.5) (2025-03-14)
+
+### Bug Fixes
+
+- Refactor error handling in getCount method of FrappeDB class ([ba4e534](https://github.com/mussnad/frappe-js-client/commit/ba4e534c153f98c2ca6786f58e708efabb3c0649))
+- Remove unnecessary blank line in FrappeDB class ([d1be08e](https://github.com/mussnad/frappe-js-client/commit/d1be08e6ed0573ecd18d9eac633ff34e84b4d37e))
+- Update ESLint configuration to use CommonJS syntax ([e1ef5f8](https://github.com/mussnad/frappe-js-client/commit/e1ef5f84dc6ce0eadb9fc9f35b3b5092476cbec1))
+- Update Jest configuration to use CommonJS syntax ([78319c5](https://github.com/mussnad/frappe-js-client/commit/78319c5fc10c7e029b6fe71ccd8e12bd3ecbf01c))
+- Update TypeScript configurations and types ([942ee02](https://github.com/mussnad/frappe-js-client/commit/942ee0208f50eca279fe382fcf51586928998474))
+
 ## [1.6.4](https://github.com/mussnad/frappe-js-client/compare/v1.6.3...v1.6.4) (2025-03-13)
 
 ### Bug Fixes
