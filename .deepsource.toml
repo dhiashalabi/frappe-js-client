@@ -8,3 +8,6 @@ name = "javascript"
     "jest",
     "nodejs"
   ]
+
+[[transformers]]
+name = "prettier"

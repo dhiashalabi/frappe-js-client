@@ -12,7 +12,7 @@
 export interface FileMetadata {
     description?: string
     tags?: string[]
-    [key: string]: unknown
+    [key: string]: any
 }
 
 /** Configuration options for file upload operations */

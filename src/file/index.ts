@@ -161,7 +161,7 @@ export class FrappeFileUpload {
         file: File,
         args: FileArgs,
         onProgress?: (bytesUploaded: number, totalBytes?: number, progress?: AxiosProgressEvent) => void,
-        apiPath: string = 'upload_file',
+        apiPath = 'upload_file',
     ) {
         const formData = new FormData()
         if (file) formData.append('file', file, file.name)

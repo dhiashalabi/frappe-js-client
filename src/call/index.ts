@@ -29,7 +29,7 @@ import { Error } from '../frappe/types'
 
 /** Base response type for Frappe API calls */
 export interface FrappeResponse {
-    message: unknown
+    message: any
 }
 
 /**
