@@ -8,21 +8,21 @@ This client provides a seamless integration between Frappe/ERPNext backend and J
 
 ## ✨ Features
 
-- 🔄 Seamless integration with Frappe/ERPNext or any other Frappe-based application
-- ⚡ Built for JS/TS applications with full type support
-- 🛠️ Type-safe API calls and database operations
-- 🔐 Built-in authentication handling with multiple auth methods
-- 📦 Easy-to-use database operations and document management
-- 📁 File upload and management capabilities
-- 🎯 Optimized for performance with proper error handling
+-   🔄 Seamless integration with Frappe/ERPNext or any other Frappe-based application
+-   ⚡ Built for JS/TS applications with full type support
+-   🛠️ Type-safe API calls and database operations
+-   🔐 Built-in authentication handling with multiple auth methods
+-   📦 Easy-to-use database operations and document management
+-   📁 File upload and management capabilities
+-   🎯 Optimized for performance with proper error handling
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- A running Frappe/ERPNext instance
-- JS/TS project
+-   Node.js (v16 or higher)
+-   A running Frappe/ERPNext instance
+-   JS/TS project
 
 ### Installation
 
@@ -195,9 +195,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 If you have any questions or need help, please:
 
-- Open an issue
-- Join our community discussions
-- Check our documentation
+-   Open an issue
+-   Join our community discussions
+-   Check our documentation
 
 ---
 
