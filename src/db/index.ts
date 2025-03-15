@@ -122,13 +122,11 @@ export class FrappeDB {
      * ```typescript
      * // Get a user document
      * const user = await db.getDoc<User>('User', 'administrator');
-     * console.log(user.email);
-     *
      * // Get a task document
      * const task = await db.getDoc('Task', 'TASK-001');
      * ```
      */
-    async getDoc<T = object>(doctype: string, docname = ''): Promise<FrappeDoc<T>> {
+    getDoc<T = object>(doctype: string, docname = '') {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -166,7 +164,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    async getDocList<T = object, K = FrappeDoc<T>>(doctype: string, args?: GetDocListArgs<K>) {
+    getDocList<T = object, K = FrappeDoc<T>>(doctype: string, args?: GetDocListArgs<K>) {
         let params = {}
 
         if (args) {
@@ -222,7 +220,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    async createDoc<T = object>(doctype: string, value: T): Promise<FrappeDoc<T>> {
+    createDoc<T = object>(doctype: string, value: T) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -260,7 +258,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    async updateDoc<T = object>(doctype: string, docname: string | null, value: Partial<T>): Promise<FrappeDoc<T>> {
+    updateDoc<T = object>(doctype: string, docname: string | null, value: Partial<T>) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -290,7 +288,7 @@ export class FrappeDB {
      * await db.deleteDoc('User', 'john@example.com');
      * ```
      */
-    async deleteDoc(doctype: string, docname?: string | null): Promise<{ message: string }> {
+    deleteDoc(doctype: string, docname?: string | null) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -327,7 +325,7 @@ export class FrappeDB {
      * );
      * ```
      */
-    async getCount<T = object>(doctype: string, filters?: Filter<T>[], cache = false, debug = false): Promise<number> {
+    getCount<T = object>(doctype: string, filters?: Filter<T>[], cache = false, debug = false) {
         const params: Record<string, any> = {
             doctype,
             filters: [],

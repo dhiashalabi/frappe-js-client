@@ -120,7 +120,7 @@ export class FrappeCall {
      * });
      * ```
      */
-    async get<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
+    get<T>(path: string, params?: ApiParams) {
         const encodedParams = new URLSearchParams()
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
@@ -170,7 +170,7 @@ export class FrappeCall {
      * });
      * ```
      */
-    async post<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
+    post<T>(path: string, params?: ApiParams) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -203,7 +203,7 @@ export class FrappeCall {
      * });
      * ```
      */
-    async put<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
+    put<T>(path: string, params?: ApiParams) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -233,7 +233,7 @@ export class FrappeCall {
      * });
      * ```
      */
-    async delete<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
+    delete<T>(path: string, params?: ApiParams) {
         return handleRequest({
             axios: this.axios,
             config: {

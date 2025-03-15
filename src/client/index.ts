@@ -45,7 +45,7 @@ export class FrappeClient {
      * })
      * ```
      */
-    async getList<T = object, K = FrappeDoc<T>>(doctype: string, args?: GetListArgs<K>) {
+    getList<T = object, K = FrappeDoc<T>>(doctype: string, args?: GetListArgs<K>) {
         let params = {}
 
         if (args) {
@@ -101,7 +101,7 @@ export class FrappeClient {
      * })
      * ```
      */
-    async getCount(doctype: string, args?: GetCountArgs) {
+    getCount(doctype: string, args?: GetCountArgs) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -127,7 +127,7 @@ export class FrappeClient {
      * const doc = await client.getDoc('DocType', 'test')
      * ```
      */
-    async getDoc<T = object>(doctype: string, name: string, args?: GetDocArgs<T>) {
+    getDoc<T = object>(doctype: string, name: string, args?: GetDocArgs<T>) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -153,7 +153,7 @@ export class FrappeClient {
      * const value = await client.getValue('DocType', 'test')
      * ```
      */
-    async getValue<T = object>(doctype: string, fieldname: string, args?: GetValueArgs<T>): Promise<T> {
+    getValue<T = object>(doctype: string, fieldname: string, args?: GetValueArgs<T>) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -178,7 +178,7 @@ export class FrappeClient {
      * const value = await client.getSingleValue('DocType', 'test')
      * ```
      */
-    async getSingleValue<T = object>(doctype: string, field: string) {
+    getSingleValue<T = object>(doctype: string, field: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -204,7 +204,7 @@ export class FrappeClient {
      * await client.setValue('DocType', 'test', 'test', 'test')
      * ```
      */
-    async setValue<T = object>(doctype: string, name: string, fieldname: string, value: string) {
+    setValue<T = object>(doctype: string, name: string, fieldname: string, value: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -229,7 +229,7 @@ export class FrappeClient {
      * await client.insert({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    async insert<T = object>(doc: object) {
+    insert<T = object>(doc: object) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -254,7 +254,7 @@ export class FrappeClient {
      * await client.insertMany([{doctype:'DocType', name:'test', fieldname:'test', value:'test'}])
      * ```
      */
-    async insertMany<T = object>(docs: object[]) {
+    insertMany<T = object>(docs: object[]) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -279,7 +279,7 @@ export class FrappeClient {
      * await client.save({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    async save<T = object>(doc: object) {
+    save<T = object>(doc: object) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -307,7 +307,7 @@ export class FrappeClient {
      * await client.renameDoc('DocType', 'test', 'test2')
      * ```
      */
-    async renameDoc<T = object>(doctype: string, old_name: string, new_name: string, merge = false) {
+    renameDoc<T = object>(doctype: string, old_name: string, new_name: string, merge = false) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -332,7 +332,7 @@ export class FrappeClient {
      * await client.submit({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    async submit<T = object>(doc: object) {
+    submit<T = object>(doc: object) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -358,7 +358,7 @@ export class FrappeClient {
      * await client.cancel('DocType', 'test')
      * ```
      */
-    async cancel<T = object>(doctype: string, name: string) {
+    cancel<T = object>(doctype: string, name: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -384,7 +384,7 @@ export class FrappeClient {
      * await client.delete('DocType', 'test')
      * ```
      */
-    async delete<T = object>(doctype: string, name: string) {
+    delete<T = object>(doctype: string, name: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -409,7 +409,7 @@ export class FrappeClient {
      * await client.bulkUpdate([{doctype:'DocType', name:'test', fieldname:'test', value:'test'}])
      * ```
      */
-    async bulkUpdate<T = object>(docs: object[]) {
+    bulkUpdate<T = object>(docs: object[]) {
         return handleRequest({
             axios: this.axios,
             config: {
