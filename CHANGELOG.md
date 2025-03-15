@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/mussnad/frappe-js-client/compare/v2.0.0...v2.1.0) (2025-03-15)
+
+### Features
+
+- Enhance FrappeClient integration in FrappeApp ([0be2232](https://github.com/mussnad/frappe-js-client/commit/0be2232213e058c782b800ee4b698bb3cf798e33))
+- Rename methods in FrappeClient for clarity and add new API request methods ([fdcedc9](https://github.com/mussnad/frappe-js-client/commit/fdcedc93391a072c1e745bfe5156836cfd63868e))
+
 # [2.0.0](https://github.com/mussnad/frappe-js-client/compare/v1.6.5...v2.0.0) (2025-03-15)
 
 ### Bug Fixes
