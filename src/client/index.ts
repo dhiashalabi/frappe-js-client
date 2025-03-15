@@ -2,7 +2,7 @@ import { AxiosInstance } from 'axios'
 import { GetCountArgs, GetDocArgs, GetListArgs, GetValueArgs } from './types'
 import { FrappeDoc } from '../db/types'
 import { handleRequest } from '../utils/axios'
-import { FrappeDynamicDoc } from '../frappe/types'
+import { FrappeDocument } from '../frappe/types'
 
 /**
  * FrappeClient is a class that provides a client for the Frappe API.
@@ -67,7 +67,7 @@ export class FrappeClient {
      * })
      * ```
      */
-    getList<T = object, K = FrappeDoc<T>>(doctype: string, args?: GetListArgs<K>) {
+    getList<T extends FrappeDocument, K extends FrappeDoc<T>>(doctype: string, args?: GetListArgs<K>) {
         let params = {}
 
         if (args) {
@@ -151,7 +151,7 @@ export class FrappeClient {
      * const doc = await client.getDoc('DocType', 'test')
      * ```
      */
-    getDoc<T = object>(doctype: string, name: string, args?: GetDocArgs<T>) {
+    getDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, name: string, args?: GetDocArgs<T>) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -177,7 +177,7 @@ export class FrappeClient {
      * const value = await client.getValue('DocType', 'test')
      * ```
      */
-    getValue<T = object>(doctype: string, fieldname: string, args?: GetValueArgs<T>) {
+    getValue<T extends FrappeDocument = FrappeDocument>(doctype: string, fieldname: string, args?: GetValueArgs<T>) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -202,7 +202,7 @@ export class FrappeClient {
      * const value = await client.getSingleValue('DocType', 'test')
      * ```
      */
-    getSingleValue<T = object>(doctype: string, field: string) {
+    getSingleValue<T extends FrappeDocument = FrappeDocument>(doctype: string, field: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -228,7 +228,12 @@ export class FrappeClient {
      * await client.setValue('DocType', 'test', 'test', 'test')
      * ```
      */
-    setValue<T = object>(doctype: string, name: string, fieldname: string, value: string) {
+    setValue<T extends FrappeDocument = FrappeDocument>(
+        doctype: string,
+        name: string,
+        fieldname: string,
+        value: string,
+    ) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -253,7 +258,7 @@ export class FrappeClient {
      * await client.insertDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    insertDoc<T = object>(doc: object) {
+    insertDoc<T extends FrappeDocument = FrappeDocument>(doc: T) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -278,7 +283,7 @@ export class FrappeClient {
      * await client.insertMany([{doctype:'DocType', name:'test', fieldname:'test', value:'test'}])
      * ```
      */
-    insertMany<T = object>(docs: object[]) {
+    insertMany<T extends FrappeDocument = FrappeDocument>(docs: T[]) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -303,7 +308,7 @@ export class FrappeClient {
      * await client.saveDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    saveDoc<T = object>(doc: object) {
+    saveDoc<T extends FrappeDocument = FrappeDocument>(doc: T) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -331,7 +336,12 @@ export class FrappeClient {
      * await client.renameDoc('DocType', 'test', 'test2')
      * ```
      */
-    renameDoc<T = object>(doctype: string, old_name: string, new_name: string, merge = false) {
+    renameDoc<T extends FrappeDocument = FrappeDocument>(
+        doctype: string,
+        old_name: string,
+        new_name: string,
+        merge = false,
+    ) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -356,7 +366,7 @@ export class FrappeClient {
      * await client.submitDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    submitDoc<T = object>(doc: object) {
+    submitDoc<T extends FrappeDocument = FrappeDocument>(doc: T) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -382,7 +392,7 @@ export class FrappeClient {
      * await client.cancelDoc('DocType', 'test')
      * ```
      */
-    cancelDoc<T = object>(doctype: string, name: string) {
+    cancelDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, name: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -408,7 +418,7 @@ export class FrappeClient {
      * await client.deleteDoc('DocType', 'test')
      * ```
      */
-    deleteDoc<T = object>(doctype: string, name: string) {
+    deleteDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, name: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -433,7 +443,7 @@ export class FrappeClient {
      * await client.bulkUpdate([{doctype:'DocType', name:'test', fieldname:'test', value:'test'}])
      * ```
      */
-    bulkUpdate<T = object>(docs: object[]) {
+    bulkUpdate<T extends FrappeDocument = FrappeDocument>(docs: T[]) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -460,7 +470,7 @@ export class FrappeClient {
      * await client.validateLink('DocType', 'test', ['field1', 'field2'])
      * ```
      */
-    validateLink<T extends FrappeDynamicDoc = FrappeDynamicDoc>(doctype: string, docname: string, fields = ['name']) {
+    validateLink<T extends FrappeDocument = FrappeDocument>(doctype: string, docname: string, fields = ['name']) {
         return handleRequest({
             axios: this.axios,
             config: {

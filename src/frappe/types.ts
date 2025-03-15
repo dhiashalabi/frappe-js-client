@@ -68,4 +68,28 @@ export interface TokenParams {
     type: 'Bearer' | 'token'
 }
 
-export type FrappeDynamicDoc<T = any> = Record<string, T>
+/**
+ * Represents a Frappe document.
+ *
+ * @interface Document
+ * @description Standardized document structure returned by Frappe backend services.
+ * Contains all fields of the document.
+ */
+export type FrappeDocument<T = any> = T & {
+    /** The document type of the document */
+    doctype?: string
+    /** The name of the document */
+    name?: string
+    /** The owner of the document */
+    owner?: string
+    /** The creation date of the document */
+    creation?: string
+    /** The modified date of the document */
+    modified?: string
+    /** The modified by of the document */
+    modified_by?: string
+    /** The document status of the document */
+    docstatus?: number
+    /** The fields of the document */
+    [key: string]: any
+}
