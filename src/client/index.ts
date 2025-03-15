@@ -130,7 +130,9 @@ export class FrappeClient {
                 params: { doctype, ...args },
             },
             errorMessage: 'There was an error while fetching the count.',
-            transformResponse: (response: Record<string, number>) => response.message,
+            transformResponse: (response: Record<string, number>) => ({
+                count: response.message,
+            }),
         })
     }
 
