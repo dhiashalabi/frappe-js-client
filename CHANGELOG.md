@@ -1,3 +1,9 @@
+## [2.2.2](https://github.com/mussnad/frappe-js-client/compare/v2.2.1...v2.2.2) (2025-03-15)
+
+### Bug Fixes
+
+- Update validateLink method to accept structured arguments ([6e4c440](https://github.com/mussnad/frappe-js-client/commit/6e4c440a5e61cca0d295469230ae1d8e36d95b21))
+
 ## [2.2.1](https://github.com/mussnad/frappe-js-client/compare/v2.2.0...v2.2.1) (2025-03-15)
 
 ### Bug Fixes
