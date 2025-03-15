@@ -1,3 +1,9 @@
+# [2.2.0](https://github.com/mussnad/frappe-js-client/compare/v2.1.4...v2.2.0) (2025-03-15)
+
+### Features
+
+- Add validateLink method to FrappeClient for link validation ([46eb00e](https://github.com/mussnad/frappe-js-client/commit/46eb00eb742b7712db76fc2d58428f2321b718c4))
+
 ## [2.1.4](https://github.com/mussnad/frappe-js-client/compare/v2.1.3...v2.1.4) (2025-03-15)
 
 ### Bug Fixes
