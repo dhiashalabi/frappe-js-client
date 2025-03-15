@@ -1,3 +1,9 @@
+## [2.1.4](https://github.com/mussnad/frappe-js-client/compare/v2.1.3...v2.1.4) (2025-03-15)
+
+### Bug Fixes
+
+- Update transformResponse in FrappeClient to return structured count ([87ddb75](https://github.com/mussnad/frappe-js-client/commit/87ddb75e91d744bcb78332df7cd19b66b92af0c9))
+
 ## [2.1.3](https://github.com/mussnad/frappe-js-client/compare/v2.1.2...v2.1.3) (2025-03-15)
 
 ### Bug Fixes
