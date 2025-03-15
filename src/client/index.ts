@@ -19,15 +19,36 @@ export class FrappeClient {
     /** Axios instance for making HTTP requests */
     readonly axios: AxiosInstance
 
+    /** Whether to use token based authentication */
+    readonly useToken: boolean
+
+    /** Function that returns the authentication token */
+    readonly token?: () => string
+
+    /** Type of token to be used for authentication */
+    readonly tokenType?: 'Bearer' | 'token'
+
     /**
      * Creates a new FrappeClient instance.
      *
      * @param appURL - The URL of the Frappe App instance
      * @param axios - The Axios instance for making HTTP requests
+     * @param useToken - Whether to use token based authentication
+     * @param token - Function that returns the authentication token
+     * @param tokenType - Type of token to use ('Bearer' or 'token')
      */
-    constructor(appURL: string, axios: AxiosInstance) {
+    constructor(
+        appURL: string,
+        axios: AxiosInstance,
+        useToken?: boolean,
+        token?: () => string,
+        tokenType?: 'Bearer' | 'token',
+    ) {
         this.appURL = appURL
         this.axios = axios
+        this.useToken = useToken ?? false
+        this.token = token
+        this.tokenType = tokenType ?? 'Bearer'
     }
 
     /**
