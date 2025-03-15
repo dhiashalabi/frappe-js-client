@@ -1,3 +1,9 @@
+## [2.1.2](https://github.com/mussnad/frappe-js-client/compare/v2.1.1...v2.1.2) (2025-03-15)
+
+### Bug Fixes
+
+- Update API endpoint URLs to use 'https://instance.example.com' across all modules ([991e278](https://github.com/mussnad/frappe-js-client/commit/991e278a67e2d7f3a4099b4d82b71648bd1a1018))
+
 ## [2.1.1](https://github.com/mussnad/frappe-js-client/compare/v2.1.0...v2.1.1) (2025-03-15)
 
 ### Bug Fixes
