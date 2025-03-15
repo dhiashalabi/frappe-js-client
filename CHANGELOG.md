@@ -1,3 +1,9 @@
+## [2.2.5](https://github.com/mussnad/frappe-js-client/compare/v2.2.4...v2.2.5) (2025-03-15)
+
+### Bug Fixes
+
+- Update FrappeClient methods to use FrappeDocument type ([bf20630](https://github.com/mussnad/frappe-js-client/commit/bf206304a5da670bbc6b784b9f46e2f758745561))
+
 ## [2.2.4](https://github.com/mussnad/frappe-js-client/compare/v2.2.3...v2.2.4) (2025-03-15)
 
 ### Bug Fixes
