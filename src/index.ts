@@ -25,7 +25,6 @@
  * - {@link "./file"} - File handling utilities
  * - {@link "./call"} - Remote method calling utilities
  *
- * @version 1.0.0
  * @license MIT
  */
 
@@ -34,3 +33,4 @@ export * from './auth'
 export * from './db'
 export * from './file'
 export * from './call'
+export * from './client'
