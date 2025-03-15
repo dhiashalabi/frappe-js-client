@@ -465,7 +465,7 @@ export class FrappeClient {
             config: {
                 method: 'GET',
                 url: '/api/method/frappe.client.validate_link',
-                params: { doctype, docname, fields },
+                params: { doctype, docname, fields: fields ? JSON.stringify(fields) : undefined },
             },
             errorMessage: 'There was an error while validating the link.',
             transformResponse: (response: Record<string, T>) => response.message,
