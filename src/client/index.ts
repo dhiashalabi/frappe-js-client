@@ -446,6 +446,33 @@ export class FrappeClient {
     }
 
     /**
+     * Validates a link in the Frappe database.
+     *
+     * @param doctype - The name of the document type to validate
+     * @param docname - The name of the document to validate
+     * @param fields - The fields to validate
+     * @returns A promise that resolves to the validated document
+     *
+     * @example
+     * ```typescript
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
+     * await client.validateLink('DocType', 'test', ['field1', 'field2'])
+     * ```
+     */
+    validateLink<T = object>(doctype: string, docname: string, fields?: string[]) {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'GET',
+                url: '/api/method/frappe.client.validate_link',
+                params: { doctype, docname, fields },
+            },
+            errorMessage: 'There was an error while validating the link.',
+            transformResponse: (response: Record<string, T>) => response.message,
+        })
+    }
+
+    /**
      * Makes a GET request to the Frappe API.
      *
      * @param path - The path to the API endpoint
