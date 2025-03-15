@@ -173,17 +173,17 @@ export class FrappeDB {
         let params = {}
 
         if (args) {
-            const { fields, filters, orFilters, orderBy, limit, limit_start, groupBy, asDict = true } = args
+            const { fields, filters, groupBy, orderBy, limit_start, limit, asDict = true, orFilters } = args
             const orderByString = orderBy ? `${String(orderBy?.field)} ${orderBy?.order ?? 'asc'}` : ''
             params = {
                 fields: fields ? JSON.stringify(fields) : undefined,
                 filters: filters ? JSON.stringify(filters) : undefined,
-                or_filters: orFilters ? JSON.stringify(orFilters) : undefined,
-                order_by: orderByString,
                 group_by: groupBy,
-                limit,
+                order_by: orderByString,
                 limit_start,
+                limit,
                 as_dict: asDict,
+                or_filters: orFilters ? JSON.stringify(orFilters) : undefined,
             }
         }
 

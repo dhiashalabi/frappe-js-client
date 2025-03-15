@@ -144,12 +144,8 @@ export interface GetDocListArgs<T = FrappeDoc<object>> {
     fields?: (keyof T | '*')[]
     /** Filters to be applied - SQL AND operation */
     filters?: Filter<T>[]
-    /** Filters to be applied - SQL OR operation */
-    orFilters?: Filter<T>[]
-    /** Fetch from nth document in filtered and sorted list. Used for pagination */
-    limit_start?: number
-    /** Number of documents to be fetched. Default is 20 */
-    limit?: number
+    /** Group the results by particular field */
+    groupBy?: keyof T | (string & Record<never, never>)
     /** Sort configuration for the query */
     orderBy?: {
         /** Field to sort by */
@@ -157,8 +153,16 @@ export interface GetDocListArgs<T = FrappeDoc<object>> {
         /** Sort order */
         order?: 'asc' | 'desc'
     }
-    /** Group the results by particular field */
-    groupBy?: keyof T | (string & Record<never, never>)
+    /** Fetch from nth document in filtered and sorted list. Used for pagination */
+    limit_start?: number
+    /** Number of documents to be fetched. Default is 20 */
+    limit?: number
+    /** Parent document name for child tables */
+    parent?: string
+    /** Debug mode */
+    debug?: boolean
     /** Fetch documents as a dictionary */
     asDict?: boolean
+    /** Filters to be applied - SQL OR operation */
+    orFilters?: Filter<T>[]
 }
