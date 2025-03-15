@@ -10,7 +10,7 @@
  * ```typescript
  * import { FrappeApp } from '@frappe/sdk';
  *
- * const app = new FrappeApp('https://erp.example.com');
+ * const app = new FrappeApp('https://instance.example.com');
  * const call = app.call();
  *
  * // Make a GET request
@@ -38,7 +38,7 @@ import { handleRequest } from '../utils/axios'
  * @example
  * ```typescript
  * const call = new FrappeCall(
- *   'https://erp.example.com',
+ *   'https://instance.example.com',
  *   axiosInstance,
  *   true,
  *   () => localStorage.getItem('token'),
@@ -78,7 +78,7 @@ export class FrappeCall {
      * @example
      * ```typescript
      * const call = new FrappeCall(
-     *   'https://erp.example.com',
+     *   'https://instance.example.com',
      *   axiosInstance,
      *   true,
      *   () => localStorage.getItem('token'),

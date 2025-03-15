@@ -48,11 +48,11 @@ import { FrappeError } from '../frappe/types'
  * @example
  * ```typescript
  * // Basic usage without authentication
- * const client = getAxiosClient('https://erp.example.com');
+ * const client = getAxiosClient('https://instance.example.com');
  *
  * // With Bearer token authentication
  * const authenticatedClient = getAxiosClient(
- *   'https://erp.example.com',
+ *   'https://instance.example.com',
  *   true,
  *   () => localStorage.getItem('token'),
  *   'Bearer'
@@ -60,7 +60,7 @@ import { FrappeError } from '../frappe/types'
  *
  * // With custom headers
  * const clientWithHeaders = getAxiosClient(
- *   'https://erp.example.com',
+ *   'https://instance.example.com',
  *   false,
  *   undefined,
  *   undefined,
@@ -106,7 +106,7 @@ export function getAxiosClient(
  *   true,
  *   'Bearer',
  *   () => 'your-token',
- *   'https://erp.example.com',
+ *   'https://instance.example.com',
  *   { 'Custom-Header': 'value' }
  * );
  * ```

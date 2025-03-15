@@ -10,7 +10,7 @@
  * ```typescript
  * import { FrappeApp } from '@frappe/sdk';
  *
- * const app = new FrappeApp('https://erp.example.com');
+ * const app = new FrappeApp('https://instance.example.com');
  * const fileUploader = app.file();
  *
  * // Upload a file with progress tracking
@@ -43,7 +43,7 @@ import { getRequestHeaders, handleRequest } from '../utils/axios'
  * @example
  * ```typescript
  * const uploader = new FrappeFileUpload(
- *   'https://erp.example.com',
+ *   'https://instance.example.com',
  *   axiosInstance,
  *   true,
  *   () => localStorage.getItem('token'),
@@ -89,7 +89,7 @@ export class FrappeFileUpload {
      * @example
      * ```typescript
      * const uploader = new FrappeFileUpload(
-     *   'https://erp.example.com',
+     *   'https://instance.example.com',
      *   axiosInstance,
      *   true,
      *   () => localStorage.getItem('token'),
@@ -225,7 +225,7 @@ export class FrappeFileUpload {
  * @example
  * ```typescript
  * const downloader = new FrappeFileDownload(axiosInstance)
- * const response = await downloader.downloadFile('https://erp.example.com/files/test.pdf')
+ * const response = await downloader.downloadFile('https://instance.example.com/files/test.pdf')
  * ```
  */
 export class FrappeFileDownload {

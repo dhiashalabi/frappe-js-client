@@ -39,7 +39,7 @@ import { FrappeClient } from '../client'
  *
  * @example
  * ```typescript
- * const app = new FrappeApp('https://erp.example.com');
+ * const app = new FrappeApp('https://instance.example.com');
  *
  * // Authenticate
  * await app.auth().login('username', 'password');
@@ -90,11 +90,11 @@ export class FrappeApp {
      * @example
      * ```typescript
      * // Basic initialization
-     * const app = new FrappeApp('https://erp.example.com');
+     * const app = new FrappeApp('https://instance.example.com');
      *
      * // With token auth and custom headers
      * const app = new FrappeApp(
-     *   'https://erp.example.com',
+     *   'https://instance.example.com',
      *   {
      *     useToken: true,
      *     token: () => localStorage.getItem('token'),

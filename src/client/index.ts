@@ -9,7 +9,7 @@ import { handleRequest } from '../utils/axios'
  *
  * @example
  * ```typescript
- * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+ * const client = new FrappeClient('https://instance.example.com', axiosInstance)
  */
 export class FrappeClient {
     /** URL of the Frappe App instance */
@@ -60,7 +60,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * const docs = await client.getList('DocType', {
      *   fields: ['name', 'title'],
      * })
@@ -103,7 +103,7 @@ export class FrappeClient {
                 params: { doctype, ...params },
             },
             errorMessage: 'There was an error while fetching the documents.',
-            transformResponse: (data: { data: T[] }) => data.data,
+            transformResponse: (data: { message: T[] }) => data.message,
         })
     }
 
@@ -116,7 +116,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * const count = await client.getCount('DocType', {
      *   filters: ['name', '=', 'test'],
      * })
@@ -144,7 +144,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * const doc = await client.getDoc('DocType', 'test')
      * ```
      */
@@ -170,7 +170,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * const value = await client.getValue('DocType', 'test')
      * ```
      */
@@ -195,7 +195,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * const value = await client.getSingleValue('DocType', 'test')
      * ```
      */
@@ -221,7 +221,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.setValue('DocType', 'test', 'test', 'test')
      * ```
      */
@@ -246,7 +246,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.insertDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
@@ -271,7 +271,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.insertMany([{doctype:'DocType', name:'test', fieldname:'test', value:'test'}])
      * ```
      */
@@ -296,7 +296,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.saveDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
@@ -324,7 +324,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.renameDoc('DocType', 'test', 'test2')
      * ```
      */
@@ -349,7 +349,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.submitDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
@@ -375,7 +375,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.cancelDoc('DocType', 'test')
      * ```
      */
@@ -401,7 +401,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.deleteDoc('DocType', 'test')
      * ```
      */
@@ -426,7 +426,7 @@ export class FrappeClient {
      *
      * @example
      * ```typescript
-     * const client = new FrappeClient('https://erp.example.com', axiosInstance)
+     * const client = new FrappeClient('https://instance.example.com', axiosInstance)
      * await client.bulkUpdate([{doctype:'DocType', name:'test', fieldname:'test', value:'test'}])
      * ```
      */

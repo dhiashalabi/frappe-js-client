@@ -10,7 +10,7 @@
  * ```typescript
  * import { FrappeApp } from '@frappe/sdk';
  *
- * const app = new FrappeApp('https://erp.example.com');
+ * const app = new FrappeApp('https://instance.example.com');
  * const db = app.db();
  *
  * // Get a document
@@ -39,7 +39,7 @@ import { handleRequest } from '../utils/axios'
  * @example
  * ```typescript
  * const db = new FrappeDB(
- *   'https://erp.example.com',
+ *   'https://instance.example.com',
  *   axiosInstance,
  *   true,
  *   () => localStorage.getItem('token'),
@@ -87,7 +87,7 @@ export class FrappeDB {
      * @example
      * ```typescript
      * const db = new FrappeDB(
-     *   'https://erp.example.com',
+     *   'https://instance.example.com',
      *   axiosInstance,
      *   true,
      *   () => localStorage.getItem('token'),

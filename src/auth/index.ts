@@ -10,7 +10,7 @@
  * ```typescript
  * import { FrappeApp } from '@frappe/sdk';
  *
- * const app = new FrappeApp('https://erp.example.com');
+ * const app = new FrappeApp('https://instance.example.com');
  * const auth = app.auth();
  *
  * await auth.loginWithUsernamePassword({
@@ -37,7 +37,7 @@ import { FrappeError } from '../frappe/types'
  * @example
  * ```typescript
  * const auth = new FrappeAuth(
- *   'https://erp.example.com',
+ *   'https://instance.example.com',
  *   axiosInstance,
  *   true,
  *   () => localStorage.getItem('token'),
@@ -80,7 +80,7 @@ export class FrappeAuth {
      * @example
      * ```typescript
      * const auth = new FrappeAuth(
-     *   'https://erp.example.com',
+     *   'https://instance.example.com',
      *   axiosInstance,
      *   true,
      *   () => localStorage.getItem('token'),
