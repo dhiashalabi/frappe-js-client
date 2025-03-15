@@ -103,7 +103,7 @@ export class FrappeClient {
                 params: { doctype, ...params },
             },
             errorMessage: 'There was an error while fetching the documents.',
-            transformResponse: (data: { message: T[] }) => data.message,
+            transformResponse: (response: Record<string, T[]>) => response.message,
         })
     }
 
@@ -130,7 +130,7 @@ export class FrappeClient {
                 params: { doctype, ...args },
             },
             errorMessage: 'There was an error while fetching the count.',
-            transformResponse: (data: { data: number }) => data.data,
+            transformResponse: (response: Record<string, number>) => response.message,
         })
     }
 
@@ -156,7 +156,7 @@ export class FrappeClient {
                 params: { doctype, name, ...args },
             },
             errorMessage: 'There was an error while fetching the document.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -182,7 +182,7 @@ export class FrappeClient {
                 params: { doctype, fieldname, ...args },
             },
             errorMessage: 'There was an error while fetching the value.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -207,7 +207,7 @@ export class FrappeClient {
                 params: { doctype, field },
             },
             errorMessage: 'There was an error while fetching the value.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -234,7 +234,7 @@ export class FrappeClient {
                 params: { doctype, name, fieldname, value },
             },
             errorMessage: 'There was an error while setting the value.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -259,7 +259,7 @@ export class FrappeClient {
                 params: { doc },
             },
             errorMessage: 'There was an error while inserting the document.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -284,7 +284,7 @@ export class FrappeClient {
                 params: { docs },
             },
             errorMessage: 'There was an error while inserting the documents.',
-            transformResponse: (data: { data: T[] }) => data.data,
+            transformResponse: (response: Record<string, T[]>) => response.message,
         })
     }
 
@@ -309,7 +309,7 @@ export class FrappeClient {
                 params: { doc },
             },
             errorMessage: 'There was an error while saving the document.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -337,7 +337,7 @@ export class FrappeClient {
                 params: { doctype, old_name, new_name, merge },
             },
             errorMessage: 'There was an error while renaming the document.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -362,7 +362,7 @@ export class FrappeClient {
                 params: { doc },
             },
             errorMessage: 'There was an error while submitting the document.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -388,7 +388,7 @@ export class FrappeClient {
                 params: { doctype, name },
             },
             errorMessage: 'There was an error while canceling the document.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -414,7 +414,7 @@ export class FrappeClient {
                 params: { doctype, name },
             },
             errorMessage: 'There was an error while deleting the document.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -439,7 +439,7 @@ export class FrappeClient {
                 params: { docs },
             },
             errorMessage: 'There was an error while updating the documents.',
-            transformResponse: (data: { data: T[] }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -459,7 +459,7 @@ export class FrappeClient {
                 params,
             },
             errorMessage: 'There was an error while making the GET request.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response.message,
         })
     }
 
@@ -481,7 +481,7 @@ export class FrappeClient {
                 params,
             },
             errorMessage: 'There was an error while making the POST request.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response,
         })
     }
 
@@ -503,7 +503,7 @@ export class FrappeClient {
                 params,
             },
             errorMessage: 'There was an error while making the PUT request.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response,
         })
     }
 
@@ -523,7 +523,7 @@ export class FrappeClient {
                 params,
             },
             errorMessage: 'There was an error while making the DELETE request.',
-            transformResponse: (data: { data: T }) => data.data,
+            transformResponse: (response: Record<string, T>) => response,
         })
     }
 }

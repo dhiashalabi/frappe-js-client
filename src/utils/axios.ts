@@ -174,7 +174,7 @@ export interface RequestHandlerOptions<T = any, R = any> {
     /** Optional error message to use when request fails */
     errorMessage?: string
     /** Optional function to transform the response data */
-    transformResponse?: (data: T) => R
+    transformResponse?: (response: T) => R
 }
 
 /**
@@ -200,7 +200,7 @@ export async function handleRequest<T = any, R = T>({
     axios,
     config,
     errorMessage = 'An error occurred while processing the request.',
-    transformResponse = (data: T): R => data as any as R,
+    transformResponse = (response: T): R => response as any as R,
 }: RequestHandlerOptions<T, R>): Promise<R> {
     try {
         const response: AxiosResponse<T> = await axios.request(config)
