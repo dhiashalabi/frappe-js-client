@@ -1,3 +1,9 @@
+## [2.2.4](https://github.com/mussnad/frappe-js-client/compare/v2.2.3...v2.2.4) (2025-03-15)
+
+### Bug Fixes
+
+- Enhance validateLink method with FrappeDynamicDoc type ([f234e56](https://github.com/mussnad/frappe-js-client/commit/f234e56922f21d184a4c280eed87489a9c7f5140))
+
 ## [2.2.3](https://github.com/mussnad/frappe-js-client/compare/v2.2.2...v2.2.3) (2025-03-15)
 
 ### Bug Fixes
