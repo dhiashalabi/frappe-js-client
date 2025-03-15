@@ -239,7 +239,7 @@ export class FrappeFileDownload {
      * @throws {FrappeError} If the download fails
      */
     async downloadFile(fileURL: string): Promise<void> {
-        const response = await this.axios.get(`/api/method/download_file`, {
+        const response = await this.axios.get('/api/method/download_file', {
             params: {
                 file_url: fileURL,
             },
