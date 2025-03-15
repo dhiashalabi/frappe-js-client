@@ -31,7 +31,7 @@ import { AxiosInstance, AxiosProgressEvent } from 'axios'
 
 import { FrappeError } from '../frappe/types'
 import { FileArgs } from './types'
-import { getRequestHeaders } from '../utils/axios'
+import { getRequestHeaders, handleRequest } from '../utils/axios'
 
 /**
  * Handles file upload operations for Frappe.
@@ -238,12 +238,18 @@ export class FrappeFileDownload {
      * @returns Promise that resolves with the download response
      * @throws {FrappeError} If the download fails
      */
-    async downloadFile(fileURL: string): Promise<void> {
-        const response = await this.axios.get('/api/method/download_file', {
-            params: {
-                file_url: fileURL,
+    downloadFile(fileURL: string) {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'GET',
+                url: '/api/method/download_file',
+                params: {
+                    file_url: fileURL,
+                },
             },
+            errorMessage: 'There was an error while downloading the file.',
+            transformResponse: (data: { data: Blob }) => data.data,
         })
-        return response.data
     }
 }
