@@ -1,3 +1,9 @@
+## [2.1.3](https://github.com/mussnad/frappe-js-client/compare/v2.1.2...v2.1.3) (2025-03-15)
+
+### Bug Fixes
+
+- Update response transformation in FrappeClient and axios utility ([e20cba8](https://github.com/mussnad/frappe-js-client/commit/e20cba8f938c0526301ad67e2da98bb243d9f7c2))
+
 ## [2.1.2](https://github.com/mussnad/frappe-js-client/compare/v2.1.1...v2.1.2) (2025-03-15)
 
 ### Bug Fixes
