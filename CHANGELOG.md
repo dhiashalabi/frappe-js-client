@@ -1,3 +1,9 @@
+## [2.2.3](https://github.com/mussnad/frappe-js-client/compare/v2.2.2...v2.2.3) (2025-03-15)
+
+### Bug Fixes
+
+- Refactor validateLink method to default fields parameter ([eda7be8](https://github.com/mussnad/frappe-js-client/commit/eda7be805542b546d46f37d0ef02c9a54572df46))
+
 ## [2.2.2](https://github.com/mussnad/frappe-js-client/compare/v2.2.1...v2.2.2) (2025-03-15)
 
 ### Bug Fixes
