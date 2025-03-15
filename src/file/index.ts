@@ -29,7 +29,7 @@
 
 import { AxiosInstance, AxiosProgressEvent } from 'axios'
 
-import { Error } from '../frappe/types'
+import { FrappeError } from '../frappe/types'
 import { FileArgs } from './types'
 import { getRequestHeaders } from '../utils/axios'
 
@@ -123,7 +123,7 @@ export class FrappeFileUpload {
      * @param apiPath - Optional custom API endpoint path (defaults to 'upload_file')
      *
      * @returns Promise that resolves with the upload response
-     * @throws {Error} If the upload fails
+     * @throws {FrappeError} If the upload fails
      *
      * @example
      * ```typescript
@@ -211,7 +211,7 @@ export class FrappeFileUpload {
                     httpStatusText: error.response.statusText,
                     message: error.response.data.message ?? 'There was an error while uploading the file.',
                     exception: error.response.data.exception ?? '',
-                } as Error
+                } as FrappeError
             })
     }
 }
@@ -236,7 +236,7 @@ export class FrappeFileDownload {
      *
      * @param fileURL - The URL of the file to download
      * @returns Promise that resolves with the download response
-     * @throws {Error} If the download fails
+     * @throws {FrappeError} If the download fails
      */
     async downloadFile(fileURL: string): Promise<void> {
         const response = await this.axios.get(`/api/method/download_file`, {

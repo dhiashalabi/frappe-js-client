@@ -24,7 +24,7 @@
  * }
  * ```
  */
-export interface Error {
+export interface FrappeError {
     /** HTTP status code of the error response */
     httpStatus: number
     /** HTTP status text corresponding to the status code */

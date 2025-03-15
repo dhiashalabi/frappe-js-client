@@ -26,6 +26,7 @@
 import { AxiosInstance } from 'axios'
 
 import { ApiParams, TypedResponse } from './types'
+import { handleRequest } from '../utils/axios'
 
 /**
  * Handles HTTP API calls to Frappe endpoints.
@@ -130,18 +131,16 @@ export class FrappeCall {
             })
         }
 
-        return this.axios
-            .get(`/api/method/${path}`, { params: encodedParams })
-            .then((res) => res.data)
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: error.response.data.message ?? 'There was an error.',
-                    exception: error.response.data.exception ?? '',
-                } as Error
-            })
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'GET',
+                url: `/api/method/${path}`,
+                params: encodedParams,
+            },
+            errorMessage: 'There was an error while making the GET request.',
+            transformResponse: (data: { data: TypedResponse<T> }) => data.data,
+        })
     }
 
     /**
@@ -172,18 +171,16 @@ export class FrappeCall {
      * ```
      */
     async post<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
-        return this.axios
-            .post(`/api/method/${path}`, params)
-            .then((res) => res.data)
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: error.response.data.message ?? 'There was an error.',
-                    exception: error.response.data.exception ?? '',
-                } as Error
-            })
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'POST',
+                url: `/api/method/${path}`,
+                data: params,
+            },
+            errorMessage: 'There was an error while making the POST request.',
+            transformResponse: (data: { data: TypedResponse<T> }) => data.data,
+        })
     }
 
     /**
@@ -207,18 +204,16 @@ export class FrappeCall {
      * ```
      */
     async put<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
-        return this.axios
-            .put(`/api/method/${path}`, params)
-            .then((res) => res.data)
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: error.response.data.message ?? 'There was an error.',
-                    exception: error.response.data.exception ?? '',
-                } as Error
-            })
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'PUT',
+                url: `/api/method/${path}`,
+                data: params,
+            },
+            errorMessage: 'There was an error while making the PUT request.',
+            transformResponse: (data: { data: TypedResponse<T> }) => data.data,
+        })
     }
 
     /**
@@ -239,17 +234,15 @@ export class FrappeCall {
      * ```
      */
     async delete<T>(path: string, params?: ApiParams): Promise<TypedResponse<T>> {
-        return this.axios
-            .delete(`/api/method/${path}`, { params })
-            .then((res) => res.data)
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: error.response.data.message ?? 'There was an error.',
-                    exception: error.response.data.exception ?? '',
-                } as Error
-            })
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'DELETE',
+                url: `/api/method/${path}`,
+                params,
+            },
+            errorMessage: 'There was an error while making the DELETE request.',
+            transformResponse: (data: { data: TypedResponse<T> }) => data.data,
+        })
     }
 }
