@@ -1,3 +1,9 @@
+## [2.2.1](https://github.com/mussnad/frappe-js-client/compare/v2.2.0...v2.2.1) (2025-03-15)
+
+### Bug Fixes
+
+- Ensure fields are properly serialized in validateLink method ([b9a1fde](https://github.com/mussnad/frappe-js-client/commit/b9a1fde8d73d23ba1c06c2ad6ba97e85591bb06f))
+
 # [2.2.0](https://github.com/mussnad/frappe-js-client/compare/v2.1.4...v2.2.0) (2025-03-15)
 
 ### Features
