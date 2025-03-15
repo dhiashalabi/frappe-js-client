@@ -215,3 +215,35 @@ export class FrappeFileUpload {
             })
     }
 }
+
+/**
+ * Handles file download operations for Frappe.
+ *
+ * @class FrappeFileDownload
+ * @description Provides methods for downloading files from a Frappe instance.
+ *
+ * @example
+ * ```typescript
+ * const downloader = new FrappeFileDownload(axiosInstance)
+ * const response = await downloader.downloadFile('https://erp.example.com/files/test.pdf')
+ * ```
+ */
+export class FrappeFileDownload {
+    constructor(private readonly axios: AxiosInstance) {}
+
+    /**
+     * Downloads a file from the Frappe instance.
+     *
+     * @param fileURL - The URL of the file to download
+     * @returns Promise that resolves with the download response
+     * @throws {Error} If the download fails
+     */
+    async downloadFile(fileURL: string): Promise<void> {
+        const response = await this.axios.get(`/api/method/download_file`, {
+            params: {
+                file_url: fileURL,
+            },
+        })
+        return response.data
+    }
+}
