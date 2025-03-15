@@ -19,15 +19,36 @@ export class FrappeClient {
     /** Axios instance for making HTTP requests */
     readonly axios: AxiosInstance
 
+    /** Whether to use token based authentication */
+    readonly useToken: boolean
+
+    /** Function that returns the authentication token */
+    readonly token?: () => string
+
+    /** Type of token to be used for authentication */
+    readonly tokenType?: 'Bearer' | 'token'
+
     /**
      * Creates a new FrappeClient instance.
      *
      * @param appURL - The URL of the Frappe App instance
      * @param axios - The Axios instance for making HTTP requests
+     * @param useToken - Whether to use token based authentication
+     * @param token - Function that returns the authentication token
+     * @param tokenType - Type of token to use ('Bearer' or 'token')
      */
-    constructor(appURL: string, axios: AxiosInstance) {
+    constructor(
+        appURL: string,
+        axios: AxiosInstance,
+        useToken?: boolean,
+        token?: () => string,
+        tokenType?: 'Bearer' | 'token',
+    ) {
         this.appURL = appURL
         this.axios = axios
+        this.useToken = useToken ?? false
+        this.token = token
+        this.tokenType = tokenType ?? 'Bearer'
     }
 
     /**
@@ -226,10 +247,10 @@ export class FrappeClient {
      * @example
      * ```typescript
      * const client = new FrappeClient('https://erp.example.com', axiosInstance)
-     * await client.insert({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
+     * await client.insertDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    insert<T = object>(doc: object) {
+    insertDoc<T = object>(doc: object) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -276,10 +297,10 @@ export class FrappeClient {
      * @example
      * ```typescript
      * const client = new FrappeClient('https://erp.example.com', axiosInstance)
-     * await client.save({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
+     * await client.saveDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    save<T = object>(doc: object) {
+    saveDoc<T = object>(doc: object) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -329,10 +350,10 @@ export class FrappeClient {
      * @example
      * ```typescript
      * const client = new FrappeClient('https://erp.example.com', axiosInstance)
-     * await client.submit({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
+     * await client.submitDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    submit<T = object>(doc: object) {
+    submitDoc<T = object>(doc: object) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -355,10 +376,10 @@ export class FrappeClient {
      * @example
      * ```typescript
      * const client = new FrappeClient('https://erp.example.com', axiosInstance)
-     * await client.cancel('DocType', 'test')
+     * await client.cancelDoc('DocType', 'test')
      * ```
      */
-    cancel<T = object>(doctype: string, name: string) {
+    cancelDoc<T = object>(doctype: string, name: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -381,10 +402,10 @@ export class FrappeClient {
      * @example
      * ```typescript
      * const client = new FrappeClient('https://erp.example.com', axiosInstance)
-     * await client.delete('DocType', 'test')
+     * await client.deleteDoc('DocType', 'test')
      * ```
      */
-    delete<T = object>(doctype: string, name: string) {
+    deleteDoc<T = object>(doctype: string, name: string) {
         return handleRequest({
             axios: this.axios,
             config: {
@@ -419,6 +440,90 @@ export class FrappeClient {
             },
             errorMessage: 'There was an error while updating the documents.',
             transformResponse: (data: { data: T[] }) => data.data,
+        })
+    }
+
+    /**
+     * Makes a GET request to the Frappe API.
+     *
+     * @param path - The path to the API endpoint
+     * @param params - Optional query parameters
+     * @returns A promise that resolves to the response data
+     */
+    get<T = any>(path: string, params?: object) {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'GET',
+                url: path,
+                params,
+            },
+            errorMessage: 'There was an error while making the GET request.',
+            transformResponse: (data: { data: T }) => data.data,
+        })
+    }
+
+    /**
+     * Makes a POST request to the Frappe API.
+     *
+     * @param path - The path to the API endpoint
+     * @param data - Optional request body
+     * @param params - Optional query parameters
+     * @returns A promise that resolves to the response data
+     */
+    post<T = any>(path: string, data?: object, params?: object) {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'POST',
+                url: path,
+                data,
+                params,
+            },
+            errorMessage: 'There was an error while making the POST request.',
+            transformResponse: (data: { data: T }) => data.data,
+        })
+    }
+
+    /**
+     * Makes a PUT request to the Frappe API.
+     *
+     * @param path - The path to the API endpoint
+     * @param data - Optional request body
+     * @param params - Optional query parameters
+     * @returns A promise that resolves to the response data
+     */
+    put<T = any>(path: string, data?: object, params?: object) {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'PUT',
+                url: path,
+                data,
+                params,
+            },
+            errorMessage: 'There was an error while making the PUT request.',
+            transformResponse: (data: { data: T }) => data.data,
+        })
+    }
+
+    /**
+     * Makes a DELETE request to the Frappe API.
+     *
+     * @param path - The path to the API endpoint
+     * @param params - Optional query parameters
+     * @returns A promise that resolves to the response data
+     */
+    delete<T = any>(path: string, params?: object) {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'DELETE',
+                url: path,
+                params,
+            },
+            errorMessage: 'There was an error while making the DELETE request.',
+            transformResponse: (data: { data: T }) => data.data,
         })
     }
 }

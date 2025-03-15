@@ -28,6 +28,7 @@ import { FrappeDB } from '../db'
 import { FrappeFileUpload } from '../file'
 import { getAxiosClient } from '../utils/axios'
 import { TokenParams } from './types'
+import { FrappeClient } from '../client'
 
 /**
  * Main class for interacting with a Frappe instance.
@@ -175,5 +176,20 @@ export class FrappeApp {
      */
     call(): FrappeCall {
         return new FrappeCall(this.url, this.axios, this.useToken, this.token, this.tokenType)
+    }
+
+    /**
+     * Returns a FrappeClient object for client operations.
+     *
+     * @returns {FrappeClient} An instance of FrappeClient for handling client operations
+     *
+     * @example
+     * ```typescript
+     * const client = app.client();
+     * const response = await client.get('api/method/frappe.ping');
+     * ```
+     */
+    client(): FrappeClient {
+        return new FrappeClient(this.url, this.axios, this.useToken, this.token, this.tokenType)
     }
 }
