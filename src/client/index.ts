@@ -2,6 +2,7 @@ import { AxiosInstance } from 'axios'
 import { GetCountArgs, GetDocArgs, GetListArgs, GetValueArgs } from './types'
 import { FrappeDoc } from '../db/types'
 import { handleRequest } from '../utils/axios'
+import { FrappeDynamicDoc } from '../frappe/types'
 
 /**
  * FrappeClient is a class that provides a client for the Frappe API.
@@ -459,7 +460,7 @@ export class FrappeClient {
      * await client.validateLink('DocType', 'test', ['field1', 'field2'])
      * ```
      */
-    validateLink<T = object>(doctype: string, docname: string, fields = ['name']) {
+    validateLink<T extends FrappeDynamicDoc = FrappeDynamicDoc>(doctype: string, docname: string, fields = ['name']) {
         return handleRequest({
             axios: this.axios,
             config: {

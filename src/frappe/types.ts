@@ -67,3 +67,5 @@ export interface TokenParams {
     /** Type of token to be used for authentication */
     type: 'Bearer' | 'token'
 }
+
+export type FrappeDynamicDoc<T = any> = Record<string, T>
