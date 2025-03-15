@@ -1,3 +1,9 @@
+## [2.1.1](https://github.com/mussnad/frappe-js-client/compare/v2.1.0...v2.1.1) (2025-03-15)
+
+### Bug Fixes
+
+- Update API endpoint URLs in FrappeClient ([3191ec3](https://github.com/mussnad/frappe-js-client/commit/3191ec3651bf0ecf67f785b37f6e964c642b6d77))
+
 # [2.1.0](https://github.com/mussnad/frappe-js-client/compare/v2.0.0...v2.1.0) (2025-03-15)
 
 ### Features
