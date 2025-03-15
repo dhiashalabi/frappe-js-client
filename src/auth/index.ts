@@ -25,7 +25,7 @@
 import { AxiosInstance } from 'axios'
 
 import { AuthCredentials, AuthResponse, OTPCredentials, UserPassCredentials } from './types'
-import { Error } from '../frappe/types'
+import { FrappeError } from '../frappe/types'
 
 /**
  * Handles authentication operations for Frappe.
@@ -107,7 +107,7 @@ export class FrappeAuth {
      *
      * @param credentials - Authentication credentials (username/password or OTP)
      * @returns Promise resolving to the authentication response
-     * @throws {Error} If authentication fails
+     * @throws {FrappeError} If authentication fails
      *
      * @example
      * ```typescript
@@ -143,7 +143,7 @@ export class FrappeAuth {
                     httpStatusText: error.response.statusText,
                     message: error.response.data.message ?? 'There was an error while logging in',
                     exception: error.response.data.exception ?? '',
-                } as Error
+                } as FrappeError
             })
     }
 
@@ -152,7 +152,7 @@ export class FrappeAuth {
      *
      * @param method - The method to use to get the logged in user
      * @returns Promise resolving to the username of the logged-in user
-     * @throws {Error} If the request fails or no user is logged in
+     * @throws {FrappeError} If the request fails or no user is logged in
      *
      * @example
      * ```typescript
@@ -171,7 +171,7 @@ export class FrappeAuth {
                     httpStatusText: error.response.statusText,
                     message: 'There was an error while fetching the logged in user',
                     exception: error.response.data.exception ?? '',
-                } as Error
+                } as FrappeError
             })
     }
 
@@ -179,7 +179,7 @@ export class FrappeAuth {
      * Logs out the current user.
      *
      * @returns Promise resolving when logout is successful
-     * @throws {Error} If logout fails
+     * @throws {FrappeError} If logout fails
      *
      * @example
      * ```typescript
@@ -200,7 +200,7 @@ export class FrappeAuth {
                     httpStatusText: error.response.statusText,
                     message: error.response.data.message ?? 'There was an error while logging out',
                     exception: error.response.data.exception ?? '',
-                } as Error
+                } as FrappeError
             })
     }
 
@@ -209,7 +209,7 @@ export class FrappeAuth {
      *
      * @param user - Username or email of the user
      * @returns Promise resolving when the reset email is sent
-     * @throws {Error} If the password reset request fails
+     * @throws {FrappeError} If the password reset request fails
      *
      * @example
      * ```typescript
@@ -233,7 +233,7 @@ export class FrappeAuth {
                     httpStatusText: error.response.statusText,
                     message: error.response.data.message ?? 'There was an error sending password reset email.',
                     exception: error.response.data.exception ?? '',
-                } as Error
+                } as FrappeError
             })
     }
 }

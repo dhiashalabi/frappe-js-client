@@ -29,9 +29,9 @@
 
 import { AxiosInstance, AxiosProgressEvent } from 'axios'
 
-import { Error } from '../frappe/types'
+import { FrappeError } from '../frappe/types'
 import { FileArgs } from './types'
-import { getRequestHeaders } from '../utils/axios'
+import { getRequestHeaders, handleRequest } from '../utils/axios'
 
 /**
  * Handles file upload operations for Frappe.
@@ -123,7 +123,7 @@ export class FrappeFileUpload {
      * @param apiPath - Optional custom API endpoint path (defaults to 'upload_file')
      *
      * @returns Promise that resolves with the upload response
-     * @throws {Error} If the upload fails
+     * @throws {FrappeError} If the upload fails
      *
      * @example
      * ```typescript
@@ -211,7 +211,45 @@ export class FrappeFileUpload {
                     httpStatusText: error.response.statusText,
                     message: error.response.data.message ?? 'There was an error while uploading the file.',
                     exception: error.response.data.exception ?? '',
-                } as Error
+                } as FrappeError
             })
+    }
+}
+
+/**
+ * Handles file download operations for Frappe.
+ *
+ * @class FrappeFileDownload
+ * @description Provides methods for downloading files from a Frappe instance.
+ *
+ * @example
+ * ```typescript
+ * const downloader = new FrappeFileDownload(axiosInstance)
+ * const response = await downloader.downloadFile('https://erp.example.com/files/test.pdf')
+ * ```
+ */
+export class FrappeFileDownload {
+    constructor(private readonly axios: AxiosInstance) {}
+
+    /**
+     * Downloads a file from the Frappe instance.
+     *
+     * @param fileURL - The URL of the file to download
+     * @returns Promise that resolves with the download response
+     * @throws {FrappeError} If the download fails
+     */
+    downloadFile(fileURL: string) {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'GET',
+                url: '/api/method/download_file',
+                params: {
+                    file_url: fileURL,
+                },
+            },
+            errorMessage: 'There was an error while downloading the file.',
+            transformResponse: (data: { data: Blob }) => data.data,
+        })
     }
 }

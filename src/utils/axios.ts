@@ -24,7 +24,15 @@
  * ```
  */
 
-import axios, { AxiosInstance, RawAxiosRequestHeaders } from 'axios'
+import axios, {
+    AxiosError,
+    AxiosInstance,
+    AxiosRequestConfig,
+    AxiosResponse,
+    isAxiosError,
+    RawAxiosRequestHeaders,
+} from 'axios'
+import { FrappeError } from '../frappe/types'
 
 /**
  * Creates and configures an Axios instance with Frappe-specific settings.
@@ -153,4 +161,63 @@ export function getCSRFToken(): string | undefined {
     }
 
     return undefined
+}
+
+/**
+ * Interface for the request handler options
+ */
+export interface RequestHandlerOptions<T = any, R = any> {
+    /** The axios instance to use for the request */
+    axios: AxiosInstance
+    /** The request configuration */
+    config: AxiosRequestConfig
+    /** Optional error message to use when request fails */
+    errorMessage?: string
+    /** Optional function to transform the response data */
+    transformResponse?: (data: T) => R
+}
+
+/**
+ * Handles a request and returns the transformed response data.
+ *
+ * @param axios - The axios instance to use for the request
+ * @param config - The request configuration
+ * @param errorMessage - Optional error message to use when request fails
+ * @param transformResponse - Optional function to transform the response data
+ * @returns The transformed response data
+ *
+ * @example
+ * ```typescript
+ * const response = await handleRequest({
+ *   axios,
+ *   config,
+ *   errorMessage: 'An error occurred while processing the request.',
+ *   transformResponse: (data: T): R => data as any as R,
+ * });
+ * ```
+ */
+export async function handleRequest<T = any, R = T>({
+    axios,
+    config,
+    errorMessage = 'An error occurred while processing the request.',
+    transformResponse = (data: T): R => data as any as R,
+}: RequestHandlerOptions<T, R>): Promise<R> {
+    try {
+        const response: AxiosResponse<T> = await axios.request(config)
+        return transformResponse(response.data)
+    } catch (error) {
+        if (isAxiosError(error)) {
+            const axiosError = error as AxiosError<Partial<FrappeError>>
+            throw {
+                ...axiosError.response?.data,
+                httpStatus: axiosError.response?.status ?? 500,
+                httpStatusText: axiosError.response?.statusText ?? 'Internal Server Error',
+                message: axiosError.response?.data?.message ?? errorMessage,
+                exception:
+                    axiosError.response?.data?.exception ?? axiosError.response?.data?.exc_type ?? 'UnknownException',
+                _server_messages: axiosError.response?.data?._server_messages ?? '',
+            } as FrappeError
+        }
+        throw error
+    }
 }
