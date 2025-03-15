@@ -459,13 +459,13 @@ export class FrappeClient {
      * await client.validateLink('DocType', 'test', ['field1', 'field2'])
      * ```
      */
-    validateLink<T = object>(doctype: string, docname: string, fields?: string[]) {
+    validateLink<T = object>(doctype: string, docname: string, args?: GetDocArgs<T>) {
         return handleRequest({
             axios: this.axios,
             config: {
                 method: 'GET',
                 url: '/api/method/frappe.client.validate_link',
-                params: { doctype, docname, fields: fields ? JSON.stringify(fields) : undefined },
+                params: { doctype, docname, ...args },
             },
             errorMessage: 'There was an error while validating the link.',
             transformResponse: (response: Record<string, T>) => response.message,
