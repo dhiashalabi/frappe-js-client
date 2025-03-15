@@ -99,7 +99,7 @@ export class FrappeClient {
         return handleRequest({
             axios: this.axios,
             config: {
-                url: '/frappe.client.get_list/',
+                url: '/api/method/frappe.client.get_list/',
                 params: { doctype, ...params },
             },
             errorMessage: 'There was an error while fetching the documents.',
@@ -126,7 +126,7 @@ export class FrappeClient {
         return handleRequest({
             axios: this.axios,
             config: {
-                url: '/frappe.client.get_count/',
+                url: '/api/method/frappe.client.get_count/',
                 params: { doctype, ...args },
             },
             errorMessage: 'There was an error while fetching the count.',
@@ -152,7 +152,7 @@ export class FrappeClient {
         return handleRequest({
             axios: this.axios,
             config: {
-                url: '/frappe.client.get/',
+                url: '/api/method/frappe.client.get/',
                 params: { doctype, name, ...args },
             },
             errorMessage: 'There was an error while fetching the document.',
@@ -178,7 +178,7 @@ export class FrappeClient {
         return handleRequest({
             axios: this.axios,
             config: {
-                url: '/frappe.client.get_value/',
+                url: '/api/method/frappe.client.get_value/',
                 params: { doctype, fieldname, ...args },
             },
             errorMessage: 'There was an error while fetching the value.',
@@ -203,7 +203,7 @@ export class FrappeClient {
         return handleRequest({
             axios: this.axios,
             config: {
-                url: '/frappe.client.get_single_value/',
+                url: '/api/method/frappe.client.get_single_value/',
                 params: { doctype, field },
             },
             errorMessage: 'There was an error while fetching the value.',
@@ -230,7 +230,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'PUT',
-                url: '/frappe.client.set_value/',
+                url: '/api/method/frappe.client.set_value/',
                 params: { doctype, name, fieldname, value },
             },
             errorMessage: 'There was an error while setting the value.',
@@ -255,7 +255,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'POST',
-                url: '/frappe.client.insert/',
+                url: '/api/method/frappe.client.insert/',
                 params: { doc },
             },
             errorMessage: 'There was an error while inserting the document.',
@@ -280,7 +280,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'POST',
-                url: '/frappe.client.insert_many/',
+                url: '/api/method/frappe.client.insert_many/',
                 params: { docs },
             },
             errorMessage: 'There was an error while inserting the documents.',
@@ -305,7 +305,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'POST',
-                url: '/frappe.client.save/',
+                url: '/api/method/frappe.client.save/',
                 params: { doc },
             },
             errorMessage: 'There was an error while saving the document.',
@@ -333,7 +333,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'POST',
-                url: '/frappe.client.rename_doc/',
+                url: '/api/method/frappe.client.rename_doc/',
                 params: { doctype, old_name, new_name, merge },
             },
             errorMessage: 'There was an error while renaming the document.',
@@ -358,7 +358,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'POST',
-                url: '/frappe.client.submit/',
+                url: '/api/method/frappe.client.submit/',
                 params: { doc },
             },
             errorMessage: 'There was an error while submitting the document.',
@@ -384,7 +384,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'POST',
-                url: '/frappe.client.cancel/',
+                url: '/api/method/frappe.client.cancel/',
                 params: { doctype, name },
             },
             errorMessage: 'There was an error while canceling the document.',
@@ -410,7 +410,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'DELETE',
-                url: '/frappe.client.delete/',
+                url: '/api/method/frappe.client.delete/',
                 params: { doctype, name },
             },
             errorMessage: 'There was an error while deleting the document.',
@@ -435,7 +435,7 @@ export class FrappeClient {
             axios: this.axios,
             config: {
                 method: 'PUT',
-                url: '/frappe.client.bulk_update/',
+                url: '/api/method/frappe.client.bulk_update/',
                 params: { docs },
             },
             errorMessage: 'There was an error while updating the documents.',
