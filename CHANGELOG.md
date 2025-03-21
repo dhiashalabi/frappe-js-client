@@ -1,3 +1,27 @@
+# [2.3.0](https://github.com/mussnad/frappe-js-client/compare/v2.2.5...v2.3.0) (2025-03-21)
+
+### Bug Fixes
+
+- Enhance file upload and download methods for improved type safety and error handling ([c9ced7a](https://github.com/mussnad/frappe-js-client/commit/c9ced7a3b2ab43744e24ef00c751aca7540a3e49))
+- Enhance type safety in FrappeCall methods ([7a46351](https://github.com/mussnad/frappe-js-client/commit/7a46351f168d9e48cade5c2cdb71197a7349fed0))
+- Improve type definitions in client types for better clarity and consistency ([f93d36a](https://github.com/mussnad/frappe-js-client/commit/f93d36a7b15daf254c6881b7bcf2594a36e6b120))
+- Refactor FrappeDB methods for improved type safety and response handling ([cf5eabd](https://github.com/mussnad/frappe-js-client/commit/cf5eabdbae2a8dd7acc533055c53baa8e008ebaf))
+- Refactor FrappeDocument type for improved clarity and structure ([4803998](https://github.com/mussnad/frappe-js-client/commit/4803998860e30746fc9dddc9d64982c00970190d))
+- Refactor type definitions in db/types.ts for improved clarity and flexibility ([9f0fa58](https://github.com/mussnad/frappe-js-client/commit/9f0fa58cbff6f33a16f9e4da0160edf9825409ad))
+- Remove redundant test for X-Frappe-Site-Name header ([a33a7b6](https://github.com/mussnad/frappe-js-client/commit/a33a7b6efcdaaafd2baf1533ad64f2d266045564))
+- Simplify authentication methods by utilizing handleRequest utility ([11466b3](https://github.com/mussnad/frappe-js-client/commit/11466b348231455a99e5520eccee52e0c15b7e55))
+- Update FrappeClient methods for improved type safety and response handling ([90834b0](https://github.com/mussnad/frappe-js-client/commit/90834b08b7bd7ea87e2143d467a82784e2067c3a))
+
+### Features
+
+- Add permission handling to FrappeApp class ([f89623b](https://github.com/mussnad/frappe-js-client/commit/f89623b16f5238027bb616e32f867d5bea9a3c61))
+- Add PermissionType and Permissions interfaces for permission management ([e1d665f](https://github.com/mussnad/frappe-js-client/commit/e1d665fc9d4a4e7583eee2fff8825d3df8bbb323))
+- Add utility function to extract site name from appURL ([d60fdaf](https://github.com/mussnad/frappe-js-client/commit/d60fdafd45fc666ba8bb0ef0045df0e868dd01c7))
+- Enhance Axios client configuration and header management ([6a0f3cf](https://github.com/mussnad/frappe-js-client/commit/6a0f3cffa0fe736cb10121b323eeffd990df2337))
+- Extend AuthResponse interface to support dynamic fields ([19a409c](https://github.com/mussnad/frappe-js-client/commit/19a409cbd024d91dd710660ef5e5262ce9ce4c71))
+- Implement Permission class for managing document permissions ([a1f944c](https://github.com/mussnad/frappe-js-client/commit/a1f944c83d62d040e3d7f29077dea339dab4d762))
+- Introduce ApiData type for enhanced API call structure ([f299338](https://github.com/mussnad/frappe-js-client/commit/f2993380613f4d85498b6b1801966aef8f3d6ae4))
+
 ## [2.2.5](https://github.com/mussnad/frappe-js-client/compare/v2.2.4...v2.2.5) (2025-03-15)
 
 ### Bug Fixes
