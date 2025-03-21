@@ -29,9 +29,9 @@
 
 import { AxiosInstance, AxiosProgressEvent } from 'axios'
 
-import { FrappeError } from '../frappe/types'
 import { FileArgs } from './types'
 import { getRequestHeaders, handleRequest } from '../utils/axios'
+import { FrappeDocument } from '../frappe/types'
 
 /**
  * Handles file upload operations for Frappe.
@@ -157,12 +157,12 @@ export class FrappeFileUpload {
      * );
      * ```
      */
-    async uploadFile(
+    uploadFile<T extends FrappeDocument = FrappeDocument>(
         file: File,
         args: FileArgs,
         onProgress?: (bytesUploaded: number, totalBytes?: number, progress?: AxiosProgressEvent) => void,
         apiPath = 'upload_file',
-    ) {
+    ): Promise<T> {
         const formData = new FormData()
         if (file) formData.append('file', file, file.name)
 
@@ -192,8 +192,11 @@ export class FrappeFileUpload {
             })
         }
 
-        return this.axios
-            .post(`/api/method/${apiPath}`, formData, {
+        return handleRequest<{ data: { message: T } }, T>({
+            axios: this.axios,
+            config: {
+                url: `/api/method/${apiPath}`,
+                data: formData,
                 onUploadProgress: (progressEvent) => {
                     if (onProgress) {
                         onProgress(progressEvent.loaded, progressEvent.total, progressEvent)
@@ -203,16 +206,10 @@ export class FrappeFileUpload {
                     ...getRequestHeaders(this.useToken, this.tokenType, this.token, this.appURL, this.customHeaders),
                     'Content-Type': 'multipart/form-data',
                 },
-            })
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: error.response.data.message ?? 'There was an error while uploading the file.',
-                    exception: error.response.data.exception ?? '',
-                } as FrappeError
-            })
+            },
+            errorMessage: 'There was an error while uploading the file.',
+            transformResponse: (response: { data: { message: T } }) => response.data.message,
+        })
     }
 }
 
@@ -238,8 +235,8 @@ export class FrappeFileDownload {
      * @returns Promise that resolves with the download response
      * @throws {FrappeError} If the download fails
      */
-    downloadFile(fileURL: string) {
-        return handleRequest({
+    downloadFile(fileURL: string): Promise<Blob> {
+        return handleRequest<{ data: Blob }, Blob>({
             axios: this.axios,
             config: {
                 method: 'GET',
@@ -249,7 +246,7 @@ export class FrappeFileDownload {
                 },
             },
             errorMessage: 'There was an error while downloading the file.',
-            transformResponse: (data: { data: Blob }) => data.data,
+            transformResponse: (response: { data: Blob }) => response.data,
         })
     }
 }
