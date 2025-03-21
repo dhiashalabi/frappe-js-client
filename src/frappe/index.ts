@@ -29,6 +29,7 @@ import { FrappeFileUpload } from '../file'
 import { getAxiosClient } from '../utils/axios'
 import { TokenParams } from './types'
 import { FrappeClient } from '../client'
+import { Permission } from '../permission'
 
 /**
  * Main class for interacting with a Frappe instance.
@@ -191,5 +192,20 @@ export class FrappeApp {
      */
     client(): FrappeClient {
         return new FrappeClient(this.url, this.axios, this.useToken, this.token, this.tokenType)
+    }
+
+    /**
+     * Returns a Permission object for permission operations.
+     *
+     * @returns {Permission} An instance of Permission for handling permission operations
+     *
+     * @example
+     * ```typescript
+     * const permission = app.permission();
+     * const hasPermission = await permission.hasPermission('User', 'administrator', 'read');
+     * ```
+     */
+    perms(): Permission {
+        return new Permission(this.url, this.axios, this.useToken, this.token, this.tokenType)
     }
 }
