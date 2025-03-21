@@ -17,3 +17,10 @@ export interface TypedResponse<T> extends FrappeResponse {
  * @template V - Value type, must be string, number, boolean, or object
  */
 export type ApiParams = Record<string, string | number | boolean | object>
+
+/**
+ * Generic data type for API calls
+ * @template K - Key type, must be string
+ * @template V - Value type, must be string, number, boolean, or object
+ */
+export type ApiData = Record<string, string | number | boolean | object>
