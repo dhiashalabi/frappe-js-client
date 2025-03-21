@@ -1,3 +1,10 @@
+/**
+ * The type of permission.
+ *
+ * @enum {string}
+ * @readonly
+ * @enum {string}
+ */
 export type PermissionType =
     | 'select'
     | 'read'
@@ -14,6 +21,12 @@ export type PermissionType =
     | 'export'
     | 'share'
 
+/**
+ * The permissions for a document.
+ *
+ * @interface Permissions
+ * @readonly
+ */
 export interface Permissions {
     select: number
     read: number
@@ -31,6 +44,12 @@ export interface Permissions {
     share: number
 }
 
+/**
+ * The response for has permission.
+ *
+ * @interface HasPermissionResponse
+ * @readonly
+ */
 export interface HasPermissionResponse {
     has_permission: boolean
 }
