@@ -75,7 +75,7 @@ export interface TokenParams {
  * @description Standardized document structure returned by Frappe backend services.
  * Contains all fields of the document.
  */
-export type FrappeDocument<T = any> = T & {
+export type FrappeDocument = {
     /** The document type of the document */
     doctype?: string
     /** The name of the document */

@@ -77,7 +77,10 @@ export function getAxiosClient(
 ): AxiosInstance {
     return axios.create({
         baseURL: appURL,
-        headers: getRequestHeaders(useToken, tokenType, token, appURL, customHeaders),
+        headers: {
+            ...getRequestHeaders(useToken, tokenType, token, appURL, customHeaders),
+            'Content-Type': 'application/json; charset=utf-8',
+        },
         withCredentials: true,
     })
 }
@@ -129,15 +132,16 @@ export function getRequestHeaders(
         headers.Authorization = `${tokenType} ${token()}`
     }
 
+    // Extract site name from appURL if provided
+    const siteName = getSiteName(appURL)
+
     // in case of browser environments
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-        if (window.location) {
-            if (appURL && appURL !== window.location.origin) {
-                // Do not set X-Frappe-Site-Name
-            } else {
-                headers['X-Frappe-Site-Name'] = window.location.hostname
-            }
+        // Only set X-Frappe-Site-Name if appURL matches window origin
+        if (!appURL || new URL(appURL).origin === window.location.origin) {
+            headers['X-Frappe-Site-Name'] = siteName || window.location.hostname
         }
+
         if (window.csrf_token && window.csrf_token !== '{{ csrf_token }}') {
             headers['X-Frappe-CSRF-Token'] = window.csrf_token
         }
@@ -219,5 +223,25 @@ export async function handleRequest<T = any, R = T>({
             } as FrappeError
         }
         throw error
+    }
+}
+
+/**
+ * Extracts the site name from the appURL.
+ *
+ * @param appURL - The base URL of the application
+ * @returns The site name
+ */
+export function getSiteName(appURL: string | undefined): string | undefined {
+    if (!appURL) {
+        return undefined
+    }
+
+    try {
+        const url = new URL(appURL)
+        return url.hostname
+    } catch (error) {
+        console.warn(`Invalid appURL provided: ${appURL}`, error)
+        return undefined
     }
 }

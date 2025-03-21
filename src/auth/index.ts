@@ -25,7 +25,7 @@
 import { AxiosInstance } from 'axios'
 
 import { AuthCredentials, AuthResponse, OTPCredentials, UserPassCredentials } from './types'
-import { FrappeError } from '../frappe/types'
+import { handleRequest } from '../utils/axios'
 
 /**
  * Handles authentication operations for Frappe.
@@ -126,25 +126,23 @@ export class FrappeAuth {
      * });
      * ```
      */
-    async loginWithUsernamePassword(credentials: AuthCredentials): Promise<AuthResponse> {
-        return this.axios
-            .post('/api/method/login', {
-                usr: (credentials as UserPassCredentials).username,
-                pwd: (credentials as UserPassCredentials).password,
-                otp: (credentials as OTPCredentials).otp,
-                tmp_id: (credentials as OTPCredentials).tmp_id,
-                device: credentials.device,
-            })
-            .then((res) => res.data as AuthResponse)
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: error.response.data.message ?? 'There was an error while logging in',
-                    exception: error.response.data.exception ?? '',
-                } as FrappeError
-            })
+    loginWithUsernamePassword<T extends AuthResponse = AuthResponse>(credentials: AuthCredentials): Promise<T> {
+        return handleRequest<Record<string, T>, T>({
+            axios: this.axios,
+            config: {
+                method: 'POST',
+                url: '/api/method/login',
+                data: {
+                    usr: (credentials as UserPassCredentials).username,
+                    pwd: (credentials as UserPassCredentials).password,
+                    otp: (credentials as OTPCredentials).otp,
+                    tmp_id: (credentials as OTPCredentials).tmp_id,
+                    device: credentials.device,
+                },
+            },
+            errorMessage: 'There was an error while logging in',
+            transformResponse: (response: Record<string, T>) => response.data,
+        })
     }
 
     /**
@@ -160,19 +158,15 @@ export class FrappeAuth {
      * console.log(`Logged in as: ${username}`);
      * ```
      */
-    async getLoggedInUser(method?: string): Promise<string> {
-        return this.axios
-            .get(`/api/method/${method ?? 'frappe.auth.get_logged_user'}`)
-            .then((res) => res.data.message)
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: 'There was an error while fetching the logged in user',
-                    exception: error.response.data.exception ?? '',
-                } as FrappeError
-            })
+    getLoggedInUser<T = any>(method?: string): Promise<T> {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                url: `/api/method/${method ?? 'frappe.auth.get_logged_user'}`,
+            },
+            errorMessage: 'There was an error while fetching the logged in user',
+            transformResponse: (response: Record<string, T>) => response.message,
+        })
     }
 
     /**
@@ -187,21 +181,17 @@ export class FrappeAuth {
      * console.log('User logged out successfully');
      * ```
      */
-    async logout(): Promise<void> {
-        return this.axios
-            .post('/api/method/logout', {})
-            .then(() => {
-                return
-            })
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: error.response.data.message ?? 'There was an error while logging out',
-                    exception: error.response.data.exception ?? '',
-                } as FrappeError
-            })
+    logout<T extends AuthResponse = AuthResponse>(): Promise<T> {
+        return handleRequest<Record<string, T>, T>({
+            axios: this.axios,
+            config: {
+                method: 'POST',
+                url: '/api/method/logout',
+                data: {},
+            },
+            errorMessage: 'There was an error while logging out',
+            transformResponse: (response: Record<string, T>) => response.data,
+        })
     }
 
     /**
@@ -217,23 +207,19 @@ export class FrappeAuth {
      * console.log('Password reset email sent');
      * ```
      */
-    async forgetPassword(user: string): Promise<void> {
-        return this.axios
-            .post('/', {
-                cmd: 'frappe.core.doctype.user.user.reset_password',
-                user,
-            })
-            .then(() => {
-                return
-            })
-            .catch((error) => {
-                throw {
-                    ...error.response.data,
-                    httpStatus: error.response.status,
-                    httpStatusText: error.response.statusText,
-                    message: error.response.data.message ?? 'There was an error sending password reset email.',
-                    exception: error.response.data.exception ?? '',
-                } as FrappeError
-            })
+    forgetPassword<T = any>(user: string): Promise<T> {
+        return handleRequest({
+            axios: this.axios,
+            config: {
+                method: 'POST',
+                url: '/',
+                data: {
+                    cmd: 'frappe.core.doctype.user.user.reset_password',
+                    user,
+                },
+            },
+            errorMessage: 'There was an error while sending password reset email',
+            transformResponse: (response: Record<string, T>) => response.data,
+        })
     }
 }

@@ -120,7 +120,7 @@ export class FrappeCall {
      * });
      * ```
      */
-    get<T>(path: string, params?: ApiParams) {
+    get<T extends TypedResponse<any> = TypedResponse<any>>(path: string, params?: ApiParams): Promise<T> {
         const encodedParams = new URLSearchParams()
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
@@ -131,7 +131,7 @@ export class FrappeCall {
             })
         }
 
-        return handleRequest({
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'GET',
@@ -139,7 +139,7 @@ export class FrappeCall {
                 params: encodedParams,
             },
             errorMessage: 'There was an error while making the GET request.',
-            transformResponse: (data: { data: TypedResponse<T> }) => data.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 
@@ -170,8 +170,8 @@ export class FrappeCall {
      * });
      * ```
      */
-    post<T>(path: string, params?: ApiParams) {
-        return handleRequest({
+    post<T extends TypedResponse<any> = TypedResponse<any>>(path: string, params?: ApiParams): Promise<T> {
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -179,7 +179,7 @@ export class FrappeCall {
                 data: params,
             },
             errorMessage: 'There was an error while making the POST request.',
-            transformResponse: (data: { data: TypedResponse<T> }) => data.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 
@@ -203,8 +203,8 @@ export class FrappeCall {
      * });
      * ```
      */
-    put<T>(path: string, params?: ApiParams) {
-        return handleRequest({
+    put<T extends TypedResponse<any> = TypedResponse<any>>(path: string, params?: ApiParams): Promise<T> {
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'PUT',
@@ -212,7 +212,7 @@ export class FrappeCall {
                 data: params,
             },
             errorMessage: 'There was an error while making the PUT request.',
-            transformResponse: (data: { data: TypedResponse<T> }) => data.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 
@@ -233,8 +233,8 @@ export class FrappeCall {
      * });
      * ```
      */
-    delete<T>(path: string, params?: ApiParams) {
-        return handleRequest({
+    delete<T extends TypedResponse<any> = TypedResponse<any>>(path: string, params?: ApiParams): Promise<T> {
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'DELETE',
@@ -242,7 +242,7 @@ export class FrappeCall {
                 params,
             },
             errorMessage: 'There was an error while making the DELETE request.',
-            transformResponse: (data: { data: TypedResponse<T> }) => data.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 }

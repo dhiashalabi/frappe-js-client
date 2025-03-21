@@ -26,8 +26,9 @@
 
 import { AxiosInstance } from 'axios'
 
-import { Filter, FrappeDoc, GetDocListArgs, GetLastDocArgs } from './types'
+import { FrappeDoc, GetDocListArgs, GetLastDocArgs } from './types'
 import { handleRequest } from '../utils/axios'
+import { FrappeDocument } from '../frappe/types'
 
 /**
  * Main class for database operations in Frappe.
@@ -126,15 +127,15 @@ export class FrappeDB {
      * const task = await db.getDoc('Task', 'TASK-001');
      * ```
      */
-    getDoc<T = object>(doctype: string, docname = '') {
-        return handleRequest({
+    getDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, docname = ''): Promise<T> {
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'GET',
                 url: `/api/resource/${doctype}/${encodeURIComponent(docname)}`,
             },
             errorMessage: 'There was an error while fetching the document.',
-            transformResponse: (data: { data: FrappeDoc<T> }) => data.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 
@@ -164,7 +165,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    getDocList<T = object, K = FrappeDoc<T>>(doctype: string, args?: GetDocListArgs<K>) {
+    getDocList<T extends FrappeDocument = FrappeDocument>(doctype: string, args?: GetDocListArgs): Promise<T[]> {
         let params = {}
 
         if (args) {
@@ -182,7 +183,7 @@ export class FrappeDB {
             }
         }
 
-        return handleRequest({
+        return handleRequest<{ data: T[] }, T[]>({
             axios: this.axios,
             config: {
                 method: 'GET',
@@ -190,7 +191,7 @@ export class FrappeDB {
                 params,
             },
             errorMessage: 'There was an error while fetching the documents.',
-            transformResponse: (data: { data: FrappeDoc<T>[] }) => data.data,
+            transformResponse: (response: { data: T[] }) => response.data,
         })
     }
 
@@ -220,8 +221,8 @@ export class FrappeDB {
      * });
      * ```
      */
-    createDoc<T = object>(doctype: string, value: T) {
-        return handleRequest({
+    createDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, value: T): Promise<T> {
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -229,7 +230,7 @@ export class FrappeDB {
                 data: value,
             },
             errorMessage: 'There was an error while creating the document.',
-            transformResponse: (data: { data: FrappeDoc<T> }) => data.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 
@@ -258,8 +259,12 @@ export class FrappeDB {
      * });
      * ```
      */
-    updateDoc<T = object>(doctype: string, docname: string | null, value: Partial<T>) {
-        return handleRequest({
+    updateDoc<T extends FrappeDocument = FrappeDocument>(
+        doctype: string,
+        docname: string | null,
+        value: Partial<T>,
+    ): Promise<T> {
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'PUT',
@@ -267,7 +272,7 @@ export class FrappeDB {
                 data: value,
             },
             errorMessage: 'There was an error while updating the document.',
-            transformResponse: (data: { data: FrappeDoc<T> }) => data.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 
@@ -288,69 +293,15 @@ export class FrappeDB {
      * await db.deleteDoc('User', 'john@example.com');
      * ```
      */
-    deleteDoc(doctype: string, docname?: string | null) {
-        return handleRequest({
+    deleteDoc(doctype: string, docname?: string | null): Promise<string> {
+        return handleRequest<{ data: string }, string>({
             axios: this.axios,
             config: {
                 method: 'DELETE',
                 url: `/api/resource/${doctype}/${docname ? encodeURIComponent(docname) : docname}`,
             },
             errorMessage: 'There was an error while deleting the document.',
-            transformResponse: (data: { data: { message: string } }) => data.data,
-        })
-    }
-
-    /**
-     * Gets the count of documents matching the specified filters.
-     *
-     * @template T - Type of the document for filter fields
-     * @param doctype - Name of the doctype
-     * @param filters - Optional filters to apply
-     * @param cache - Whether to cache the result
-     * @param debug - Whether to enable debug mode
-     * @returns Promise resolving to the count
-     * @throws {FrappeError} If count retrieval fails
-     *
-     * @example
-     * ```typescript
-     * // Count all open tasks
-     * const openTasks = await db.getCount('Task', [
-     *   ['status', '=', 'Open']
-     * ]);
-     *
-     * // Count with caching
-     * const userCount = await db.getCount('User',
-     *   [['user_type', '=', 'System User']],
-     *   true
-     * );
-     * ```
-     */
-    getCount<T = object>(doctype: string, filters?: Filter<T>[], cache = false, debug = false) {
-        const params: Record<string, any> = {
-            doctype,
-            filters: [],
-        }
-
-        if (cache) {
-            params.cache = cache
-        }
-
-        if (debug) {
-            params.debug = debug
-        }
-        if (filters) {
-            params.filters = filters ? JSON.stringify(filters) : undefined
-        }
-
-        return handleRequest({
-            axios: this.axios,
-            config: {
-                method: 'GET',
-                url: '/api/method/frappe.client.get_count',
-                params,
-            },
-            errorMessage: 'There was an error while getting the count.',
-            transformResponse: (data: { data: number }) => data.data,
+            transformResponse: (response: { data: string }) => response.data,
         })
     }
 
@@ -375,8 +326,11 @@ export class FrappeDB {
      * });
      * ```
      */
-    async getLastDoc<T = object>(doctype: string, args?: GetLastDocArgs<FrappeDoc<T>>): Promise<FrappeDoc<T>> {
-        let queryArgs: GetLastDocArgs<FrappeDoc<T>> = {
+    async getLastDoc<T extends FrappeDocument = FrappeDocument>(
+        doctype: string,
+        args?: GetLastDocArgs<FrappeDoc>,
+    ): Promise<T> {
+        let queryArgs: GetLastDocArgs<FrappeDoc> = {
             orderBy: {
                 field: 'creation',
                 order: 'desc',
@@ -389,7 +343,7 @@ export class FrappeDB {
             }
         }
 
-        const getDocLists = await this.getDocList<{ name: string }, FrappeDoc<T>>(doctype, {
+        const getDocLists = await this.getDocList<T>(doctype, {
             ...queryArgs,
             limit: 1,
             fields: ['name'],
@@ -398,6 +352,6 @@ export class FrappeDB {
             return this.getDoc<T>(doctype, getDocLists[0].name)
         }
 
-        return {} as FrappeDoc<T>
+        return {} as T
     }
 }

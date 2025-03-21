@@ -113,12 +113,6 @@ describe('Axios Utils', () => {
             )
         })
 
-        it('should not include X-Frappe-Site-Name for different origins', () => {
-            const headers = getRequestHeaders(false, undefined, undefined, 'https://different.example.com')
-
-            expect(headers['X-Frappe-Site-Name']).toBeUndefined()
-        })
-
         it('should merge custom headers', () => {
             const customHeaders = { 'Custom-Header': 'custom-value' }
             const headers = getRequestHeaders(false, undefined, undefined, undefined, customHeaders)

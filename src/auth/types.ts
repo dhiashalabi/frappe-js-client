@@ -62,6 +62,8 @@ export interface AuthResponse {
     }
     /** Type of exception if authentication fails */
     exc_type?: string
+    /** Additional dynamic fields returned by the API */
+    [key: string]: any
 }
 
 /**

@@ -1,6 +1,7 @@
-import { FrappeDoc, Filter } from '../db/types'
+import { Filter, FrappeDoc } from '../db/types'
+import { FrappeDocument } from '../frappe/types'
 
-export interface GetListArgs<T = FrappeDoc<object>> {
+export interface GetListArgs<T = FrappeDoc> {
     /** Fields to be fetched */
     fields?: (keyof T | '*')[]
     /** Filters to be applied - SQL AND operation */
@@ -28,7 +29,7 @@ export interface GetListArgs<T = FrappeDoc<object>> {
     orFilters?: Filter<T>[]
 }
 
-export interface GetCountArgs<T = FrappeDoc<object>> {
+export interface GetCountArgs<T = FrappeDoc> {
     /** Filters to be applied - SQL AND operation */
     filters?: Filter<T>[] | string
     /** Debug mode */
@@ -37,16 +38,14 @@ export interface GetCountArgs<T = FrappeDoc<object>> {
     cache?: boolean
 }
 
-export interface GetDocArgs<T = FrappeDoc<object>> {
-    /** Document name to fetch */
-    name: string
+export interface GetDocArgs<T = FrappeDoc> {
     /** Fields to be fetched */
     fields?: (keyof T | '*')[]
     /** Debug mode */
     parent?: string
 }
 
-export interface GetValueArgs<T = FrappeDoc<object>> {
+export interface GetValueArgs<T = FrappeDoc> {
     /** Filters to be applied - SQL AND operation */
     filters: Filter<T>[]
     /** Fetch documents as a dictionary */
@@ -55,4 +54,30 @@ export interface GetValueArgs<T = FrappeDoc<object>> {
     debug?: boolean
     /** Parent document name for child tables */
     parent?: string
+}
+
+/**
+ * Response type for the getCount method
+ */
+export interface GetCountResponse {
+    /** The count of documents */
+    count: number
+}
+
+/**
+ * Response type for rename document operation
+ */
+export interface RenameDocResponse {
+    message: string
+    _server_messages: string
+}
+
+/**
+ * Response type for bulk update operation
+ */
+export interface BulkUpdateResponse {
+    failed_docs: Array<{
+        doc: FrappeDocument
+        exc: string
+    }>
 }
