@@ -226,6 +226,12 @@ export async function handleRequest<T = any, R = T>({
     }
 }
 
+/**
+ * Extracts the site name from the appURL.
+ *
+ * @param appURL - The base URL of the application
+ * @returns The site name
+ */
 export function getSiteName(appURL: string | undefined): string | undefined {
     if (!appURL) {
         return undefined
