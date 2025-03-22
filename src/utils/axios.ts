@@ -212,7 +212,6 @@ export async function handleRequest<T = any, R = T>({
     } catch (error) {
         if (isAxiosError(error)) {
             const axiosError = error as AxiosError<Partial<FrappeError>>
-            const serverMessages = axiosError.response?.data?._server_messages
 
             throw {
                 ...axiosError.response?.data,
@@ -221,7 +220,7 @@ export async function handleRequest<T = any, R = T>({
                 message: axiosError.response?.data?.message ?? errorMessage,
                 exception:
                     axiosError.response?.data?.exception ?? axiosError.response?.data?.exc_type ?? 'UnknownException',
-                _server_messages: parseServerMessages(serverMessages),
+                _server_messages: parseServerMessages(axiosError.response?.data?._server_messages),
             } as FrappeError
         }
         throw error
