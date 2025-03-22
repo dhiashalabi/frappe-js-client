@@ -127,7 +127,7 @@ export class FrappeAuth {
      * ```
      */
     loginWithUsernamePassword<T extends AuthResponse = AuthResponse>(credentials: AuthCredentials): Promise<T> {
-        return handleRequest<Record<string, T>, T>({
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -141,7 +141,7 @@ export class FrappeAuth {
                 },
             },
             errorMessage: 'There was an error while logging in',
-            transformResponse: (response: Record<string, T>) => response.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 
@@ -159,13 +159,13 @@ export class FrappeAuth {
      * ```
      */
     getLoggedInUser<T = any>(method?: string): Promise<T> {
-        return handleRequest({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 url: `/api/method/${method ?? 'frappe.auth.get_logged_user'}`,
             },
             errorMessage: 'There was an error while fetching the logged in user',
-            transformResponse: (response: Record<string, T>) => response.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -182,7 +182,7 @@ export class FrappeAuth {
      * ```
      */
     logout<T extends AuthResponse = AuthResponse>(): Promise<T> {
-        return handleRequest<Record<string, T>, T>({
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -190,7 +190,7 @@ export class FrappeAuth {
                 data: {},
             },
             errorMessage: 'There was an error while logging out',
-            transformResponse: (response: Record<string, T>) => response.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 
@@ -208,7 +208,7 @@ export class FrappeAuth {
      * ```
      */
     forgetPassword<T = any>(user: string): Promise<T> {
-        return handleRequest({
+        return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -219,7 +219,7 @@ export class FrappeAuth {
                 },
             },
             errorMessage: 'There was an error while sending password reset email',
-            transformResponse: (response: Record<string, T>) => response.data,
+            transformResponse: (response: { data: T }) => response.data,
         })
     }
 }

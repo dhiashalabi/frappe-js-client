@@ -133,14 +133,14 @@ export class FrappeClient {
      * ```
      */
     getCount<T extends GetCountResponse = GetCountResponse>(doctype: string, args?: GetCountArgs): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 url: '/api/method/frappe.client.get_count/',
                 params: { doctype, ...args },
             },
             errorMessage: 'There was an error while fetching the count.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -159,14 +159,14 @@ export class FrappeClient {
      * ```
      */
     getDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, name: string, args?: GetDocArgs): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 url: '/api/method/frappe.client.get/',
                 params: { doctype, name, ...args },
             },
             errorMessage: 'There was an error while fetching the document.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -189,14 +189,14 @@ export class FrappeClient {
         fieldname: string,
         args?: GetValueArgs,
     ): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 url: '/api/method/frappe.client.get_value/',
                 params: { doctype, fieldname, ...args },
             },
             errorMessage: 'There was an error while fetching the value.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -214,14 +214,14 @@ export class FrappeClient {
      * ```
      */
     getSingleValue<T extends FrappeDocument = FrappeDocument>(doctype: string, field: string): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 url: '/api/method/frappe.client.get_single_value/',
                 params: { doctype, field },
             },
             errorMessage: 'There was an error while fetching the value.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -245,7 +245,7 @@ export class FrappeClient {
         fieldname: string,
         value: string,
     ): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 method: 'PUT',
@@ -253,7 +253,7 @@ export class FrappeClient {
                 params: { doctype, name, fieldname, value },
             },
             errorMessage: 'There was an error while setting the value.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -270,7 +270,7 @@ export class FrappeClient {
      * ```
      */
     insertDoc<T extends FrappeDocument = FrappeDocument>(doc: T): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -278,7 +278,7 @@ export class FrappeClient {
                 params: { doc },
             },
             errorMessage: 'There was an error while inserting the document.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -295,7 +295,7 @@ export class FrappeClient {
      * ```
      */
     insertMany<T extends FrappeDocument = FrappeDocument>(docs: T[]): Promise<string[]> {
-        return handleRequest<{ data: { message: string[] } }, string[]>({
+        return handleRequest<{ message: string[] }, string[]>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -303,7 +303,7 @@ export class FrappeClient {
                 params: { docs },
             },
             errorMessage: 'There was an error while inserting the documents.',
-            transformResponse: (response: { data: { message: string[] } }) => response.data.message,
+            transformResponse: (response: { message: string[] }) => response.message,
         })
     }
 
@@ -320,7 +320,7 @@ export class FrappeClient {
      * ```
      */
     saveDoc<T extends FrappeDocument = FrappeDocument>(doc: T): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -328,7 +328,7 @@ export class FrappeClient {
                 params: { doc },
             },
             errorMessage: 'There was an error while saving the document.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -353,7 +353,7 @@ export class FrappeClient {
         new_name: string,
         merge = false,
     ): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -361,7 +361,7 @@ export class FrappeClient {
                 params: { doctype, old_name, new_name, merge },
             },
             errorMessage: 'There was an error while renaming the document.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -378,7 +378,7 @@ export class FrappeClient {
      * ```
      */
     submitDoc<T extends FrappeDocument = FrappeDocument>(doc: T): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -386,7 +386,7 @@ export class FrappeClient {
                 params: { doc },
             },
             errorMessage: 'There was an error while submitting the document.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -404,7 +404,7 @@ export class FrappeClient {
      * ```
      */
     cancelDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, name: string): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 method: 'POST',
@@ -412,7 +412,7 @@ export class FrappeClient {
                 params: { doctype, name },
             },
             errorMessage: 'There was an error while canceling the document.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
@@ -430,7 +430,7 @@ export class FrappeClient {
      * ```
      */
     deleteDoc(doctype: string, name: string): Promise<void> {
-        return handleRequest<{ data: { message: never } }, void>({
+        return handleRequest<{ message: never }, void>({
             axios: this.axios,
             config: {
                 method: 'DELETE',
@@ -460,7 +460,7 @@ export class FrappeClient {
      * ```
      */
     bulkUpdate<T extends FrappeDocument = FrappeDocument>(docs: T[]): Promise<BulkUpdateResponse> {
-        return handleRequest<{ data: { message: BulkUpdateResponse } }, BulkUpdateResponse>({
+        return handleRequest<{ message: BulkUpdateResponse }, BulkUpdateResponse>({
             axios: this.axios,
             config: {
                 method: 'PUT',
@@ -468,7 +468,7 @@ export class FrappeClient {
                 params: { docs },
             },
             errorMessage: 'There was an error while updating the documents.',
-            transformResponse: (response: { data: { message: BulkUpdateResponse } }) => response.data.message,
+            transformResponse: (response: { message: BulkUpdateResponse }) => response.message,
         })
     }
 
@@ -491,7 +491,7 @@ export class FrappeClient {
         docname: string,
         fields = ['name'],
     ): Promise<T> {
-        return handleRequest<{ data: { message: T } }, T>({
+        return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
                 method: 'GET',
@@ -499,7 +499,7 @@ export class FrappeClient {
                 params: { doctype, docname, fields: JSON.stringify(fields) },
             },
             errorMessage: 'There was an error while validating the link.',
-            transformResponse: (response: { data: { message: T } }) => response.data.message,
+            transformResponse: (response: { message: T }) => response.message,
         })
     }
 
