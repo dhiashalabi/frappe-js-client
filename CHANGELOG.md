@@ -1,3 +1,9 @@
+## [2.3.6](https://github.com/mussnad/frappe-js-client/compare/v2.3.5...v2.3.6) (2025-03-22)
+
+### Bug Fixes
+
+- Refactor server message handling and enhance type definitions ([9ab071a](https://github.com/mussnad/frappe-js-client/commit/9ab071a57b4a8de2eac54c6789412871b8ca8f5b))
+
 ## [2.3.5](https://github.com/mussnad/frappe-js-client/compare/v2.3.4...v2.3.5) (2025-03-22)
 
 ### Bug Fixes
