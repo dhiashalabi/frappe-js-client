@@ -106,14 +106,14 @@ export class FrappeClient {
             }
         }
 
-        return handleRequest<{ data: { message: T[] } }, T[]>({
+        return handleRequest<{ message: T[] }, T[]>({
             axios: this.axios,
             config: {
                 url: '/api/method/frappe.client.get_list/',
                 params: { doctype, ...params },
             },
             errorMessage: 'There was an error while fetching the documents.',
-            transformResponse: (response: { data: { message: T[] } }) => response.data.message,
+            transformResponse: (response: { message: T[] }) => response.message,
         })
     }
 
