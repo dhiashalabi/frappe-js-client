@@ -211,7 +211,7 @@ export async function handleRequest<T = any, R = T>({
         return transformResponse(response.data)
     } catch (error) {
         if (isAxiosError(error)) {
-            const axiosError = error as AxiosError<Partial<FrappeError>>
+            const axiosError = error as AxiosError<Partial<FrappeError> & { _server_messages: string }>
 
             throw {
                 ...axiosError.response?.data,
@@ -228,20 +228,30 @@ export async function handleRequest<T = any, R = T>({
 }
 
 /**
- * Parses the server messages from a string to an array of strings.
+ * Parses the server messages from a string to an array of objects.
  *
  * @param serverMessages - The server messages to parse
  * @returns The parsed server messages
  */
-const parseServerMessages = (serverMessages: string | undefined): string | string[] => {
+const parseServerMessages = (
+    serverMessages: string | undefined,
+): Array<{
+    message: string
+    title: string
+    indicator: string
+    raise_exception: number
+    __frappe_exc_id: string
+}> => {
     if (!serverMessages) {
-        return ''
+        return []
     }
 
     try {
-        return JSON.parse(serverMessages)
-    } catch {
-        return serverMessages
+        const parsedArray = JSON.parse(serverMessages)
+        return parsedArray.map((item: string) => JSON.parse(item))
+    } catch (error) {
+        console.warn('Failed to parse server messages:', error)
+        return []
     }
 }
 

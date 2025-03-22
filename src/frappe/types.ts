@@ -8,9 +8,23 @@
  */
 
 /**
+ * Represents a server message from Frappe.
+ *
+ * @interface ServerMessage
+ * @description Standardized server message structure returned by Frappe backend services.
+ * Contains both HTTP-level and application-level error details.
+ */
+export interface ServerMessage {
+    message: string
+    title: string
+    indicator: string
+    raise_exception: number
+    __frappe_exc_id: string
+}
+/**
  * Represents a Frappe API error response.
  *
- * @interface Error
+ * @interface FrappeError
  * @description Standardized error structure returned by Frappe backend services.
  * Contains both HTTP-level and application-level error details.
  *
@@ -37,8 +51,8 @@ export interface FrappeError {
     exc?: string
     /** Type of the exception that occurred */
     exc_type?: string
-    /** Server-side messages in JSON string format */
-    _server_messages?: string
+    /** Parsed server messages array */
+    _server_messages?: ServerMessage[]
 }
 
 /**
