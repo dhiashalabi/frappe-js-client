@@ -1,3 +1,9 @@
+## [2.3.5](https://github.com/mussnad/frappe-js-client/compare/v2.3.4...v2.3.5) (2025-03-22)
+
+### Bug Fixes
+
+- Refactor error handling in handleRequest to improve server message parsing ([f922a4e](https://github.com/mussnad/frappe-js-client/commit/f922a4e60e88813cb430d198cb6ea82daf0a042e))
+
 ## [2.3.4](https://github.com/mussnad/frappe-js-client/compare/v2.3.3...v2.3.4) (2025-03-22)
 
 ### Bug Fixes
