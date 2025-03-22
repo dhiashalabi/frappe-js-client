@@ -212,6 +212,8 @@ export async function handleRequest<T = any, R = T>({
     } catch (error) {
         if (isAxiosError(error)) {
             const axiosError = error as AxiosError<Partial<FrappeError>>
+            const serverMessages = axiosError.response?.data?._server_messages
+
             throw {
                 ...axiosError.response?.data,
                 httpStatus: axiosError.response?.status ?? 500,
@@ -219,10 +221,28 @@ export async function handleRequest<T = any, R = T>({
                 message: axiosError.response?.data?.message ?? errorMessage,
                 exception:
                     axiosError.response?.data?.exception ?? axiosError.response?.data?.exc_type ?? 'UnknownException',
-                _server_messages: axiosError.response?.data?._server_messages ?? '',
+                _server_messages: parseServerMessages(serverMessages),
             } as FrappeError
         }
         throw error
+    }
+}
+
+/**
+ * Parses the server messages from a string to an array of strings.
+ *
+ * @param serverMessages - The server messages to parse
+ * @returns The parsed server messages
+ */
+const parseServerMessages = (serverMessages: string | undefined): string | string[] => {
+    if (!serverMessages) {
+        return ''
+    }
+
+    try {
+        return JSON.parse(serverMessages)
+    } catch {
+        return serverMessages
     }
 }
 
