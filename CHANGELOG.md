@@ -1,3 +1,9 @@
+## [2.3.3](https://github.com/mussnad/frappe-js-client/compare/v2.3.2...v2.3.3) (2025-03-22)
+
+### Bug Fixes
+
+- Update Frappe document type handling for improved type safety ([408705d](https://github.com/mussnad/frappe-js-client/commit/408705db8f4cb4edca4e1a99698bc25d79fd3f9f))
+
 ## [2.3.2](https://github.com/mussnad/frappe-js-client/compare/v2.3.1...v2.3.2) (2025-03-22)
 
 ### Bug Fixes
