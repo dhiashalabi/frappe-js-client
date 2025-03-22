@@ -1,3 +1,9 @@
+## [2.3.2](https://github.com/mussnad/frappe-js-client/compare/v2.3.1...v2.3.2) (2025-03-22)
+
+### Bug Fixes
+
+- Update response transformation in FrappeAuth and FrappeClient to align with API changes ([cca2f74](https://github.com/mussnad/frappe-js-client/commit/cca2f74ea782172a69b46ba2d5a2cb1e6bcd9bcf))
+
 ## [2.3.1](https://github.com/mussnad/frappe-js-client/compare/v2.3.0...v2.3.1) (2025-03-22)
 
 ### Bug Fixes
