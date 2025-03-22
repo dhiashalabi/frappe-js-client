@@ -69,27 +69,54 @@ export interface TokenParams {
 }
 
 /**
- * Represents a Frappe document.
+ * Base interface for all Frappe documents.
  *
- * @interface Document
- * @description Standardized document structure returned by Frappe backend services.
- * Contains all fields of the document.
+ * @interface FrappeDoc
+ * @template T - Additional fields specific to the document type
+ *
+ * @example
+ * ```typescript
+ * interface User extends FrappeDoc<{
+ *   first_name: string;
+ *   email: string;
+ * }> {}
+ *
+ * const user: User = {
+ *   name: "USER001",
+ *   first_name: "John",
+ *   email: "john@example.com",
+ *   owner: "Administrator",
+ *   creation: "2024-03-10T12:00:00",
+ *   modified: "2024-03-10T12:00:00",
+ *   modified_by: "Administrator",
+ *   idx: 1,
+ *   docstatus: 0
+ * };
+ * ```
  */
-export type FrappeDocument = {
+export type FrappeDoc<T> = T & {
     /** The document type of the document */
-    doctype?: string
-    /** The name of the document */
-    name?: string
-    /** The owner of the document */
-    owner?: string
-    /** The creation date of the document */
-    creation?: string
-    /** The modified date of the document */
-    modified?: string
-    /** The modified by of the document */
-    modified_by?: string
-    /** The document status of the document */
-    docstatus?: number
+    doctype: string
+    /** User who created the document */
+    owner: string
+    /** Date and time when the document was created - ISO format */
+    creation: string
+    /** Date and time when the document was last modified - ISO format */
+    modified: string
+    /** User who last modified the document */
+    modified_by: string
+    /** Index of the document in its list */
+    idx: number
+    /** Document status: 0 - Saved, 1 - Submitted, 2 - Cancelled */
+    docstatus: 0 | 1 | 2
+    /** Parent document name for child tables */
+    parent?: string
+    /** Parent field name for child tables */
+    parentfield?: string
+    /** Parent document type for child tables */
+    parenttype?: string
+    /** The primary key of the DocType table */
+    name: string
     /** The fields of the document */
     [key: string]: any
 }

@@ -1,7 +1,7 @@
-import { Filter, FrappeDoc } from '../db/types'
-import { FrappeDocument } from '../frappe/types'
+import { Filter } from '../db/types'
+import { FrappeDoc } from '../frappe/types'
 
-export interface GetListArgs<T = FrappeDoc> {
+export interface GetListArgs<T = FrappeDoc<object>> {
     /** Fields to be fetched */
     fields?: (keyof T | '*')[]
     /** Filters to be applied - SQL AND operation */
@@ -29,7 +29,7 @@ export interface GetListArgs<T = FrappeDoc> {
     orFilters?: Filter<T>[]
 }
 
-export interface GetCountArgs<T = FrappeDoc> {
+export interface GetCountArgs<T = object> {
     /** Filters to be applied - SQL AND operation */
     filters?: Filter<T>[] | string
     /** Debug mode */
@@ -38,14 +38,14 @@ export interface GetCountArgs<T = FrappeDoc> {
     cache?: boolean
 }
 
-export interface GetDocArgs<T = FrappeDoc> {
+export interface GetDocArgs<T = object> {
     /** Fields to be fetched */
     fields?: (keyof T | '*')[]
     /** Debug mode */
     parent?: string
 }
 
-export interface GetValueArgs<T = FrappeDoc> {
+export interface GetValueArgs<T = object> {
     /** Filters to be applied - SQL AND operation */
     filters: Filter<T>[]
     /** Fetch documents as a dictionary */
@@ -77,7 +77,7 @@ export interface RenameDocResponse {
  */
 export interface BulkUpdateResponse {
     failed_docs: Array<{
-        doc: FrappeDocument
+        doc: FrappeDoc<object>
         exc: string
     }>
 }

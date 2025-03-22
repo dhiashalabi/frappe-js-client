@@ -9,7 +9,7 @@ import {
     RenameDocResponse,
 } from './types'
 import { handleRequest } from '../utils/axios'
-import { FrappeDocument } from '../frappe/types'
+import { FrappeDoc } from '../frappe/types'
 import { ApiData, ApiParams, TypedResponse } from '../call/types'
 
 /**
@@ -75,7 +75,7 @@ export class FrappeClient {
      * })
      * ```
      */
-    getList<T extends FrappeDocument = FrappeDocument>(doctype: string, args?: GetListArgs): Promise<T[]> {
+    getList<T extends FrappeDoc<object>>(doctype: string, args?: GetListArgs<T>): Promise<T[]> {
         let params = {}
 
         if (args) {
@@ -132,7 +132,7 @@ export class FrappeClient {
      * })
      * ```
      */
-    getCount<T extends GetCountResponse = GetCountResponse>(doctype: string, args?: GetCountArgs): Promise<T> {
+    getCount<T extends GetCountResponse, K extends FrappeDoc<T>>(doctype: string, args?: GetCountArgs<K>): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -158,7 +158,7 @@ export class FrappeClient {
      * const doc = await client.getDoc('DocType', 'test')
      * ```
      */
-    getDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, name: string, args?: GetDocArgs): Promise<T> {
+    getDoc<T extends FrappeDoc<object>>(doctype: string, name: string, args?: GetDocArgs<T>): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -184,11 +184,7 @@ export class FrappeClient {
      * const value = await client.getValue('DocType', 'test')
      * ```
      */
-    getValue<T extends FrappeDocument = FrappeDocument>(
-        doctype: string,
-        fieldname: string,
-        args?: GetValueArgs,
-    ): Promise<T> {
+    getValue<T extends FrappeDoc<object>>(doctype: string, fieldname: string, args?: GetValueArgs): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -213,7 +209,7 @@ export class FrappeClient {
      * const value = await client.getSingleValue('DocType', 'test')
      * ```
      */
-    getSingleValue<T extends FrappeDocument = FrappeDocument>(doctype: string, field: string): Promise<T> {
+    getSingleValue<T extends FrappeDoc<object>>(doctype: string, field: string): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -239,12 +235,7 @@ export class FrappeClient {
      * await client.setValue('DocType', 'test', 'test', 'test')
      * ```
      */
-    setValue<T extends FrappeDocument = FrappeDocument>(
-        doctype: string,
-        name: string,
-        fieldname: string,
-        value: string,
-    ): Promise<T> {
+    setValue<T extends FrappeDoc<object>>(doctype: string, name: string, fieldname: string, value: string): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -269,7 +260,7 @@ export class FrappeClient {
      * await client.insertDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    insertDoc<T extends FrappeDocument = FrappeDocument>(doc: T): Promise<T> {
+    insertDoc<T extends FrappeDoc<object>>(doc: T): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -294,7 +285,7 @@ export class FrappeClient {
      * await client.insertMany([{doctype:'DocType', name:'test', fieldname:'test', value:'test'}])
      * ```
      */
-    insertMany<T extends FrappeDocument = FrappeDocument>(docs: T[]): Promise<string[]> {
+    insertMany<T extends FrappeDoc<object>>(docs: T[]): Promise<string[]> {
         return handleRequest<{ message: string[] }, string[]>({
             axios: this.axios,
             config: {
@@ -319,7 +310,7 @@ export class FrappeClient {
      * await client.saveDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    saveDoc<T extends FrappeDocument = FrappeDocument>(doc: T): Promise<T> {
+    saveDoc<T extends FrappeDoc<object>>(doc: T): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -347,7 +338,7 @@ export class FrappeClient {
      * const newName = await client.renameDoc('DocType', 'test', 'test2')
      * ```
      */
-    renameDoc<T extends RenameDocResponse = RenameDocResponse>(
+    renameDoc<T extends RenameDocResponse>(
         doctype: string,
         old_name: string,
         new_name: string,
@@ -377,7 +368,7 @@ export class FrappeClient {
      * await client.submitDoc({doctype:'DocType', name:'test', fieldname:'test', value:'test'})
      * ```
      */
-    submitDoc<T extends FrappeDocument = FrappeDocument>(doc: T): Promise<T> {
+    submitDoc<T extends FrappeDoc<object>>(doc: T): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -403,7 +394,7 @@ export class FrappeClient {
      * await client.cancelDoc('DocType', 'test')
      * ```
      */
-    cancelDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, name: string): Promise<T> {
+    cancelDoc<T extends FrappeDoc<object>>(doctype: string, name: string): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -459,7 +450,7 @@ export class FrappeClient {
      * }
      * ```
      */
-    bulkUpdate<T extends FrappeDocument = FrappeDocument>(docs: T[]): Promise<BulkUpdateResponse> {
+    bulkUpdate<T extends FrappeDoc<object>>(docs: T[]): Promise<BulkUpdateResponse> {
         return handleRequest<{ message: BulkUpdateResponse }, BulkUpdateResponse>({
             axios: this.axios,
             config: {
@@ -486,11 +477,7 @@ export class FrappeClient {
      * await client.validateLink('DocType', 'test', ['field1', 'field2'])
      * ```
      */
-    validateLink<T extends FrappeDocument = FrappeDocument>(
-        doctype: string,
-        docname: string,
-        fields = ['name'],
-    ): Promise<T> {
+    validateLink<T extends FrappeDoc<object>>(doctype: string, docname: string, fields = ['name']): Promise<T> {
         return handleRequest<{ message: T }, T>({
             axios: this.axios,
             config: {
@@ -522,7 +509,7 @@ export class FrappeClient {
      * console.log(dataResponse.data);
      * ```
      */
-    get<T extends TypedResponse<any> = TypedResponse<any>>(path: string, params?: ApiParams): Promise<T> {
+    get<T extends TypedResponse<any>>(path: string, params?: ApiParams): Promise<T> {
         const encodedParams = new URLSearchParams()
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
@@ -553,11 +540,7 @@ export class FrappeClient {
      * @param params - Optional query parameters
      * @returns A promise that resolves to the response data
      */
-    post<T extends TypedResponse<any> = TypedResponse<any>>(
-        path: string,
-        data?: ApiData,
-        params?: ApiParams,
-    ): Promise<T> {
+    post<T extends TypedResponse<any>>(path: string, data?: ApiData, params?: ApiParams): Promise<T> {
         return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
@@ -579,11 +562,7 @@ export class FrappeClient {
      * @param params - Optional query parameters
      * @returns A promise that resolves to the response data
      */
-    put<T extends TypedResponse<any> = TypedResponse<any>>(
-        path: string,
-        data?: ApiData,
-        params?: ApiParams,
-    ): Promise<T> {
+    put<T extends TypedResponse<any>>(path: string, data?: ApiData, params?: ApiParams): Promise<T> {
         return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
@@ -604,7 +583,7 @@ export class FrappeClient {
      * @param params - Optional query parameters
      * @returns A promise that resolves to the response data
      */
-    delete<T extends TypedResponse<any> = TypedResponse<any>>(path: string, params?: ApiParams): Promise<T> {
+    delete<T extends TypedResponse<any>>(path: string, params?: ApiParams): Promise<T> {
         return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {

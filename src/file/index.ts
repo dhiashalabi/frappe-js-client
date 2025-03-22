@@ -31,7 +31,7 @@ import { AxiosInstance, AxiosProgressEvent } from 'axios'
 
 import { FileArgs } from './types'
 import { getRequestHeaders, handleRequest } from '../utils/axios'
-import { FrappeDocument } from '../frappe/types'
+import { FrappeDoc } from '../frappe/types'
 
 /**
  * Handles file upload operations for Frappe.
@@ -157,7 +157,7 @@ export class FrappeFileUpload {
      * );
      * ```
      */
-    uploadFile<T extends FrappeDocument = FrappeDocument>(
+    uploadFile<T extends FrappeDoc<object>>(
         file: File,
         args: FileArgs,
         onProgress?: (bytesUploaded: number, totalBytes?: number, progress?: AxiosProgressEvent) => void,

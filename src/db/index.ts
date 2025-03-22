@@ -26,9 +26,9 @@
 
 import { AxiosInstance } from 'axios'
 
-import { FrappeDoc, GetDocListArgs, GetLastDocArgs } from './types'
+import { GetDocListArgs, GetLastDocArgs } from './types'
 import { handleRequest } from '../utils/axios'
-import { FrappeDocument } from '../frappe/types'
+import { FrappeDoc } from '../frappe/types'
 
 /**
  * Main class for database operations in Frappe.
@@ -127,7 +127,7 @@ export class FrappeDB {
      * const task = await db.getDoc('Task', 'TASK-001');
      * ```
      */
-    getDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, docname = ''): Promise<T> {
+    getDoc<T extends FrappeDoc<object>>(doctype: string, docname = ''): Promise<T> {
         return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
@@ -165,7 +165,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    getDocList<T extends FrappeDocument = FrappeDocument>(doctype: string, args?: GetDocListArgs): Promise<T[]> {
+    getDocList<T extends FrappeDoc<object>>(doctype: string, args?: GetDocListArgs<T>): Promise<T[]> {
         let params = {}
 
         if (args) {
@@ -221,7 +221,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    createDoc<T extends FrappeDocument = FrappeDocument>(doctype: string, value: T): Promise<T> {
+    createDoc<T extends FrappeDoc<object>>(doctype: string, value: T): Promise<T> {
         return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
@@ -259,11 +259,7 @@ export class FrappeDB {
      * });
      * ```
      */
-    updateDoc<T extends FrappeDocument = FrappeDocument>(
-        doctype: string,
-        docname: string | null,
-        value: Partial<T>,
-    ): Promise<T> {
+    updateDoc<T extends FrappeDoc<object>>(doctype: string, docname: string | null, value: Partial<T>): Promise<T> {
         return handleRequest<{ data: T }, T>({
             axios: this.axios,
             config: {
@@ -326,11 +322,8 @@ export class FrappeDB {
      * });
      * ```
      */
-    async getLastDoc<T extends FrappeDocument = FrappeDocument>(
-        doctype: string,
-        args?: GetLastDocArgs<FrappeDoc>,
-    ): Promise<T> {
-        let queryArgs: GetLastDocArgs<FrappeDoc> = {
+    async getLastDoc<T extends FrappeDoc<object>>(doctype: string, args?: GetLastDocArgs<T>): Promise<T> {
+        let queryArgs: GetLastDocArgs<T> = {
             orderBy: {
                 field: 'creation',
                 order: 'desc',
