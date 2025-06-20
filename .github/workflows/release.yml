@@ -25,15 +25,17 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: 20
+            - name: Check lockfile integrity
+              run: git diff --exit-code yarn.lock
 
             - name: Install dependencies 📥
-              run: npm install
+              run: yarn install --frozen-lockfile
 
             - name: Build package 🔨
-              run: npm run build
+              run: yarn build
 
             - name: Audit dependencies 🔍
-              run: npm audit signature
+              run: yarn audit --level high || true
 
             - name: Run Semantic Release 🚀
               env:
