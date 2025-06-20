@@ -1,3 +1,9 @@
+## [2.3.7](https://github.com/dhiashalabi/frappe-js-client/compare/v2.3.6...v2.3.7) (2025-06-20)
+
+### Bug Fixes
+
+- refactor code structure for improved readability and maintainability ([ba8eba7](https://github.com/dhiashalabi/frappe-js-client/commit/ba8eba734cd9a864010ff1027bfefc2fec9adb01))
+
 ## [2.3.6](https://github.com/mussnad/frappe-js-client/compare/v2.3.5...v2.3.6) (2025-03-22)
 
 ### Bug Fixes
