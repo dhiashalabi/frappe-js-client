@@ -1,0 +1,33 @@
+version: 2
+updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: weekly
+      open-pull-requests-limit: 10
+      groups:
+          eslint:
+              patterns:
+                  - 'eslint*'
+                  - '@eslint/*'
+                  - 'typescript-eslint'
+          docusaurus:
+              patterns:
+                  - '@docusaurus/*'
+                  - '@easyops-cn/docusaurus-search-local'
+                  - 'docusaurus-*'
+                  - 'typedoc*'
+          vitest:
+              patterns:
+                  - 'vitest'
+                  - '@vitest/*'
+
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: weekly
+      open-pull-requests-limit: 5
+      groups:
+          github-actions:
+              patterns:
+                  - '*'

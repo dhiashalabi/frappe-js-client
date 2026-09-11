@@ -1,0 +1,58 @@
+name: Feature request
+description: Propose a new capability or an API change
+title: '[feat] '
+labels: [enhancement]
+type: feature
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Describe the problem first, then the API you want. Search [existing issues](https://github.com/dhiashalabi/frappe-js-client/issues?q=is%3Aissue) first.
+    - type: checkboxes
+      id: checks
+      attributes:
+          label: Checks
+          options:
+              - label: I searched existing issues and this is not a duplicate
+                required: true
+    - type: dropdown
+      id: package
+      attributes:
+          label: Package
+          options:
+              - frappe-js-client
+              - '@frappe-js-client/codegen'
+              - Documentation site
+              - CI / repository tooling
+      validations:
+          required: true
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem
+          description: What is hard or impossible today?
+      validations:
+          required: true
+    - type: textarea
+      id: proposal
+      attributes:
+          label: Proposed API or behavior
+          description: Sketch the types, methods, or CLI flags you want.
+          render: ts
+      validations:
+          required: true
+    - type: textarea
+      id: alternatives
+      attributes:
+          label: Alternatives considered
+          description: Workarounds or other APIs you evaluated.
+    - type: dropdown
+      id: breaking
+      attributes:
+          label: Would this be a breaking change?
+          options:
+              - 'No'
+              - 'Yes'
+              - Unsure
+      validations:
+          required: true

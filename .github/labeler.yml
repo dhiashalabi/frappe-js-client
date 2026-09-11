@@ -1,0 +1,35 @@
+tests:
+    - changed-files:
+          - any-glob-to-any-file:
+                - packages/*/tests/**
+                - packages/*/vitest.config.ts
+                - packages/*/vitest.*.ts
+
+docs:
+    - changed-files:
+          - any-glob-to-any-file:
+                - README.md
+                - packages/*/README.md
+                - packages/*/CHANGELOG.md
+                - docs/**
+
+ci:
+    - changed-files:
+          - any-glob-to-any-file:
+                - .github/**
+                - .husky/**
+                - .changeset/**
+                - .mergify.yml
+
+source:
+    - changed-files:
+          - any-glob-to-any-file:
+                - packages/*/src/**
+
+dependencies:
+    - changed-files:
+          - any-glob-to-any-file:
+                - package.json
+                - packages/*/package.json
+                - pnpm-lock.yaml
+                - pnpm-workspace.yaml

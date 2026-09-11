@@ -1,0 +1,32 @@
+name: Documentation
+description: Missing, unclear, or incorrect docs
+title: '[docs] '
+labels: [documentation]
+type: task
+body:
+    - type: markdown
+      attributes:
+          value: |
+              For the published site and package READMEs. Usage questions that are not doc bugs belong in a discussion or a feature request.
+    - type: dropdown
+      id: location
+      attributes:
+          label: Where?
+          options:
+              - Docs site (https://dhiashalabi.github.io/frappe-js-client/)
+              - Package README
+              - Changelog
+              - TypeDoc / generated API pages
+      validations:
+          required: true
+    - type: input
+      id: url
+      attributes:
+          label: Page URL or file path
+          placeholder: e.g. /docs/getting-started or packages/client/README.md
+    - type: textarea
+      id: issue
+      attributes:
+          label: What should change?
+      validations:
+          required: true
