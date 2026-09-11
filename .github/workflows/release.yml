@@ -1,0 +1,87 @@
+name: Release
+
+on:
+    push:
+        branches:
+            - master
+
+concurrency:
+    group: release
+    cancel-in-progress: false
+
+jobs:
+    release:
+        name: Release
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+
+        permissions:
+            contents: write
+            id-token: write
+            issues: write
+            pull-requests: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7.0.1
+              with:
+                  fetch-depth: 0
+
+            - name: Setup pnpm and Node.js
+              uses: pnpm/setup@v2.1.0
+              with:
+                  runtime: node@22
+                  cache: true
+                  install: false
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+              env:
+                  HUSKY: '0'
+
+            - name: Audit dependencies
+              run: pnpm audit --audit-level high
+
+            - name: Typecheck
+              run: pnpm typecheck
+
+            - name: Lint
+              run: pnpm lint
+
+            - name: Check formatting
+              run: pnpm format:check
+
+            - name: Lint dependency graph
+              run: pnpm lint:deps
+
+            - name: Test
+              run: pnpm test
+
+            - name: Build
+              run: pnpm build
+
+            - name: Check public API surface
+              run: pnpm api:check
+
+            - name: Check package.json / exports correctness (publint)
+              run: pnpm publint
+
+            - name: Check type resolution across module systems (attw)
+              run: pnpm attw
+
+            - name: Authenticate npm
+              run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Create Release Pull Request or Publish
+              uses: changesets/action@v2.1.2
+              with:
+                  publish-script: pnpm release
+                  version-script: pnpm version-packages
+                  pr-title: 'chore: version packages'
+                  commit-message: 'chore: version packages'
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  HUSKY: '0'

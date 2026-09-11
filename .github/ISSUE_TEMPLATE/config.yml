@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+    - name: Documentation
+      url: https://dhiashalabi.github.io/frappe-js-client/
+      about: Usage guides and API reference for frappe-js-client
+    - name: Report a security vulnerability
+      url: https://github.com/dhiashalabi/frappe-js-client/security/advisories/new
+      about: Privately report a security issue. Do not file a public GitHub issue.
