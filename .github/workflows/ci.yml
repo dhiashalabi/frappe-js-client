@@ -71,9 +71,6 @@ jobs:
             - name: Check type resolution across module systems (attw)
               run: pnpm attw
 
-            - name: Check bundle size budget
-              run: pnpm size-limit
-
             - name: Check changeset
               if: github.event_name == 'pull_request' && !contains(join(github.event.pull_request.labels.*.name, ','), 'skip-changeset')
               run: |

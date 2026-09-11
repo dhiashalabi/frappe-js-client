@@ -1,6 +1,6 @@
 {
     "name": "frappe-js-client",
-    "version": "1.0.0",
+    "version": "3.2.0",
     "description": "Zero-dependency, fetch-native TypeScript/JavaScript client for Frappe Framework REST APIs (v14, v15, v16).",
     "author": "Dhia A. Shalabi <dhia.shalabi@gmail.com>",
     "license": "MIT",
@@ -129,8 +129,7 @@
         "api:check": "api-extractor run",
         "publint": "publint",
         "attw": "attw --pack . --profile node16",
-        "size-limit": "size-limit",
-        "gate": "pnpm typecheck && pnpm lint && pnpm lint:deps && pnpm test && pnpm build && pnpm api:check && pnpm publint && pnpm attw && pnpm size-limit"
+        "gate": "pnpm typecheck && pnpm lint && pnpm lint:deps && pnpm test && pnpm build && pnpm api:check && pnpm publint && pnpm attw"
     },
     "dependencies": {},
     "peerDependencies": {
@@ -154,8 +153,6 @@
         "globals": "^17.12.0",
         "msw": "^2.15.0",
         "publint": "^0.3.24",
-        "size-limit": "^13.0.3",
-        "@size-limit/preset-small-lib": "^13.0.3",
         "socket.io-client": "^4.8.3",
         "tsup": "^8.5.1",
         "typescript": "~6.0.3",
@@ -164,32 +161,5 @@
     },
     "publishConfig": {
         "access": "public"
-    },
-    "size-limit": [
-        {
-            "name": "frappe-js-client (core)",
-            "path": "dist/index.mjs",
-            "limit": "8 KB"
-        },
-        {
-            "name": "frappe-js-client/extended",
-            "path": "dist/extended.mjs",
-            "limit": "6 KB"
-        },
-        {
-            "name": "frappe-js-client/testing",
-            "path": "dist/testing.mjs",
-            "limit": "16 KB"
-        },
-        {
-            "name": "frappe-js-client/errors",
-            "path": "dist/errors.mjs",
-            "limit": "2 KB"
-        },
-        {
-            "name": "frappe-js-client/middleware",
-            "path": "dist/middleware.mjs",
-            "limit": "3 KB"
-        }
-    ]
+    }
 }

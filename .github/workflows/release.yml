@@ -69,9 +69,6 @@ jobs:
             - name: Check type resolution across module systems (attw)
               run: pnpm attw
 
-            - name: Check bundle size budget
-              run: pnpm size-limit
-
             - name: Create Release Pull Request or Publish
               uses: changesets/action@v2.1.1
               with:

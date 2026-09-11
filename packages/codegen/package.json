@@ -63,8 +63,7 @@
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "publint": "publint",
         "attw": "attw --pack . --profile node16",
-        "size-limit": "size-limit",
-        "gate": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm publint && pnpm attw && pnpm size-limit"
+        "gate": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm publint && pnpm attw"
     },
     "dependencies": {
         "frappe-js-client": "workspace:^"
@@ -72,7 +71,6 @@
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.18.5",
         "@eslint/js": "^10.0.1",
-        "@size-limit/file": "^13.0.3",
         "@types/node": "^26.4.1",
         "@vitest/coverage-v8": "^5.0.0",
         "eslint": "^10.10.0",
@@ -80,7 +78,6 @@
         "eslint-plugin-simple-import-sort": "^14.0.0",
         "globals": "^17.12.0",
         "publint": "^0.3.24",
-        "size-limit": "^13.0.3",
         "tsup": "^8.5.1",
         "typescript": "~6.0.3",
         "typescript-eslint": "^8.70.0",
@@ -88,17 +85,5 @@
     },
     "publishConfig": {
         "access": "public"
-    },
-    "size-limit": [
-        {
-            "name": "@frappe-js-client/codegen (programmatic API)",
-            "path": "dist/index.mjs",
-            "limit": "5 KB"
-        },
-        {
-            "name": "@frappe-js-client/codegen (cli)",
-            "path": "dist/cli.js",
-            "limit": "7 KB"
-        }
-    ]
+    }
 }

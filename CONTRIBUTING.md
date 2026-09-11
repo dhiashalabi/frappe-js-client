@@ -26,7 +26,7 @@ Run the full gate:
 pnpm gate
 ```
 
-That typechecks, lints, runs unit tests, builds, and checks the public API snapshot (`api:check`), package publishing constraints, and bundle size. The same quality gate (plus `pnpm format:check`) runs in PR CI and again in the release workflow before publish. Mergify auto-merge waits on the `build` and `docs` check names from `.github/workflows/ci.yml`.
+That typechecks, lints, runs unit tests, builds, and checks the public API snapshot (`api:check`) and package publishing constraints. The same quality gate (plus `pnpm format:check`) runs in PR CI and again in the release workflow before publish. Mergify auto-merge waits on the `build` and `docs` check names from `.github/workflows/ci.yml`.
 
 Source changes under `packages/` need a [changeset](https://github.com/changesets/changesets):
 

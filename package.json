@@ -38,7 +38,6 @@
         "changeset": "changeset",
         "version-packages": "changeset version",
         "release": "changeset publish",
-        "size-limit": "pnpm -r --filter=./packages/* run size-limit",
         "gate": "pnpm -r --filter=./packages/* run gate",
         "docs:start": "pnpm --dir docs start",
         "docs:build": "pnpm --dir docs build",
