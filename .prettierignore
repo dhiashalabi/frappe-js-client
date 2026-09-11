@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+temp
+pnpm-lock.yaml
+docs/build
+docs/.docusaurus
+docs/docs/api
+*.tsbuildinfo
+*.tgz
+packages/codegen/tests/fixtures/*.expected.ts
+packages/client/etc/*.api.md
