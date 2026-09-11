@@ -1,0 +1,195 @@
+{
+    "name": "frappe-js-client",
+    "version": "1.0.0",
+    "description": "Zero-dependency, fetch-native TypeScript/JavaScript client for Frappe Framework REST APIs (v14, v15, v16).",
+    "author": "Dhia A. Shalabi <dhia.shalabi@gmail.com>",
+    "license": "MIT",
+    "type": "commonjs",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20"
+    },
+    "keywords": [
+        "frappe",
+        "frappe-framework",
+        "erpnext",
+        "fetch",
+        "typescript",
+        "rest",
+        "sdk",
+        "api-client",
+        "zero-dependency"
+    ],
+    "homepage": "https://dhiashalabi.github.io/frappe-js-client/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dhiashalabi/frappe-js-client.git",
+        "directory": "packages/client"
+    },
+    "bugs": {
+        "url": "https://github.com/dhiashalabi/frappe-js-client/issues"
+    },
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
+        },
+        "./extended": {
+            "import": {
+                "types": "./dist/extended.d.mts",
+                "default": "./dist/extended.mjs"
+            },
+            "require": {
+                "types": "./dist/extended.d.ts",
+                "default": "./dist/extended.js"
+            }
+        },
+        "./errors": {
+            "import": {
+                "types": "./dist/errors.d.mts",
+                "default": "./dist/errors.mjs"
+            },
+            "require": {
+                "types": "./dist/errors.d.ts",
+                "default": "./dist/errors.js"
+            }
+        },
+        "./middleware": {
+            "import": {
+                "types": "./dist/middleware.d.mts",
+                "default": "./dist/middleware.mjs"
+            },
+            "require": {
+                "types": "./dist/middleware.d.ts",
+                "default": "./dist/middleware.js"
+            }
+        },
+        "./types": {
+            "import": {
+                "types": "./dist/types.d.mts",
+                "default": "./dist/types.mjs"
+            },
+            "require": {
+                "types": "./dist/types.d.ts",
+                "default": "./dist/types.js"
+            }
+        },
+        "./testing": {
+            "import": {
+                "types": "./dist/testing.d.mts",
+                "default": "./dist/testing.mjs"
+            },
+            "require": {
+                "types": "./dist/testing.d.ts",
+                "default": "./dist/testing.js"
+            }
+        },
+        "./realtime": {
+            "import": {
+                "types": "./dist/realtime.d.mts",
+                "default": "./dist/realtime.mjs"
+            },
+            "require": {
+                "types": "./dist/realtime.d.ts",
+                "default": "./dist/realtime.js"
+            }
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist",
+        "LICENSE",
+        "README.md",
+        "CHANGELOG.md"
+    ],
+    "scripts": {
+        "build": "tsup && node scripts/verify-dist.mjs",
+        "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+        "prepack": "pnpm clean && pnpm build",
+        "test": "vitest run --coverage",
+        "test:watch": "vitest",
+        "test:integration": "vitest run --config vitest.integration.config.ts",
+        "test:live": "vitest run --config vitest.live.config.ts",
+        "coverage": "vitest run --coverage",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "lint:deps": "dependency-cruiser src",
+        "format": "prettier --write .",
+        "typecheck": "tsc --noEmit -p tsconfig.test.json",
+        "api:extract": "api-extractor run --local",
+        "api:check": "api-extractor run",
+        "publint": "publint",
+        "attw": "attw --pack . --profile node16",
+        "size-limit": "size-limit",
+        "gate": "pnpm typecheck && pnpm lint && pnpm lint:deps && pnpm test && pnpm build && pnpm api:check && pnpm publint && pnpm attw && pnpm size-limit"
+    },
+    "dependencies": {},
+    "peerDependencies": {
+        "socket.io-client": "^4.0.0"
+    },
+    "peerDependenciesMeta": {
+        "socket.io-client": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@arethetypeswrong/cli": "^0.18.5",
+        "@eslint/js": "^10.0.1",
+        "@microsoft/api-extractor": "^7.59.1",
+        "@types/node": "^26.4.1",
+        "@vitest/coverage-v8": "^5.0.0",
+        "dependency-cruiser": "^18.2.0",
+        "eslint": "^10.10.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-simple-import-sort": "^14.0.0",
+        "globals": "^17.12.0",
+        "msw": "^2.15.0",
+        "publint": "^0.3.24",
+        "size-limit": "^13.0.3",
+        "@size-limit/preset-small-lib": "^13.0.3",
+        "socket.io-client": "^4.8.3",
+        "tsup": "^8.5.1",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.70.0",
+        "vitest": "^5.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "size-limit": [
+        {
+            "name": "frappe-js-client (core)",
+            "path": "dist/index.mjs",
+            "limit": "8 KB"
+        },
+        {
+            "name": "frappe-js-client/extended",
+            "path": "dist/extended.mjs",
+            "limit": "6 KB"
+        },
+        {
+            "name": "frappe-js-client/testing",
+            "path": "dist/testing.mjs",
+            "limit": "16 KB"
+        },
+        {
+            "name": "frappe-js-client/errors",
+            "path": "dist/errors.mjs",
+            "limit": "2 KB"
+        },
+        {
+            "name": "frappe-js-client/middleware",
+            "path": "dist/middleware.mjs",
+            "limit": "3 KB"
+        }
+    ]
+}

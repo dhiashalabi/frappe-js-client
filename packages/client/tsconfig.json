@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "lib": ["ES2022", "DOM"],
+        "types": ["node"],
+        "rootDir": ".",
+        "noEmit": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "isolatedModules": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true
+    },
+    "include": [
+        "src",
+        "tests",
+        "vitest.config.ts",
+        "vitest.live.config.ts",
+        "vitest.integration.config.ts",
+        "tsup.config.ts"
+    ]
+}

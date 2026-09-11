@@ -1,0 +1,212 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { ConfigurationError } from '../src/core/errors'
+import { cookieAuth, createFrappeClient, tokenAuth } from '../src/index'
+import { createRealtime } from '../src/realtime'
+
+type Handler = (...args: unknown[]) => void
+
+class FakeSocket {
+    connected = false
+    autoSucceed = true
+    emitted: Array<{ event: string; args: unknown[] }> = []
+    private readonly listeners = new Map<string, Set<Handler>>()
+
+    private add(event: string, handler: Handler, once: boolean): this {
+        const wrap: Handler = (...args) => {
+            if (once) this.off(event, wrap)
+            handler(...args)
+        }
+        const set = this.listeners.get(event) ?? new Set()
+        set.add(once ? wrap : handler)
+        this.listeners.set(event, set)
+        return this
+    }
+
+    connect(): this {
+        if (this.autoSucceed) {
+            this.connected = true
+            queueMicrotask(() => this.fire('connect'))
+        }
+        return this
+    }
+
+    fail(reason: unknown): this {
+        queueMicrotask(() => this.fire('connect_error', reason))
+        return this
+    }
+
+    disconnect(): this {
+        this.connected = false
+        return this
+    }
+
+    emit(event: string, ...args: unknown[]): boolean {
+        this.emitted.push({ event, args })
+        return true
+    }
+
+    on(event: string, handler: Handler): this {
+        return this.add(event, handler, false)
+    }
+
+    off(event: string, handler?: Handler): this {
+        if (!handler) {
+            this.listeners.delete(event)
+            return this
+        }
+        this.listeners.get(event)?.delete(handler)
+        return this
+    }
+
+    once(event: string, handler: Handler): this {
+        return this.add(event, handler, true)
+    }
+
+    fire(event: string, ...args: unknown[]): void {
+        for (const handler of [...(this.listeners.get(event) ?? [])]) handler(...args)
+    }
+}
+
+const mock = vi.hoisted(() => {
+    const state: {
+        impl: ((url: string, opts: Record<string, unknown>) => FakeSocket) | undefined
+        url?: string
+        opts?: Record<string, unknown>
+        socket?: FakeSocket
+        autoSucceed: boolean
+    } = { impl: undefined, autoSucceed: true }
+
+    return { state }
+})
+
+vi.mock('socket.io-client', () => ({
+    io: (url: string, opts: Record<string, unknown>) => {
+        if (!mock.state.impl) throw new Error('not installed')
+        return mock.state.impl(url, opts)
+    },
+}))
+
+function client(auth?: ReturnType<typeof tokenAuth> | ReturnType<typeof cookieAuth>) {
+    return createFrappeClient({ url: 'https://frappe.example.com', auth })
+}
+
+describe('createRealtime', () => {
+    beforeEach(() => {
+        mock.state.autoSucceed = true
+        mock.state.socket = undefined
+        mock.state.opts = undefined
+        mock.state.impl = (url, opts) => {
+            mock.state.url = url
+            mock.state.opts = opts
+            const socket = new FakeSocket()
+            socket.autoSucceed = mock.state.autoSucceed
+            mock.state.socket = socket
+            return socket
+        }
+    })
+
+    it('connects and reports connected after the socket handshake', async () => {
+        const rt = createRealtime(client(), { autoConnect: false })
+        expect(rt.connected).toBe(false)
+        await rt.connect()
+        expect(rt.connected).toBe(true)
+        expect(mock.state.url).toBe('https://frappe.example.com')
+        expect(mock.state.opts?.path).toBe('/socket.io')
+        await rt.connect()
+        rt.close()
+        expect(rt.connected).toBe(false)
+        await expect(rt.connect()).rejects.toBeInstanceOf(ConfigurationError)
+    })
+
+    it('rejects connect() when the socket reports connect_error', async () => {
+        mock.state.autoSucceed = false
+        const rt = createRealtime(client(), { autoConnect: false })
+        const pending = rt.connect()
+        await vi.waitFor(() => expect(mock.state.socket).toBeDefined())
+        mock.state.socket!.fail('boom')
+        await expect(pending).rejects.toThrow(/boom/)
+        rt.close()
+    })
+
+    it('forwards cookie and token auth onto extraHeaders and handshake.auth', async () => {
+        const auth = cookieAuth()
+        await auth.onResponse?.(new Headers({ 'set-cookie': 'sid=abc; Path=/' }), {
+            method: 'GET',
+            url: 'https://frappe.example.com/',
+        })
+        const rt = createRealtime(client(auth), { autoConnect: false, socketUrl: 'wss://rt.example.com' })
+        await rt.connect()
+        expect(mock.state.url).toBe('wss://rt.example.com')
+        expect((mock.state.opts?.extraHeaders as Record<string, string>).Cookie).toContain('sid=abc')
+        rt.close()
+
+        const token = createRealtime(client(tokenAuth({ apiKey: 'k', apiSecret: 's' })), {
+            autoConnect: false,
+            auth: (ctx) => ({ ...ctx, site: 'x' }),
+        })
+        await token.connect()
+        expect((mock.state.opts?.extraHeaders as Record<string, string>).Authorization).toMatch(/^token /)
+        expect(mock.state.opts?.auth).toMatchObject({ site: 'x' })
+        token.close()
+    })
+
+    it('subscribes to a document, filters events, and refcounts unsubscribe', async () => {
+        const rt = createRealtime(client(), { autoConnect: false })
+        await rt.connect()
+        const seen: unknown[] = []
+        const stop1 = rt.subscribeDoc('ToDo', 'TD-1', (e) => seen.push(e))
+        const stop2 = rt.subscribeDoc('ToDo', 'TD-1', (e) => seen.push(['second', e]))
+        expect(mock.state.socket!.emitted.filter((e) => e.event === 'doc_subscribe')).toHaveLength(1)
+
+        mock.state.socket!.fire('doc_update', { doctype: 'ToDo', name: 'TD-1', status: 'Open' })
+        mock.state.socket!.fire('doc_update', { doctype: 'ToDo', name: 'other' })
+        expect(seen).toHaveLength(2)
+
+        stop1()
+        expect(mock.state.socket!.emitted.filter((e) => e.event === 'doc_unsubscribe')).toHaveLength(0)
+        stop2()
+        expect(mock.state.socket!.emitted.filter((e) => e.event === 'doc_unsubscribe')).toHaveLength(1)
+        rt.close()
+    })
+
+    it('subscribes to a doctype list and to doc_viewers', async () => {
+        const rt = createRealtime(client(), { autoConnect: false })
+        await rt.connect()
+        const lists: unknown[] = []
+        const viewers: unknown[] = []
+        const stopList = rt.subscribeDocType('ToDo', (e) => lists.push(e))
+        const stopViewers = rt.subscribeDocViewers('ToDo', 'TD-1', (e) => viewers.push(e))
+        mock.state.socket!.fire('list_update', { doctype: 'ToDo' })
+        mock.state.socket!.fire('list_update', { doctype: 'User' })
+        mock.state.socket!.fire('doc_viewers', { doctype: 'ToDo', name: 'TD-1', viewers: [{ user: 'a' }] })
+        mock.state.socket!.fire('doc_viewers', { doctype: 'ToDo', name: 'other', viewers: [] })
+        expect(lists).toHaveLength(1)
+        expect(viewers).toHaveLength(1)
+        stopList()
+        stopViewers()
+        expect(mock.state.socket!.emitted.some((e) => e.event === 'doctype_unsubscribe')).toBe(true)
+        expect(mock.state.socket!.emitted.some((e) => e.event === 'doc_unsubscribe')).toBe(true)
+        rt.close()
+    })
+
+    it('forwards connection-lifecycle events through on()', async () => {
+        const rt = createRealtime(client(), { autoConnect: false })
+        const seen: string[] = []
+        const stop = rt.on('disconnect', (reason) => seen.push(String(reason)))
+        await rt.connect()
+        mock.state.socket!.fire('disconnect', 'io server disconnect')
+        expect(seen).toEqual(['io server disconnect'])
+        stop()
+        mock.state.socket!.fire('disconnect', 'ignored')
+        expect(seen).toHaveLength(1)
+        rt.close()
+    })
+
+    it('throws when socket.io-client cannot be loaded', async () => {
+        mock.state.impl = undefined
+        const rt = createRealtime(client(), { autoConnect: false })
+        await expect(rt.connect()).rejects.toThrow(/not installed/)
+        rt.close()
+    })
+})

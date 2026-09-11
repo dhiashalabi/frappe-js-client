@@ -1,8 +1,6 @@
 # frappe-js-client
 
-Zero-dependency TypeScript/JavaScript client for [Frappe Framework](https://frappeframework.com) REST APIs (v14, v15, v16). Uses `globalThis.fetch` — no Axios.
-
-This repository is a **rewrite** of the older Axios `FrappeApp` line. The public API is `createFrappeClient`, not `FrappeApp`.
+Zero-dependency TypeScript/JavaScript client for [Frappe Framework](https://frappeframework.com) REST APIs (v14, v15, v16). Uses `globalThis.fetch`.
 
 Supports **Frappe v14, v15, and v16**. Default `apiVersion` is **`2`** (`/api/v2`, Frappe 15+). Pass `{ apiVersion: 1 }` for classic `/api/method` + `/api/resource` (the v14-safe path). Realtime is optional (`frappe-js-client/realtime` + `socket.io-client`); core is zero-dependency.
 

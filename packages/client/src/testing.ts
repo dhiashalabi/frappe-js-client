@@ -1,0 +1,46 @@
+/**
+ * frappe-js-client/testing — test your own Frappe code without a running server.
+ *
+ * @example
+ * ```ts
+ * import { createTestClient } from 'frappe-js-client/testing'
+ *
+ * const { client, transport } = createTestClient()
+ * transport.mock({ method: 'GET', path: '/api/v2/document/User/Administrator', body: fixtureUser })
+ * const user = await client.db.getDoc('User', 'Administrator')
+ * ```
+ *
+ * @packageDocumentation
+ */
+
+import { createFrappeClient, type FrappeClient } from './client'
+import { anonymousAuth } from './core/auth'
+import type { FrappeClientOptions } from './core/config'
+import { type ExtendedFrappeClient, withExtended } from './extended'
+import { MemoryTransport } from './testing/memory-transport'
+
+export * from './testing/fixtures'
+export type { MemoryRoute, MemoryTransportOptions } from './testing/memory-transport'
+export { MemoryTransport } from './testing/memory-transport'
+
+/**
+ * Builds a core-tier client backed by a `MemoryTransport` instead of the network. The returned
+ * `client` is a real `FrappeClient` — assignable anywhere a production client is, and produced
+ * by the exact same `createFrappeClient` wiring.
+ */
+export function createTestClient<Docs extends object = object>(
+    options: Partial<FrappeClientOptions> = {},
+): { client: FrappeClient<Docs>; transport: MemoryTransport } {
+    const auth = options.auth ?? anonymousAuth()
+    const transport = new MemoryTransport({ auth })
+    const client = createFrappeClient<Docs>({ url: 'https://test.local', ...options, auth, transport })
+    return { client, transport }
+}
+
+/** Builds a core + extended tier client backed by a `MemoryTransport` instead of the network. */
+export function createExtendedTestClient<Docs extends object = object>(
+    options: Partial<FrappeClientOptions> = {},
+): { client: ExtendedFrappeClient<Docs>; transport: MemoryTransport } {
+    const { client, transport } = createTestClient<Docs>(options)
+    return { client: withExtended(client), transport }
+}

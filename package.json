@@ -3,7 +3,7 @@
     "private": true,
     "description": "Monorepo for frappe-js-client (core client) and @frappe-js-client/codegen.",
     "license": "MIT",
-    "packageManager": "pnpm@11.25.0",
+    "packageManager": "pnpm@12.3.4",
     "engines": {
         "node": ">=20",
         "pnpm": ">=11"
@@ -48,7 +48,7 @@
         "@changesets/changelog-github": "^1.0.1",
         "@changesets/cli": "^3.0.2",
         "husky": "^9.1.7",
-        "lint-staged": "^17.4.1",
+        "lint-staged": "^17.5.0",
         "prettier": "3.9.6"
     }
 }
