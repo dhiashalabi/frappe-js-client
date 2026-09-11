@@ -1,0 +1,66 @@
+{
+    "name": "ToDo",
+    "istable": 0,
+    "issingle": 0,
+    "fields": [
+        {
+            "fieldname": "description",
+            "fieldtype": "Text Editor",
+            "label": "Description",
+            "reqd": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Open\nClosed",
+            "reqd": 1
+        },
+        {
+            "fieldname": "priority",
+            "fieldtype": "Select",
+            "label": "Priority",
+            "options": "High\nMedium\nLow"
+        },
+        {
+            "fieldname": "date",
+            "fieldtype": "Date",
+            "label": "Due Date"
+        },
+        {
+            "fieldname": "allocated_to",
+            "fieldtype": "Link",
+            "label": "Allocated To",
+            "options": "User"
+        },
+        {
+            "fieldname": "section_break_reference",
+            "fieldtype": "Section Break",
+            "label": "Reference"
+        },
+        {
+            "fieldname": "reference_type",
+            "fieldtype": "Link",
+            "label": "Reference Type",
+            "options": "DocType"
+        },
+        {
+            "fieldname": "reference_name",
+            "fieldtype": "Dynamic Link",
+            "label": "Reference Name",
+            "options": "reference_type"
+        },
+        {
+            "fieldname": "assigned_by",
+            "fieldtype": "Link",
+            "label": "Assigned By",
+            "options": "User"
+        },
+        {
+            "fieldname": "sender",
+            "fieldtype": "Data",
+            "label": "Sender",
+            "hidden": 1
+        }
+    ]
+}
