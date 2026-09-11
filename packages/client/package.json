@@ -1,6 +1,6 @@
 {
     "name": "frappe-js-client",
-    "version": "3.2.0",
+    "version": "3.3.0",
     "description": "Zero-dependency, fetch-native TypeScript/JavaScript client for Frappe Framework REST APIs (v14, v15, v16).",
     "author": "Dhia A. Shalabi <dhia.shalabi@gmail.com>",
     "license": "MIT",
