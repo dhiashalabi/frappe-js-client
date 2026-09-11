@@ -2,10 +2,10 @@
 
 This repo publishes two npm packages. The client never depends on codegen.
 
-| Package            | npm                                                                                    | Role                                              |
-| ------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `packages/client`  | [`frappe-js-client`](https://www.npmjs.com/package/frappe-js-client)                   | REST client                                       |
-| `packages/codegen` | [`@frappe-js-client/codegen`](https://www.npmjs.com/package/@frappe-js-client/codegen) | CLI + library that emits typed DocType interfaces |
+| Package            | npm                                                                  | Role                                              |
+| ------------------ | -------------------------------------------------------------------- | ------------------------------------------------- |
+| `packages/client`  | [`frappe-js-client`](https://www.npmjs.com/package/frappe-js-client) | REST client                                       |
+| `packages/codegen` | [`frappe-codegen`](https://www.npmjs.com/package/frappe-codegen)     | CLI + library that emits typed DocType interfaces |
 
 ## `frappe-js-client`
 
@@ -27,11 +27,11 @@ There is no `logging()` middleware. Logging is `logger: consoleLogger()` on the 
 
 There is no `customAuth()` factory. Implement [`AuthStrategy`](./authentication.md) yourself.
 
-## `@frappe-js-client/codegen`
+## `frappe-codegen`
 
 Depends on `frappe-js-client`. Requires Frappe **v15+** (`apiVersion: 2`) because meta is `GET /api/v2/doctype/{doctype}/meta`.
 
 - Binary: `frappe-codegen`
-- Programmatic: `import { generateModule, resolveDocTypes, … } from '@frappe-js-client/codegen'`
+- Programmatic: `import { generateModule, resolveDocTypes, … } from 'frappe-codegen'`
 
 Full guide: [Codegen](./codegen.md).

@@ -100,5 +100,3 @@ MIT. See [LICENSE](LICENSE).
 
 - [Issues](https://github.com/dhiashalabi/frappe-js-client/issues)
 - [Discussions](https://github.com/dhiashalabi/frappe-js-client/discussions)
-
-[Dhia A. Shalabi](https://github.com/dhiashalabi)

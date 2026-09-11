@@ -12,11 +12,11 @@ pnpm install
 
 This is a pnpm workspace. Work from the repo root, not `packages/client` alone.
 
-| Path               | Package                     |
-| ------------------ | --------------------------- |
-| `packages/client`  | `frappe-js-client`          |
-| `packages/codegen` | `@frappe-js-client/codegen` |
-| `docs`             | Docusaurus site             |
+| Path               | Package            |
+| ------------------ | ------------------ |
+| `packages/client`  | `frappe-js-client` |
+| `packages/codegen` | `frappe-codegen`   |
+| `docs`             | Docusaurus site    |
 
 ## Before opening a PR
 

@@ -34,7 +34,7 @@ Prefer importing types from `frappe-js-client/types` in generated files so runti
 
 ## Generate types from your site
 
-[`@frappe-js-client/codegen`](./codegen.md) (`frappe-codegen`) against a live v15+ site writes `GeneratedDocTypes` / `GeneratedInserts`:
+[`frappe-codegen`](./codegen.md) (`frappe-codegen`) against a live v15+ site writes `GeneratedDocTypes` / `GeneratedInserts`:
 
 ```typescript
 import { createFrappeClient } from 'frappe-js-client'

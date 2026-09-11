@@ -42,8 +42,8 @@ const FeatureList: FeatureItem[] = [
         title: 'Typed DocTypes',
         description: (
             <>
-                <code>@frappe-js-client/codegen</code> reads a live v15+ site and emits <code>GeneratedDocTypes</code>{' '}
-                so <code>db.getDoc</code> infers the row.
+                <code>frappe-codegen</code> reads a live v15+ site and emits <code>GeneratedDocTypes</code> so{' '}
+                <code>db.getDoc</code> infers the row.
             </>
         ),
     },

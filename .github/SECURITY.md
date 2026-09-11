@@ -5,7 +5,7 @@
 Security fixes are accepted for the latest published release of:
 
 - `frappe-js-client`
-- `@frappe-js-client/codegen`
+- `frappe-codegen`
 
 Older major versions are unsupported unless a release is still marked current on npm.
 

@@ -100,7 +100,7 @@ const config: Config = {
                     position: 'right',
                 },
                 {
-                    href: 'https://www.npmjs.com/package/@frappe-js-client/codegen',
+                    href: 'https://www.npmjs.com/package/frappe-codegen',
                     label: 'codegen',
                     position: 'right',
                 },
@@ -143,7 +143,7 @@ const config: Config = {
                         },
                         {
                             label: 'codegen',
-                            href: 'https://www.npmjs.com/package/@frappe-js-client/codegen',
+                            href: 'https://www.npmjs.com/package/frappe-codegen',
                         },
                         {
                             label: 'Issues',
