@@ -21,7 +21,7 @@ body:
           label: Package
           options:
               - frappe-js-client
-              - '@frappe-js-client/codegen'
+              - frappe-codegen
               - Documentation site
               - CI / repository tooling
       validations:

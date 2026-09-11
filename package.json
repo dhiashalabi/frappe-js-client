@@ -1,7 +1,7 @@
 {
     "name": "frappe-js-client-monorepo",
     "private": true,
-    "description": "Monorepo for frappe-js-client (core client) and @frappe-js-client/codegen.",
+    "description": "Monorepo for frappe-js-client (core client) and frappe-codegen.",
     "license": "MIT",
     "packageManager": "pnpm@12.3.4",
     "engines": {

@@ -19,7 +19,7 @@ Node **20+** (or a browser with `fetch`). Optional peers:
 | When                            | Install                                          |
 | ------------------------------- | ------------------------------------------------ |
 | Socket.IO document events       | `socket.io-client` (`frappe-js-client/realtime`) |
-| Typed DocTypes from a live site | `@frappe-js-client/codegen` (dev)                |
+| Typed DocTypes from a live site | `frappe-codegen` (dev)                           |
 
 ## Quick start
 

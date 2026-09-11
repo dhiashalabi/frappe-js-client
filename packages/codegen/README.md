@@ -1,4 +1,4 @@
-# @frappe-js-client/codegen
+# frappe-codegen
 
 Reads DocType metadata from a **live Frappe site** and emits typed TypeScript interfaces for
 [`frappe-js-client`](https://www.npmjs.com/package/frappe-js-client), so
@@ -15,7 +15,7 @@ Requires **Frappe v15+** (`apiVersion: 2`). Meta comes from `GET /api/v2/doctype
 ## Install
 
 ```bash
-pnpm add -D @frappe-js-client/codegen
+pnpm add -D frappe-codegen
 ```
 
 The binary is `frappe-codegen`.
@@ -72,12 +72,12 @@ the DocType map, and `--dry-run` are CLI-only.
 
 ### Other ways to run
 
-| When                                   | Command                                                                 |
-| -------------------------------------- | ----------------------------------------------------------------------- |
-| Installed in the project (recommended) | `pnpm exec frappe-codegen`                                              |
-| npm / yarn                             | `npx frappe-codegen`                                                    |
-| One-off, no install                    | `pnpm dlx @frappe-js-client/codegen` or `npx @frappe-js-client/codegen` |
-| Help                                   | `pnpm exec frappe-codegen --help`                                       |
+| When                                   | Command                                           |
+| -------------------------------------- | ------------------------------------------------- |
+| Installed in the project (recommended) | `pnpm exec frappe-codegen`                        |
+| npm / yarn                             | `npx frappe-codegen`                              |
+| One-off, no install                    | `pnpm dlx frappe-codegen` or `npx frappe-codegen` |
+| Help                                   | `pnpm exec frappe-codegen --help`                 |
 
 ## One-shot (no config file)
 
@@ -146,13 +146,7 @@ on (default) or when you list the child DocType yourself.
 
 ```ts
 import { createFrappeClient } from 'frappe-js-client'
-import {
-    fetchWithOptionalFollow,
-    generateModule,
-    loadConfigFile,
-    mergeConfig,
-    resolveDocTypes,
-} from '@frappe-js-client/codegen'
+import { fetchWithOptionalFollow, generateModule, loadConfigFile, mergeConfig, resolveDocTypes } from 'frappe-codegen'
 
 const client = createFrappeClient({ url, apiVersion: 2, auth })
 const names = await resolveDocTypes(client, {

@@ -2,7 +2,7 @@
 
 `frappe.db` is document CRUD. Names with spaces are encoded (`Sales Order`). Every method accepts trailing [`RequestOptions`](../client.md#per-request-options).
 
-For site-specific field types, generate `GeneratedDocTypes` with [`@frappe-js-client/codegen`](../codegen.md) and pass them to `createFrappeClient<GeneratedDocTypes>(...)`.
+For site-specific field types, generate `GeneratedDocTypes` with [`frappe-codegen`](../codegen.md) and pass them to `createFrappeClient<GeneratedDocTypes>(...)`.
 
 List pagination is always explicit. `limit` defaults to **20**. There is no “fetch all” — use `paginate()`.
 

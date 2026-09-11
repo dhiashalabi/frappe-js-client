@@ -1,6 +1,6 @@
 # Codegen
 
-[`@frappe-js-client/codegen`](https://www.npmjs.com/package/@frappe-js-client/codegen) reads DocType metadata from a **live Frappe site** and writes TypeScript interfaces for [`frappe-js-client`](./getting-started.md). Pass `GeneratedDocTypes` into `createFrappeClient` so `db.getDoc('ToDo', name)` infers the row instead of `FrappeDoc<object>`.
+[`frappe-codegen`](https://www.npmjs.com/package/frappe-codegen) reads DocType metadata from a **live Frappe site** and writes TypeScript interfaces for [`frappe-js-client`](./getting-started.md). Pass `GeneratedDocTypes` into `createFrappeClient` so `db.getDoc('ToDo', name)` infers the row instead of `FrappeDoc<object>`.
 
 It is a separate package with its own release cycle. It depends on `frappe-js-client`; the client never depends on codegen.
 
@@ -11,7 +11,7 @@ The CLI binary is `frappe-codegen`.
 ## Install
 
 ```bash
-pnpm add -D @frappe-js-client/codegen
+pnpm add -D frappe-codegen
 ```
 
 ## Config + env
@@ -60,12 +60,12 @@ If both key and secret are omitted, the CLI uses **anonymous** auth (only works 
 
 Default output path: `./frappe-types.generated.ts`. Parent directories are created.
 
-| Situation                | Command                              |
-| ------------------------ | ------------------------------------ |
-| Installed in the project | `pnpm exec frappe-codegen`           |
-| npm                      | `npx frappe-codegen`                 |
-| One-off                  | `pnpm dlx @frappe-js-client/codegen` |
-| Help                     | `pnpm exec frappe-codegen --help`    |
+| Situation                | Command                           |
+| ------------------------ | --------------------------------- |
+| Installed in the project | `pnpm exec frappe-codegen`        |
+| npm                      | `npx frappe-codegen`              |
+| One-off                  | `pnpm dlx frappe-codegen`         |
+| Help                     | `pnpm exec frappe-codegen --help` |
 
 ## CLI reference
 
@@ -159,7 +159,7 @@ import {
     mergeConfig,
     resolveDocTypes,
     toInterfaceName,
-} from '@frappe-js-client/codegen'
+} from 'frappe-codegen'
 
 const path = findDefaultConfigPath() // DEFAULT_CONFIG_NAME in cwd, if present
 const file = path ? loadConfigFile(path) : undefined

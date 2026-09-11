@@ -8,10 +8,10 @@ Supports **Frappe v14, v15, and v16**. Default `apiVersion` is **`2`** (`/api/v2
 
 ## Packages
 
-| Package                                | npm                         | Role                                    |
-| -------------------------------------- | --------------------------- | --------------------------------------- |
-| [`packages/client`](packages/client)   | `frappe-js-client`          | REST client                             |
-| [`packages/codegen`](packages/codegen) | `@frappe-js-client/codegen` | CLI that emits typed DocType interfaces |
+| Package                                | npm                | Role                                    |
+| -------------------------------------- | ------------------ | --------------------------------------- |
+| [`packages/client`](packages/client)   | `frappe-js-client` | REST client                             |
+| [`packages/codegen`](packages/codegen) | `frappe-codegen`   | CLI that emits typed DocType interfaces |
 
 Requires **Node.js 20+** and **pnpm 11**.
 
