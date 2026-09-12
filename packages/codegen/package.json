@@ -1,6 +1,6 @@
 {
     "name": "frappe-codegen",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "CLI that reads a live Frappe site's DocType metadata and emits typed TypeScript interfaces for frappe-js-client.",
     "author": "Dhia A. Shalabi <dhia.shalabi@gmail.com>",
     "license": "MIT",

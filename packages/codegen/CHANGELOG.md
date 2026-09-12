@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- [#9](https://github.com/dhiashalabi/frappe-js-client/pull/9) [`4b74ef2`](https://github.com/dhiashalabi/frappe-js-client/commit/4b74ef24606c0f9dbba359becc21b03594e8e017) Thanks [@dhiashalabi](https://github.com/dhiashalabi)! - Add request option validation, timezone-aware date formatting, richer error handling, and tighter list pagination. Default codegen to include hidden fields. Add browser tests and packed-consumer checks.
+
+### Patch Changes
+
+- Updated dependencies [[`4b74ef2`](https://github.com/dhiashalabi/frappe-js-client/commit/4b74ef24606c0f9dbba359becc21b03594e8e017)]:
+    - frappe-js-client@3.4.0
+
 ## 1.0.0
 
 ### Patch Changes
