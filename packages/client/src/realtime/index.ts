@@ -33,6 +33,7 @@ interface MinimalSocket {
     once(event: string, handler: (...args: unknown[]) => void): unknown
 }
 type IoFactory = (url: string, opts: Record<string, unknown>) => MinimalSocket
+type SocketAuthProvider = (callback: (payload: Record<string, unknown>) => void) => void
 
 async function loadSocketIoClient(): Promise<IoFactory> {
     try {
@@ -57,8 +58,28 @@ async function resolveAuthContext(client: FrappeClient): Promise<RealtimeAuthCon
     return { cookie: headers.Cookie, authorization: headers.Authorization }
 }
 
-function refcountKey(doctype: string, name?: string): string {
-    return name === undefined ? `dt:${doctype}` : `doc:${doctype}\u241f${name}`
+function comparableOrigin(value: string): string {
+    const url = new URL(value)
+    if (url.protocol === 'ws:') url.protocol = 'http:'
+    if (url.protocol === 'wss:') url.protocol = 'https:'
+    return url.origin
+}
+
+function applyAuthHeaders(target: Record<string, string>, ctx: RealtimeAuthContext): void {
+    if (ctx.cookie) target.Cookie = ctx.cookie
+    else delete target.Cookie
+    if (ctx.authorization) target.Authorization = ctx.authorization
+    else delete target.Authorization
+}
+
+function subscriptionKey(doctype: string, name?: string): string {
+    return JSON.stringify([doctype, name ?? null])
+}
+
+interface SubscriptionState {
+    readonly doctype: string
+    readonly name?: string
+    count: number
 }
 
 /**
@@ -79,11 +100,22 @@ function refcountKey(doctype: string, name?: string): string {
 export function createRealtime(client: FrappeClient, options: RealtimeOptions = {}): FrappeRealtime {
     let socket: MinimalSocket | undefined
     let connecting: Promise<void> | undefined
+    let cancelConnecting: (() => void) | undefined
     let ensuring: Promise<MinimalSocket> | undefined
     let closed = false
 
-    const refcounts = new Map<string, number>()
+    const subscriptions = new Map<string, SubscriptionState>()
     const rawListeners = new Set<{ event: string; handler: (...args: unknown[]) => void }>()
+    let hasConnected = false
+    let reconnectHandler: (() => void) | undefined
+
+    function assertOpen(): void {
+        if (closed) {
+            throw new ConfigurationError(
+                'This FrappeRealtime instance was closed with .close(). Create a new one with createRealtime().',
+            )
+        }
+    }
 
     function addRawListener(event: string, handler: (...args: unknown[]) => void): void {
         rawListeners.add({ event, handler })
@@ -101,25 +133,42 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
     }
 
     async function ensureConnected(): Promise<MinimalSocket> {
-        if (closed) {
-            throw new ConfigurationError(
-                'This FrappeRealtime instance was closed with .close(). Create a new one with createRealtime().',
-            )
-        }
+        assertOpen()
         if (socket) return socket
         ensuring ??= (async () => {
             const io = await loadSocketIoClient()
-            const authCtx = await resolveAuthContext(client)
-            const authPayload =
-                typeof options.auth === 'function' ? await options.auth(authCtx) : { ...authCtx, ...options.auth }
+            assertOpen()
+            const socketUrl = options.socketUrl ?? client.config.baseUrl
+            const includeClientCredentials =
+                options.allowCrossOriginCredentials === true ||
+                comparableOrigin(socketUrl) === comparableOrigin(client.config.baseUrl)
+            const getAuthContext = () =>
+                includeClientCredentials ? resolveAuthContext(client) : Promise.resolve({} as RealtimeAuthContext)
+            const handshakeFrom = async (context: RealtimeAuthContext): Promise<Record<string, unknown>> =>
+                typeof options.auth === 'function' ? options.auth(context) : { ...context, ...options.auth }
+            const authCtx = await getAuthContext()
+            assertOpen()
+            const initialHandshake = await handshakeFrom(authCtx)
+            assertOpen() // guard against close() during slow custom auth callback
 
             const extraHeaders: Record<string, string> = {}
-            if (authCtx.cookie) extraHeaders.Cookie = authCtx.cookie
-            if (authCtx.authorization) extraHeaders.Authorization = authCtx.authorization
-
-            const created = io(options.socketUrl ?? client.config.baseUrl, {
+            applyAuthHeaders(extraHeaders, authCtx)
+            let deliveredInitialHandshake = false
+            const authProvider: SocketAuthProvider = (callback) => {
+                if (!deliveredInitialHandshake) {
+                    deliveredInitialHandshake = true
+                    callback(initialHandshake)
+                    return
+                }
+                void (async () => {
+                    const context = await getAuthContext()
+                    applyAuthHeaders(extraHeaders, context)
+                    return handshakeFrom(context)
+                })().then(callback, () => callback({}))
+            }
+            const created = io(socketUrl, {
                 path: options.path ?? '/socket.io',
-                withCredentials: true,
+                withCredentials: includeClientCredentials,
                 reconnection: options.reconnection ?? true,
                 reconnectionAttempts: options.reconnectionAttempts ?? Infinity,
                 reconnectionDelay: options.reconnectionDelay ?? 1000,
@@ -127,12 +176,19 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
                 transports: options.transports ?? ['websocket', 'polling'],
                 autoConnect: false,
                 extraHeaders,
-                auth: authPayload,
+                auth: authProvider,
             })
             socket = created
 
             for (const { event, handler } of rawListeners) created.on(event, handler)
-            for (const key of refcounts.keys()) emitSubscribe(created, key)
+            for (const subscription of subscriptions.values()) emitSubscribe(created, subscription)
+            reconnectHandler = () => {
+                if (hasConnected) {
+                    for (const subscription of subscriptions.values()) emitSubscribe(created, subscription)
+                }
+                hasConnected = true
+            }
+            created.on('connect', reconnectHandler)
 
             return created
         })().finally(() => {
@@ -141,37 +197,44 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
         return ensuring
     }
 
-    function emitSubscribe(target: MinimalSocket, key: string): void {
-        if (key.startsWith('doc:')) {
-            const [doctype, name] = key.slice(4).split('\u241f')
-            target.emit('doc_subscribe', doctype, name)
+    function emitSubscribe(target: MinimalSocket, subscription: SubscriptionState): void {
+        if (subscription.name !== undefined) {
+            target.emit('doc_subscribe', subscription.doctype, subscription.name)
         } else {
-            target.emit('doctype_subscribe', key.slice(3))
+            target.emit('doctype_subscribe', subscription.doctype)
         }
     }
 
-    function emitUnsubscribe(target: MinimalSocket, key: string): void {
-        if (key.startsWith('doc:')) {
-            const [doctype, name] = key.slice(4).split('\u241f')
-            target.emit('doc_unsubscribe', doctype, name)
+    function emitUnsubscribe(target: MinimalSocket, subscription: SubscriptionState): void {
+        if (subscription.name !== undefined) {
+            target.emit('doc_unsubscribe', subscription.doctype, subscription.name)
         } else {
-            target.emit('doctype_unsubscribe', key.slice(3))
+            target.emit('doctype_unsubscribe', subscription.doctype)
         }
     }
 
-    function retain(key: string): void {
-        const count = refcounts.get(key) ?? 0
-        refcounts.set(key, count + 1)
-        if (count === 0 && socket) emitSubscribe(socket, key)
+    function retain(doctype: string, name?: string): string {
+        assertOpen()
+        const key = subscriptionKey(doctype, name)
+        const existing = subscriptions.get(key)
+        if (existing) {
+            existing.count++
+        } else {
+            const subscription = { doctype, name, count: 1 }
+            subscriptions.set(key, subscription)
+            if (socket) emitSubscribe(socket, subscription)
+        }
+        return key
     }
 
     function release(key: string): void {
-        const count = refcounts.get(key) ?? 0
-        if (count <= 1) {
-            refcounts.delete(key)
-            if (socket) emitUnsubscribe(socket, key)
+        const subscription = subscriptions.get(key)
+        if (!subscription) return
+        if (subscription.count <= 1) {
+            subscriptions.delete(key)
+            if (socket) emitUnsubscribe(socket, subscription)
         } else {
-            refcounts.set(key, count - 1)
+            subscription.count--
         }
     }
 
@@ -179,15 +242,27 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
         const target = await ensureConnected()
         if (target.connected) return
         connecting ??= new Promise<void>((resolve, reject) => {
-            const onConnect = () => {
+            const cleanup = () => {
+                target.off('connect', onConnect)
                 target.off('connect_error', onError)
                 connecting = undefined
+                cancelConnecting = undefined
+            }
+            const onConnect = () => {
+                cleanup()
                 resolve()
             }
             const onError = (error: unknown) => {
-                target.off('connect', onConnect)
-                connecting = undefined
+                cleanup()
                 reject(error instanceof Error ? error : new Error(String(error)))
+            }
+            cancelConnecting = () => {
+                cleanup()
+                reject(
+                    new ConfigurationError(
+                        'This FrappeRealtime instance was closed with .close(). Create a new one with createRealtime().',
+                    ),
+                )
             }
             target.once('connect', onConnect)
             target.once('connect_error', onError)
@@ -198,8 +273,17 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
 
     function close(): void {
         closed = true
-        refcounts.clear()
+        subscriptions.clear()
+        // Detach all registered raw listeners from the socket before clearing the Set,
+        // so late socket events (e.g. during disconnect) don't invoke stale handlers.
+        if (socket) {
+            for (const { event, handler } of rawListeners) {
+                socket.off(event, handler)
+            }
+        }
         rawListeners.clear()
+        cancelConnecting?.()
+        if (reconnectHandler) socket?.off('connect', reconnectHandler)
         socket?.disconnect()
         socket = undefined
     }
@@ -217,43 +301,49 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
         connect,
         close,
         subscribeDoc(doctype, name, handler): Unsubscribe {
-            const key = refcountKey(doctype, name)
+            const key = retain(doctype, name)
             const listener = (...args: unknown[]) => {
                 const event = args[0] as DocUpdateEvent
                 if (event && event.doctype === doctype && event.name === name) handler(event)
             }
-            retain(key)
             addRawListener('doc_update', listener)
             connect().catch(() => undefined)
+            let active = true
             return () => {
+                if (!active) return
+                active = false
                 removeRawListener('doc_update', listener)
                 release(key)
             }
         },
         subscribeDocType(doctype, handler): Unsubscribe {
-            const key = refcountKey(doctype)
+            const key = retain(doctype)
             const listener = (...args: unknown[]) => {
                 const event = args[0] as ListUpdateEvent
                 if (event && event.doctype === doctype) handler(event)
             }
-            retain(key)
             addRawListener('list_update', listener)
             connect().catch(() => undefined)
+            let active = true
             return () => {
+                if (!active) return
+                active = false
                 removeRawListener('list_update', listener)
                 release(key)
             }
         },
         subscribeDocViewers(doctype, name, handler): Unsubscribe {
-            const key = refcountKey(doctype, name)
+            const key = retain(doctype, name)
             const listener = (...args: unknown[]) => {
                 const event = args[0] as DocViewersEvent
                 if (event && event.doctype === doctype && event.name === name) handler(event)
             }
-            retain(key)
             addRawListener('doc_viewers', listener)
             connect().catch(() => undefined)
+            let active = true
             return () => {
+                if (!active) return
+                active = false
                 removeRawListener('doc_viewers', listener)
                 release(key)
             }
@@ -262,9 +352,15 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
             event: K,
             handler: (payload: RealtimeConnectionEventMap[K]) => void,
         ): Unsubscribe {
+            assertOpen()
             const listener = (...args: unknown[]) => handler(args[0] as RealtimeConnectionEventMap[K])
             addRawListener(event, listener)
-            return () => removeRawListener(event, listener)
+            let active = true
+            return () => {
+                if (!active) return
+                active = false
+                removeRawListener(event, listener)
+            }
         },
     }
 }

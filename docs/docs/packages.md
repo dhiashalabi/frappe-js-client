@@ -7,9 +7,11 @@ This repo publishes two npm packages. The client never depends on codegen.
 | `packages/client`  | [`frappe-js-client`](https://www.npmjs.com/package/frappe-js-client) | REST client                                       |
 | `packages/codegen` | [`frappe-codegen`](https://www.npmjs.com/package/frappe-codegen)     | CLI + library that emits typed DocType interfaces |
 
+Node **20+**. Optional peer on the client: `socket.io-client` ^4, only for `frappe-js-client/realtime`.
+
 ## `frappe-js-client`
 
-Zero runtime dependencies. Optional peer: `socket.io-client` ^4, only for `frappe-js-client/realtime`.
+Zero runtime dependencies.
 
 ### Subpath exports
 
@@ -27,11 +29,28 @@ There is no `logging()` middleware. Logging is `logger: consoleLogger()` on the 
 
 There is no `customAuth()` factory. Implement [`AuthStrategy`](./authentication.md) yourself.
 
+There is no `unsafeTransport()` helper. Pass a `Transport` as `createFrappeClient({ transport })`.
+
+ESM and CJS are both published (`import` / `require`). Types resolve via `exports`.
+
+### Guides
+
+- [Creating a client](./client.md)
+- [Authentication](./authentication.md)
+- [Middleware](./middleware.md)
+- [Errors](./errors.md)
+- [Testing](./testing.md)
+- [Realtime](./realtime.md)
+- [TypeScript](./typescript.md)
+- [Frappe versions](./frappe-versions.md)
+- Generated API: **Client API** in the sidebar
+
 ## `frappe-codegen`
 
 Depends on `frappe-js-client`. Requires Frappe **v15+** (`apiVersion: 2`) because meta is `GET /api/v2/doctype/{doctype}/meta`.
 
 - Binary: `frappe-codegen`
 - Programmatic: `import { generateModule, resolveDocTypes, … } from 'frappe-codegen'`
+- One export map (`.`); the CLI is not a library export
 
-Full guide: [Codegen](./codegen.md).
+Full guide: [Codegen](./codegen.md). Generated API: **Codegen API** in the sidebar.

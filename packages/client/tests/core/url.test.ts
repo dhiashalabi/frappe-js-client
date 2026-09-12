@@ -49,11 +49,15 @@ describe('core/url — regression matrix', () => {
     it('resourcePath encodes doctype and name', () => {
         expect(resourcePath(1, 'Sales Order', 'SO-0001')).toBe('/api/resource/Sales%20Order/SO-0001')
         expect(resourcePath(2, 'Sales Order')).toBe('/api/v2/document/Sales%20Order')
+        expect(resourcePath(2, 'Sales Invoice', 'INV/2026/0001')).toBe('/api/v2/document/Sales%20Invoice/INV/2026/0001')
     })
 
     it('rejects path traversal in segments', () => {
         expect(() => resourcePath(1, '..', 'x')).toThrow()
         expect(() => resourcePath(1, 'User', '../../etc/passwd')).toThrow()
+        expect(() => resourcePath(1, 'User', 'folder/../secret')).toThrow()
+        expect(() => resourcePath(1, 'User', 'folder\\secret')).toThrow()
+        expect(() => resourcePath(1, 'User', 'bad\0name')).toThrow()
     })
 
     it('rejects an empty method path', () => {

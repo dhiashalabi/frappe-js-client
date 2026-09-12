@@ -12,4 +12,10 @@ describe('core/format', () => {
         const date = new Date(2024, 0, 5, 9, 2, 7)
         expect(formatFrappeDatetime(date)).toBe('2024-01-05 09:02:07')
     })
+
+    it('formats dates in an explicit Frappe site timezone', () => {
+        const instant = new Date('2026-01-01T21:30:05Z')
+        expect(formatFrappeDate(instant, 'Asia/Riyadh')).toBe('2026-01-02')
+        expect(formatFrappeDatetime(instant, 'Asia/Riyadh')).toBe('2026-01-02 00:30:05')
+    })
 })

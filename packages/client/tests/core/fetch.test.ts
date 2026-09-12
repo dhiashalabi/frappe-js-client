@@ -10,9 +10,13 @@ import {
     TransportError,
 } from '../../src/core/errors'
 import { FetchTransport } from '../../src/core/fetch'
+import { retry } from '../../src/core/middleware'
 
-function jsonResponse(body: unknown, status = 200) {
-    return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json', ...headers },
+    })
 }
 
 describe('FetchTransport', () => {
@@ -65,6 +69,139 @@ describe('FetchTransport', () => {
         expect(res.status).toBe(200)
         expect(n).toBe(2)
         expect((globalThis.fetch as any).mock.calls[1][1].headers.Authorization).toBe('Bearer new')
+    })
+
+    it('releases a 401 response body before authentication replay', async () => {
+        let cancelled = false
+        let calls = 0
+        globalThis.fetch = vi.fn(async () => {
+            calls++
+            if (calls === 1) {
+                return new Response(
+                    new ReadableStream({
+                        cancel() {
+                            cancelled = true
+                        },
+                    }),
+                    { status: 401 },
+                )
+            }
+            return jsonResponse({ data: 'ok' })
+        }) as any
+        const transport = new FetchTransport({
+            config: normalizeConfig({
+                url: 'https://example.com',
+                auth: oauthAuth({ getToken: () => 'old', refresh: async () => 'new' }),
+            }),
+        })
+
+        await transport.request({ method: 'GET', url: '/x' })
+
+        expect(cancelled).toBe(true)
+    })
+
+    it('applies per-request header overrides case-insensitively', async () => {
+        let seen = new Headers()
+        globalThis.fetch = vi.fn(async (_url, init) => {
+            seen = new Headers(init?.headers)
+            return jsonResponse({ data: 'ok' })
+        }) as any
+        const transport = new FetchTransport({
+            config: normalizeConfig({ url: 'https://example.com', headers: { 'X-Tenant': 'old' } }),
+        })
+
+        await transport.request({ method: 'GET', url: '/x', headers: { 'x-tenant': 'new' } })
+
+        expect(seen.get('x-tenant')).toBe('new')
+    })
+
+    it('enforces the deadline while asynchronous authentication is pending', async () => {
+        const transport = new FetchTransport({
+            config: normalizeConfig({
+                url: 'https://example.com',
+                auth: oauthAuth({ getToken: () => new Promise<string>(() => undefined) }),
+            }),
+        })
+
+        await expect(transport.request({ method: 'GET', url: '/x', deadline: Date.now() + 5 })).rejects.toBeInstanceOf(
+            TimeoutError,
+        )
+    })
+
+    it('clears the deadline timer when authentication setup fails', async () => {
+        vi.useFakeTimers()
+        const transport = new FetchTransport({
+            config: normalizeConfig({
+                url: 'https://example.com',
+                auth: {
+                    name: 'failing',
+                    apply() {
+                        return Promise.reject(new Error('auth exploded'))
+                    },
+                },
+            }),
+        })
+
+        await expect(transport.request({ method: 'GET', url: '/x', deadline: Date.now() + 60_000 })).rejects.toThrow(
+            'auth exploded',
+        )
+        expect(vi.getTimerCount()).toBe(0)
+    })
+
+    it('removes query values from error request context', async () => {
+        globalThis.fetch = vi.fn(async () => jsonResponse({ message: 'denied' }, 403)) as any
+        const transport = new FetchTransport({ config: normalizeConfig({ url: 'https://example.com' }) })
+
+        await expect(
+            transport.request({ method: 'GET', url: '/x', params: { access_token: 'secret', filter: 'private' } }),
+        ).rejects.toMatchObject({ request: { url: 'https://example.com/x' } })
+    })
+
+    it('delivers both the original 401 and replay response headers to auth', async () => {
+        const seen: string[] = []
+        let calls = 0
+        globalThis.fetch = vi.fn(async () => {
+            calls++
+            return jsonResponse({ data: 'ok' }, calls === 1 ? 401 : 200, {
+                'x-auth-step': calls === 1 ? 'expired' : 'refreshed',
+            })
+        }) as any
+        const auth = {
+            name: 'refreshing',
+            apply() {},
+            onResponse(headers: Headers) {
+                seen.push(headers.get('x-auth-step')!)
+            },
+            onUnauthorized: () => true,
+        }
+        const transport = new FetchTransport({ config: normalizeConfig({ url: 'https://example.com', auth }) })
+
+        await transport.request({ method: 'GET', url: '/x' })
+        expect(seen).toEqual(['expired', 'refreshed'])
+    })
+
+    it('allows only one authentication replay across middleware retries', async () => {
+        let refreshes = 0
+        globalThis.fetch = vi.fn(async () => jsonResponse({ message: 'expired' }, 401)) as any
+        const auth = {
+            name: 'refreshing',
+            apply() {},
+            onUnauthorized() {
+                refreshes++
+                return true
+            },
+        }
+        const transport = new FetchTransport({
+            config: normalizeConfig({
+                url: 'https://example.com',
+                auth,
+                middleware: [retry({ attempts: 1, baseDelayMs: 0, shouldRetry: () => true })],
+            }),
+        })
+
+        await expect(transport.request({ method: 'GET', url: '/x' })).rejects.toBeInstanceOf(AuthenticationError)
+        expect(refreshes).toBe(1)
+        expect(globalThis.fetch).toHaveBeenCalledTimes(3)
     })
 
     it('maps a fetch rejection (no HTTP response) to TransportError', async () => {
@@ -147,6 +284,85 @@ describe('FetchTransport — remaining branches', () => {
     function transport(overrides: Record<string, unknown> = {}) {
         return new FetchTransport({ config: normalizeConfig({ url: 'https://example.com', ...overrides }) as any })
     }
+
+    function stubXhr(opts: { status?: number; response?: string } = {}) {
+        const sent: Array<{ onload: (() => void) | null }> = []
+        class StubXMLHttpRequest {
+            timeout = 0
+            withCredentials = false
+            responseType = 'text'
+            status = opts.status ?? 200
+            statusText = opts.status && opts.status !== 200 ? 'Error' : 'OK'
+            response = opts.response ?? '{"data":"ok"}'
+            upload = { onprogress: undefined as ((event: ProgressEvent) => void) | undefined }
+            ontimeout: (() => void) | null = null
+            onabort: (() => void) | null = null
+            onerror: (() => void) | null = null
+            onload: (() => void) | null = null
+            open() {}
+            setRequestHeader() {}
+            getAllResponseHeaders() {
+                return ''
+            }
+            abort() {
+                this.onabort?.()
+            }
+            send() {
+                sent.push(this)
+                queueMicrotask(() => this.onload?.())
+            }
+        }
+        ;(globalThis as any).XMLHttpRequest = StubXMLHttpRequest
+        return sent
+    }
+
+    it('removes fallback composed-signal listeners after a successful request', async () => {
+        ;(AbortSignal as any).any = undefined
+        const controller = new AbortController()
+        const add = vi.spyOn(controller.signal, 'addEventListener')
+        const remove = vi.spyOn(controller.signal, 'removeEventListener')
+        globalThis.fetch = vi.fn(async () => jsonResponse({ data: 'ok' })) as any
+
+        await transport().request({ method: 'GET', url: '/x', signal: controller.signal })
+        expect(add.mock.calls.length).toBeGreaterThanOrEqual(1)
+        expect(add.mock.calls.length).toBe(remove.mock.calls.length)
+    })
+
+    it('honors a cancellation signal supplied by middleware', async () => {
+        const controller = new AbortController()
+        globalThis.fetch = vi.fn(
+            (_url: string, init: { signal: AbortSignal }) =>
+                new Promise((_resolve, reject) => {
+                    init.signal.addEventListener('abort', () => reject(init.signal.reason), { once: true })
+                }),
+        ) as any
+        const t = transport({
+            timeout: 1000,
+            middleware: [(request: any, next: any) => next({ ...request, signal: controller.signal })],
+        })
+        const pending = t.request({ method: 'GET', url: '/x' })
+        await Promise.resolve()
+        controller.abort()
+        await expect(pending).rejects.toBeInstanceOf(CancelledError)
+    })
+
+    it('honors an already-aborted signal supplied by middleware', async () => {
+        delete (AbortSignal as any).any
+        const controller = new AbortController()
+        controller.abort('middleware cancelled')
+        globalThis.fetch = vi.fn(async (_url: string, init: { signal?: AbortSignal }) => {
+            if (init.signal?.aborted) {
+                const error = new DOMException('Aborted', 'AbortError')
+                throw error
+            }
+            return jsonResponse({})
+        }) as any
+        const t = transport({
+            middleware: [(request: any, next: any) => next({ ...request, signal: controller.signal })],
+        })
+
+        await expect(t.request({ method: 'GET', url: '/x' })).rejects.toBeInstanceOf(CancelledError)
+    })
 
     it('sets siteName headers, JSON body, requestId, and logs success', async () => {
         const debug = vi.fn()
@@ -743,6 +959,24 @@ describe('FetchTransport — remaining branches', () => {
         ;(globalThis as any).XMLHttpRequest = StubXMLHttpRequest
         const progress = () => undefined
 
+        const constructorAbort = new AbortController()
+        const OriginalStub = (globalThis as any).XMLHttpRequest
+        ;(globalThis as any).XMLHttpRequest = class extends OriginalStub {
+            constructor() {
+                super()
+                constructorAbort.abort()
+            }
+        }
+        await expect(
+            transport().request({
+                method: 'GET',
+                url: '/x',
+                onUploadProgress: progress,
+                signal: constructorAbort.signal,
+            }),
+        ).rejects.toBeInstanceOf(CancelledError)
+        ;(globalThis as any).XMLHttpRequest = OriginalStub
+
         await expect(
             transport({ timeout: 5 }).request({ method: 'GET', url: '/x', onUploadProgress: progress }),
         ).rejects.toBeInstanceOf(TimeoutError)
@@ -821,6 +1055,96 @@ describe('FetchTransport — remaining branches', () => {
         vi.stubGlobal('window', { location: { hostname: 'frappe.local' } })
         vi.stubGlobal('document', {})
         await transport().request({ method: 'POST', url: '/x', data: { a: 1 }, onUploadProgress: progress })
+    })
+
+    it('XHR: throwing onResponse routes the error to the outer rejection, no unhandled promise', async () => {
+        stubXhr()
+        const auth = {
+            name: 'boom',
+            apply() {},
+            onResponse() {
+                throw new Error('onResponse exploded')
+            },
+        }
+        await expect(
+            transport({ auth }).request({ method: 'GET', url: '/x', onUploadProgress: () => undefined }),
+        ).rejects.toThrow('onResponse exploded')
+    })
+
+    it('XHR: rejecting refreshAuth routes the error to the outer rejection', async () => {
+        const sent = stubXhr({ status: 401, response: '{"message":"expired"}' })
+        const auth = {
+            name: 'failing-refresh',
+            apply() {},
+            async onUnauthorized() {
+                throw new Error('refresh network failure')
+            },
+        }
+        await expect(
+            transport({ auth }).request({ method: 'GET', url: '/x', onUploadProgress: () => undefined }),
+        ).rejects.toThrow('refresh network failure')
+        expect(sent).toHaveLength(1)
+    })
+
+    it('XHR: abort during refresh does not send a replay XHR', async () => {
+        const sent = stubXhr({ status: 401, response: '{"message":"expired"}' })
+        let resolveRefresh!: (value: boolean) => void
+        const controller = new AbortController()
+        const auth = {
+            name: 'slow-refresh',
+            apply() {},
+            async onUnauthorized() {
+                controller.abort()
+                return new Promise<boolean>((resolve) => {
+                    resolveRefresh = resolve
+                })
+            },
+        }
+        const pending = expect(
+            transport({ auth }).request({
+                method: 'GET',
+                url: '/x',
+                onUploadProgress: () => undefined,
+                signal: controller.signal,
+            }),
+        ).rejects.toBeInstanceOf(CancelledError)
+        await vi.waitFor(() => expect(resolveRefresh).toBeTypeOf('function'))
+        resolveRefresh(true)
+        await pending
+        expect(sent).toHaveLength(1)
+    })
+
+    it('aborts the underlying XHR when the operation deadline expires', async () => {
+        let aborted = 0
+        class PendingXMLHttpRequest {
+            timeout = 0
+            withCredentials = false
+            responseType = 'text'
+            upload = { onprogress: undefined as any }
+            ontimeout: (() => void) | null = null
+            onabort: (() => void) | null = null
+            onerror: (() => void) | null = null
+            onload: (() => void) | null = null
+            open() {}
+            setRequestHeader() {}
+            send() {}
+            abort() {
+                aborted++
+                this.onabort?.()
+            }
+        }
+        ;(globalThis as any).XMLHttpRequest = PendingXMLHttpRequest
+
+        await expect(
+            transport().request({
+                method: 'POST',
+                url: '/x',
+                data: new FormData(),
+                onUploadProgress: () => undefined,
+                deadline: Date.now() + 5,
+            }),
+        ).rejects.toBeInstanceOf(TimeoutError)
+        expect(aborted).toBe(1)
     })
 
     it('sets X-Frappe-Site-Name from window.location in a browser without siteName, and does not send credentials for anonymousAuth', async () => {

@@ -15,6 +15,7 @@ export type ToDo = FrappeDoc<{
     reference_type?: Link<"DocType">
     reference_name?: string
     assigned_by?: Link<"User">
+    sender?: string
 }>
 export type ToDoInsert = FrappeInsert<ToDo>
 

@@ -144,6 +144,54 @@ describe('core/errors', () => {
         expect(whitespaceOnly.message).toBe('Request failed with status 502')
     })
 
+    it('mapServerError extracts title from HTML response if no JSON message is present', () => {
+        const error = mapServerError(
+            { status: 502, statusText: 'Bad Gateway' },
+            {},
+            '<html><head><title>502 Bad Gateway</title></head><body>...</body></html>',
+            { method: 'GET', url: 'https://example.com/x' },
+        )
+        expect(error.message).toBe('502 Bad Gateway')
+    })
+
+    it('preserves Retry-After as a safe retry delay without exposing response headers', () => {
+        const error = mapServerError(
+            { status: 429, statusText: 'Too Many Requests', headers: new Headers({ 'Retry-After': '2' }) },
+            { message: 'slow down' },
+            '{}',
+            { method: 'GET', url: 'https://example.com/x' },
+        )
+        expect(error.retryAfterMs).toBe(2000)
+        expect(error).not.toHaveProperty('headers')
+    })
+
+    it('parses HTTP-date Retry-After and ignores invalid values', () => {
+        const future = new Date(Date.now() + 60_000).toUTCString()
+        const dated = mapServerError(
+            { status: 503, statusText: 'Unavailable', headers: new Headers({ 'Retry-After': future }) },
+            {},
+            '{}',
+            { method: 'GET', url: 'https://example.com/x' },
+        )
+        expect(dated.retryAfterMs).toBeGreaterThan(0)
+
+        const invalid = mapServerError(
+            { status: 503, statusText: 'Unavailable', headers: new Headers({ 'Retry-After': 'later' }) },
+            {},
+            '{}',
+            { method: 'GET', url: 'https://example.com/x' },
+        )
+        expect(invalid.retryAfterMs).toBeUndefined()
+    })
+
+    it('removes query data from a non-absolute request URL', () => {
+        const error = mapServerError({ status: 500, statusText: 'Error' }, {}, '{}', {
+            method: 'GET',
+            url: '/api/method/x?access_token=secret#fragment',
+        })
+        expect(error.request?.url).toBe('/api/method/x')
+    })
+
     it('serverErrorFor prefers exc_type over status for DuplicateEntryError / RateLimitError / CsrfError', () => {
         expect(serverErrorFor(500, 'DuplicateEntryError').name).toBe('DuplicateEntryError')
         expect(serverErrorFor(500, 'TooManyRequestsError').name).toBe('RateLimitError')

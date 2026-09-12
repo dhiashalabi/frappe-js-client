@@ -1,3 +1,4 @@
+import { ResponseError } from '../../core/errors'
 import type { RequestOptions } from '../../core/types'
 import type { ModuleDeps } from '../deps'
 import type { LinkSearchResult, SearchLinkArgs, SearchWidgetArgs } from './types'
@@ -8,7 +9,7 @@ function normalizeSearchLinkResult(body: unknown): LinkSearchResult[] {
     if (body && typeof body === 'object' && Array.isArray((body as { results?: unknown }).results)) {
         return (body as { results: LinkSearchResult[] }).results
     }
-    return []
+    throw new ResponseError('searchLink received an unexpected response shape.')
 }
 
 class FrappeSearchImpl {

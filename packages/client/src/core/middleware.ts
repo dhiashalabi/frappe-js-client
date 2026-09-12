@@ -4,15 +4,22 @@
  * caller passes it to `createFrappeClient({ middleware })` or `withMiddleware`.
  */
 
-import { CancelledError, FrappeError, TimeoutError, TransportError } from './errors'
+import { CancelledError, ConfigurationError, FrappeError, TimeoutError, TransportError } from './errors'
 import { requestLogPath } from './logger'
 
+/**
+ * Request as seen by the middleware pipeline (`Middleware` / `NextFn`).
+ *
+ * Distinct from {@link FrappeRequestInfo} (auth) and {@link FrappeRequestContext} (errors).
+ */
 export interface FrappeRequest {
     method: string
     url: string
     headers: Record<string, string>
     body?: unknown
     signal?: AbortSignal
+    /** Absolute wall-clock deadline shared by all middleware attempts. */
+    deadline?: number
     requestId: string
 }
 
@@ -43,6 +50,12 @@ export interface RetryOptions {
     attempts?: number
     /** Default 250ms, doubling each attempt. */
     baseDelayMs?: number
+    /** Maximum exponential backoff. Default 30 seconds. */
+    maxDelayMs?: number
+    /** Randomize exponential backoff between zero and the calculated delay. Default `false`. */
+    jitter?: boolean
+    /** Honor a valid server `Retry-After` header. Default `true`. */
+    respectRetryAfter?: boolean
     /**
      * Which methods may be retried. Defaults to idempotent verbs only (GET/HEAD/PUT/DELETE).
      * POST/PATCH are never retried by default because a lost response does not mean the
@@ -51,6 +64,19 @@ export interface RetryOptions {
     methods?: readonly string[]
     /** Return `true` to retry this particular failure. Defaults to network / 429 / 5xx only. */
     shouldRetry?: (res: FrappeResponse | undefined, error: unknown) => boolean
+}
+
+function parseRetryAfter(value: string | null): number | undefined {
+    if (!value) return undefined
+    const seconds = Number(value)
+    if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1000
+    const timestamp = Date.parse(value)
+    return Number.isNaN(timestamp) ? undefined : Math.max(0, timestamp - Date.now())
+}
+
+function retryAfterMs(res: FrappeResponse | undefined, error: unknown): number | undefined {
+    if (res) return parseRetryAfter(res.headers.get('retry-after'))
+    return error instanceof FrappeError ? error.retryAfterMs : undefined
 }
 
 function isRetryableStatus(status: number): boolean {
@@ -73,16 +99,24 @@ function defaultShouldRetry(res: FrappeResponse | undefined, error: unknown): bo
     return Boolean(res && isRetryableStatus(res.status))
 }
 
-function delay(ms: number, signal?: AbortSignal): Promise<void> {
+function delay(ms: number, signal?: AbortSignal, deadline?: number): Promise<void> {
+    if (deadline !== undefined && deadline - Date.now() <= ms) {
+        return Promise.reject(new TimeoutError({ status: 0, message: 'Request deadline exceeded' }))
+    }
     if (!ms) return Promise.resolve()
     return new Promise((resolve, reject) => {
         if (signal?.aborted) {
             reject(new CancelledError({ status: 0, message: 'Request was cancelled' }))
             return
         }
-        const timer = setTimeout(resolve, ms)
+        const cleanup = () => signal?.removeEventListener('abort', onAbort)
+        const timer = setTimeout(() => {
+            cleanup()
+            resolve()
+        }, ms)
         const onAbort = () => {
             clearTimeout(timer)
+            cleanup()
             reject(new CancelledError({ status: 0, message: 'Request was cancelled' }))
         }
         signal?.addEventListener('abort', onAbort, { once: true })
@@ -98,6 +132,16 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
 export function retry(options: RetryOptions = {}): Middleware {
     const attempts = options.attempts ?? 2
     const baseDelayMs = options.baseDelayMs ?? 250
+    const maxDelayMs = options.maxDelayMs ?? 30_000
+    if (!Number.isFinite(attempts) || !Number.isInteger(attempts) || attempts < 0) {
+        throw new ConfigurationError('retry `attempts` must be a finite, non-negative integer.')
+    }
+    if (!Number.isFinite(baseDelayMs) || baseDelayMs < 0) {
+        throw new ConfigurationError('retry `baseDelayMs` must be a finite, non-negative number.')
+    }
+    if (!Number.isFinite(maxDelayMs) || maxDelayMs < 0) {
+        throw new ConfigurationError('retry `maxDelayMs` must be a finite, non-negative number.')
+    }
     const methods = new Set(options.methods ?? IDEMPOTENT_METHODS)
     const shouldRetry = options.shouldRetry ?? defaultShouldRetry
 
@@ -106,17 +150,22 @@ export function retry(options: RetryOptions = {}): Middleware {
             return next(req)
         }
         for (let attempt = 0; ; attempt++) {
+            let serverDelay: number | undefined
             try {
                 const res = await next(req)
                 if (attempt === attempts || !shouldRetry(res, undefined)) {
                     return res
                 }
+                serverDelay = options.respectRetryAfter === false ? undefined : retryAfterMs(res, undefined)
             } catch (error) {
                 if (attempt === attempts || !shouldRetry(undefined, error)) {
                     throw error
                 }
+                serverDelay = options.respectRetryAfter === false ? undefined : retryAfterMs(undefined, error)
             }
-            await delay(baseDelayMs * 2 ** attempt, req.signal)
+            const exponential = Math.min(maxDelayMs, baseDelayMs * 2 ** attempt)
+            const backoff = options.jitter ? Math.random() * exponential : exponential
+            await delay(serverDelay ?? backoff, req.signal, req.deadline)
         }
     }
 }

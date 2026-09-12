@@ -95,8 +95,8 @@ export function normalizeConfig(options: FrappeClientOptions): FrappeClientConfi
         )
     }
     const timeout = options.timeout ?? 30_000
-    if (typeof timeout !== 'number' || timeout <= 0) {
-        throw new ConfigurationError('FrappeClient `timeout` must be a positive number of milliseconds.')
+    if (typeof timeout !== 'number' || !Number.isFinite(timeout) || timeout <= 0) {
+        throw new ConfigurationError('FrappeClient `timeout` must be a finite, positive number of milliseconds.')
     }
 
     const config: FrappeClientConfig = {

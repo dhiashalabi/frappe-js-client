@@ -7,6 +7,7 @@
  */
 
 import type { AdapterRequest, Unwrap } from '../api/adapter'
+import { ConfigurationError } from './errors'
 import type { ResponseType, Transport, UploadProgressEvent } from './transport'
 import type { ApiVersion, RequestOptions } from './types'
 
@@ -17,6 +18,16 @@ export interface RequestConfig {
     data?: unknown
     responseType?: ResponseType
     onUploadProgress?: (event: UploadProgressEvent) => void
+}
+
+/** @internal Shared by `Executor.call` and file uploads so timing options fail before work starts. */
+export function validateRequestOptions(options?: RequestOptions): void {
+    if (options?.timeout !== undefined && (!Number.isFinite(options.timeout) || options.timeout <= 0)) {
+        throw new ConfigurationError('Request `timeout` must be a finite, positive number of milliseconds.')
+    }
+    if (options?.deadline !== undefined && !Number.isFinite(options.deadline)) {
+        throw new ConfigurationError('Request `deadline` must be a finite Unix timestamp in milliseconds.')
+    }
 }
 
 /** Unwraps a body that may be wrapped as `{ data: ... }` (v2) or returned bare (v1). Returns `null` when the envelope carries no payload and no other keys (e.g. a `delete` that returns `{}`). */
@@ -68,6 +79,7 @@ export class Executor {
      * by `file` (which needs `responseType`/`onUploadProgress`, not exposed on `AdapterRequest`).
      */
     async call<T>(config: RequestConfig, unwrap: Unwrap, options?: RequestOptions): Promise<T> {
+        validateRequestOptions(options)
         const res = await this.transport.request<unknown>({
             method: config.method,
             url: config.url,

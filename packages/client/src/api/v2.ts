@@ -3,6 +3,7 @@
  * @description Frappe v15+ REST v2: `/api/v2/method`, `/api/v2/document`, `/api/v2/doctype`.
  */
 
+import { ResponseError } from '../core/errors'
 import {
     doctypeMethodPath,
     doctypePath,
@@ -185,11 +186,15 @@ export class V2Adapter implements ApiAdapter {
     unwrapList<T>(body: unknown): ListResult<T> {
         const b = body as any
         if (b && typeof b === 'object' && 'data' in b) {
-            return { data: Array.isArray(b.data) ? b.data : [], hasNextPage: b.has_next_page }
+            if (!Array.isArray(b.data)) throw new ResponseError('Document list received an unexpected response shape.')
+            return { data: b.data, hasNextPage: b.has_next_page }
         }
         if (b && typeof b === 'object' && 'message' in b) {
-            return { data: Array.isArray(b.message) ? b.message : [] }
+            if (!Array.isArray(b.message))
+                throw new ResponseError('Document list received an unexpected response shape.')
+            return { data: b.message }
         }
-        return { data: Array.isArray(b) ? b : [] }
+        if (!Array.isArray(b)) throw new ResponseError('Document list received an unexpected response shape.')
+        return { data: b }
     }
 }

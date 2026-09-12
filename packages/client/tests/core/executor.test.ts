@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { V2Adapter } from '../../src/api/v2'
+import { ConfigurationError } from '../../src/core/errors'
 import { Executor, unwrapData, unwrapEnvelope, unwrapMessage } from '../../src/core/executor'
 import { MemoryTransport } from '../../src/testing'
 
@@ -46,5 +47,24 @@ describe('Executor', () => {
         transport.mock({ method: 'GET', path: '/raw', body: 9 })
         await expect(executor.call({ method: 'GET', url: '/raw' }, 'none')).resolves.toBe(9)
         await expect(executor.call({ method: 'GET', url: '/raw' }, 'data')).resolves.toBe(9)
+    })
+
+    it('validates optional request timing before invoking an injected transport', async () => {
+        const transport = new MemoryTransport()
+        const executor = new Executor(transport, 2)
+        transport.mock({ method: 'GET', path: '/timed', body: { data: 'ok' } })
+
+        await expect(
+            executor.call({ method: 'GET', url: '/timed' }, 'data', {
+                timeout: 100,
+                deadline: Date.now() + 1_000,
+            }),
+        ).resolves.toBe('ok')
+        await expect(
+            executor.call({ method: 'GET', url: '/invalid' }, 'none', { timeout: Number.NaN }),
+        ).rejects.toBeInstanceOf(ConfigurationError)
+        await expect(
+            executor.call({ method: 'GET', url: '/invalid' }, 'none', { deadline: Number.POSITIVE_INFINITY }),
+        ).rejects.toBeInstanceOf(ConfigurationError)
     })
 })

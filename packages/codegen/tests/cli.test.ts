@@ -192,7 +192,7 @@ describe('main', () => {
         expect(stdout).toHaveBeenCalledWith(expect.stringContaining('Usage:'))
         expect(stdout).toHaveBeenCalledWith(expect.stringContaining('--include-hidden'))
         expect(stdout).toHaveBeenCalledWith(expect.stringContaining('Reminder.user'))
-        expect(stdout).not.toHaveBeenCalledWith(expect.stringContaining('--no-include-hidden'))
+        expect(stdout).toHaveBeenCalledWith(expect.stringContaining('--no-include-hidden'))
         expect(fetchDocTypeMetas).not.toHaveBeenCalled()
         stdout.mockRestore()
     })

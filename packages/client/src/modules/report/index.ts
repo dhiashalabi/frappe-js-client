@@ -1,3 +1,4 @@
+import { ResponseError } from '../../core/errors'
 import type { RequestOptions } from '../../core/types'
 import { jsonParam } from '../../core/url'
 import type { ModuleDeps } from '../deps'
@@ -14,7 +15,7 @@ function toBlob(data: unknown): Blob {
     if (data instanceof Blob) return data
     if (data instanceof ArrayBuffer) return new Blob([data])
     if (typeof data === 'string') return new Blob([data])
-    return new Blob([])
+    throw new ResponseError('Expected a binary report download response.')
 }
 
 class FrappeReportImpl {

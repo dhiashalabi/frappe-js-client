@@ -62,9 +62,9 @@ describe('V1Adapter', () => {
         expect(() => adapter.runDocMethod('x', {})).toThrow(FeatureNotSupportedError)
     })
 
-    it('unwrapList reads the classic {data} envelope, tolerating non-array/missing shapes', () => {
-        expect(adapter.unwrapList(null)).toEqual({ data: [] })
-        expect(adapter.unwrapList({ data: { not: 'array' } })).toEqual({ data: [] })
+    it('unwrapList reads valid classic list shapes and rejects malformed ones', () => {
+        expect(() => adapter.unwrapList(null)).toThrow(/unexpected response shape/)
+        expect(() => adapter.unwrapList({ data: { not: 'array' } })).toThrow(/unexpected response shape/)
         expect(adapter.unwrapList({ data: [1] })).toEqual({ data: [1] })
         expect(adapter.unwrapList([1, 2])).toEqual({ data: [1, 2] })
     })
@@ -132,7 +132,7 @@ describe('V2Adapter', () => {
     })
 
     it('unwrapList normalizes REST ({data,has_next_page}), RPC ({message}), and bare-array shapes', () => {
-        expect(adapter.unwrapList(null)).toEqual({ data: [] })
+        expect(() => adapter.unwrapList(null)).toThrow(/unexpected response shape/)
         expect(adapter.unwrapList({ data: [1, 2], has_next_page: true })).toEqual({ data: [1, 2], hasNextPage: true })
         expect(adapter.unwrapList({ message: [1] })).toEqual({ data: [1] })
         expect(adapter.unwrapList([1, 2])).toEqual({ data: [1, 2] })
@@ -175,9 +175,9 @@ describe('V2Adapter', () => {
         expect(adapter.list('User', { orFilters: [] }).url).toBe('/api/v2/document/User')
     })
 
-    it('unwrapList treats a non-array {data}/{message} as empty', () => {
-        expect(adapter.unwrapList({ data: 'not-an-array' })).toEqual({ data: [], hasNextPage: undefined })
-        expect(adapter.unwrapList({ message: 'not-an-array' })).toEqual({ data: [] })
+    it('unwrapList rejects non-array {data}/{message} payloads', () => {
+        expect(() => adapter.unwrapList({ data: 'not-an-array' })).toThrow(/unexpected response shape/)
+        expect(() => adapter.unwrapList({ message: 'not-an-array' })).toThrow(/unexpected response shape/)
     })
 })
 

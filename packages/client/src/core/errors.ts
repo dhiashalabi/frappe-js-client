@@ -26,7 +26,11 @@ export interface FrappeV2ErrorEntry {
     indicator?: string
 }
 
-/** Safe, non-secret context about the request that failed. Never headers or body. */
+/**
+ * Safe, non-secret context about the request that failed. Never headers or body.
+ *
+ * Distinct from {@link FrappeRequest} (middleware) and {@link FrappeRequestInfo} (auth).
+ */
 export interface FrappeRequestContext {
     method: string
     url: string
@@ -48,10 +52,27 @@ export interface FrappeErrorInit {
     /** Raw response body text. ALWAYS preserved, even when JSON parsing fails. */
     responseText?: string
     request?: FrappeRequestContext
+    /** Parsed `Retry-After` delay. Response headers themselves are never exposed. */
+    retryAfterMs?: number
     /** The original underlying failure (a `TypeError` from fetch, a `DOMException` abort, etc). */
     cause?: unknown
     /** Extra server-provided fields that don't map onto a named field above. Never overwrites a named field. */
     extra?: Record<string, unknown>
+}
+
+function stripUrlQuery(url: string): string {
+    try {
+        const parsed = new URL(url)
+        parsed.search = ''
+        parsed.hash = ''
+        return parsed.href
+    } catch {
+        return url.replace(/[?#].*$/, '')
+    }
+}
+
+function safeRequestContext(request: FrappeRequestContext | undefined): FrappeRequestContext | undefined {
+    return request ? { ...request, url: stripUrlQuery(request.url) } : undefined
 }
 
 /**
@@ -72,6 +93,7 @@ export class FrappeError extends Error {
     readonly errors?: FrappeV2ErrorEntry[]
     readonly responseText?: string
     readonly request?: FrappeRequestContext
+    readonly retryAfterMs?: number
     /** Extra server-provided fields, never shadowing a named field on this class. */
     readonly extra: Readonly<Record<string, unknown>>
 
@@ -85,7 +107,8 @@ export class FrappeError extends Error {
         this.serverMessages = init.serverMessages ?? []
         this.errors = init.errors
         this.responseText = init.responseText
-        this.request = init.request
+        this.request = safeRequestContext(init.request)
+        this.retryAfterMs = init.retryAfterMs
         this.extra = Object.freeze({ ...init.extra })
 
         Object.setPrototypeOf(this, new.target.prototype)
@@ -108,6 +131,13 @@ export class FeatureNotSupportedError extends ConfigurationError {
 
 /** No HTTP response was received: DNS failure, connection refused, TLS error, network down. */
 export class TransportError extends FrappeError {}
+
+/** A successful HTTP response did not match the endpoint's documented wire shape. */
+export class ResponseError extends FrappeError {
+    constructor(message: string, extra?: Partial<FrappeErrorInit>) {
+        super({ status: 0, ...extra, message })
+    }
+}
 
 /** The request exceeded its timeout before a response was received. */
 export class TimeoutError extends TransportError {}
@@ -223,6 +253,16 @@ function lastLine(value?: string): string | undefined {
 export interface HttpErrorSource {
     status: number
     statusText: string
+    headers?: Pick<Headers, 'get'>
+}
+
+function parseRetryAfter(value: string | null | undefined): number | undefined {
+    if (!value) return undefined
+    const seconds = Number(value)
+    if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1000
+    const timestamp = Date.parse(value)
+    if (Number.isNaN(timestamp)) return undefined
+    return Math.max(0, timestamp - Date.now())
 }
 
 /** Maps a parsed HTTP error body (v1 or v2 envelope) to the matching `ServerError` subclass. */
@@ -242,13 +282,21 @@ export function mapServerError(
 
     const ErrorClass = serverErrorFor(res.status, frappeExceptionType)
 
+    let defaultMessage = `Request failed with status ${res.status}`
+    if (text && text.trim().toLowerCase().startsWith('<html')) {
+        const titleMatch = text.match(/<title[^>]*>([^<]+)<\/title>/i)
+        if (titleMatch && titleMatch[1]) {
+            defaultMessage = titleMatch[1].trim()
+        }
+    }
+
     const message =
         data.message ??
         primaryV2?.message ??
         serverMessages[0]?.message ??
         lastLine(data.exception) ??
         lastLine(primaryV2?.exception) ??
-        `Request failed with status ${res.status}`
+        defaultMessage
 
     const extra = { ...data }
     delete extra.message
@@ -268,6 +316,7 @@ export function mapServerError(
         errors: v2Errors,
         responseText: text,
         request,
+        retryAfterMs: parseRetryAfter(res.headers?.get('retry-after')),
         extra,
     })
 }

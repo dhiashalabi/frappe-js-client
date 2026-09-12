@@ -36,6 +36,10 @@ describe('core/config', () => {
     it('rejects a non-positive timeout', () => {
         expect(() => normalizeConfig({ url: 'https://example.com', timeout: 0 })).toThrow(ConfigurationError)
         expect(() => normalizeConfig({ url: 'https://example.com', timeout: -1 })).toThrow(ConfigurationError)
+        expect(() => normalizeConfig({ url: 'https://example.com', timeout: Number.NaN })).toThrow(ConfigurationError)
+        expect(() => normalizeConfig({ url: 'https://example.com', timeout: Number.POSITIVE_INFINITY })).toThrow(
+            ConfigurationError,
+        )
     })
 
     it('defaults auth to anonymousAuth when omitted', () => {

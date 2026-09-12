@@ -4,7 +4,43 @@
 
 For site-specific field types, generate `GeneratedDocTypes` with [`frappe-codegen`](../codegen.md) and pass them to `createFrappeClient<GeneratedDocTypes>(...)`.
 
-List pagination is always explicit. `limit` defaults to **20**. There is no “fetch all” — use `paginate()`.
+List pagination is always explicit. `limit` defaults to **20**. There is no “fetch all” — use `paginate()`. `limit` must be a finite positive integer; `start` must be a finite non-negative integer (`ConfigurationError` otherwise).
+
+`getDoc` / `updateDoc` / `deleteDoc` reject with `ConfigurationError` if the document name is missing. Slash-delimited names are supported and each segment is URL-encoded; empty, `.` and `..` segments are rejected.
+
+## Method catalog
+
+| Method                                               | Returns                  | Notes                                                                                         |
+| ---------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------- |
+| `getDoc(doctype, name, args?)`                       | document                 | `args.expandLinks?: boolean`                                                                  |
+| `getDocList(doctype, args?)`                         | `RowFor[]`               | Uses `getDocListPage` and returns `.data`                                                     |
+| `getDocListPage(doctype, args?)`                     | `{ data, hasNextPage? }` | `hasNextPage` is set on Frappe v16 `/api/v2` lists                                            |
+| `paginate(doctype, args?)`                           | `AsyncGenerator`         | Bounded pages until `hasNextPage === false`, or a short last page when `hasNextPage` is unset |
+| `createDoc(doctype, value)`                          | document                 | Server fills `name` / owner / timestamps                                                      |
+| `updateDoc(doctype, name, value)`                    | document                 | PUT classic, PATCH on v2                                                                      |
+| `deleteDoc(doctype, name)`                           | `void`                   |                                                                                               |
+| `getLastDoc(doctype, args?)`                         | document \| `null`       | Default `orderBy`: `{ field: 'creation', order: 'desc' }`, then `getDoc` of that name         |
+| `getCount(doctype, args?)`                           | `number`                 | `filters`, `debug`, `cache`                                                                   |
+| `exists(doctype, name)`                              | `boolean`                | `getCount` with `filters: [['name', '=', name]]`                                              |
+| `getValue(doctype, fieldName, args?)`                | field or dict            | `fieldName` is `string` or `string[]`; `asDict` defaults `true`                               |
+| `setValue(doctype, name, field, value?)`             | document                 | Map form: `setValue(dt, name, { field: value })` — do not pass `value`                        |
+| `getSingle(doctype)`                                 | document                 | `frappe.client.get` with no name                                                              |
+| `getSingleValue(doctype, field)`                     | value                    |                                                                                               |
+| `setSingle(doctype, values)`                         | document                 | `setValue(doctype, doctype, values)`                                                          |
+| `renameDoc(doctype, old, new, merge?)`               | `string`                 | `merge` defaults `false`                                                                      |
+| `submit(doc)`                                        | document                 | Needs `doctype` + `name` on `doc`                                                             |
+| `cancel(doctype, name)`                              | document                 |                                                                                               |
+| `insertMany(docs)`                                   | `string[]`               | Names of inserted docs                                                                        |
+| `updateMany(docs)`                                   | `BulkUpdateResponse`     | `{ failed_docs: [{ doc, exc }] }`. Wire sends `docname` (falls back to `name`)                |
+| `getPassword(doctype, name, field)`                  | `string`                 | **POST** body — not a query string                                                            |
+| `isDocumentAmended(doctype, name)`                   | `boolean`                |                                                                                               |
+| `validateLink(doctype, name, fields?)`               | dict                     | Always `frappe.client.validate_link`. `fields` defaults `['name']`                            |
+| `validateLinkAndFetch(doctype, name, fields, args?)` | dict                     | Frappe 16 only — pass `frappeVersion: 16`                                                     |
+| `copyDoc(doctype, name, ignoreNoCopy?)`              | document                 | **v2 only**. Copy is **not** inserted. `ignoreNoCopy` defaults `true`                         |
+| `getMeta(doctype)`                                   | meta                     | **v2 only** (`GET /api/v2/doctype/{dt}/meta`)                                                 |
+| `runMethod(doctype, name, method, args?)`            | unknown                  | **v2 only** — document controller method                                                      |
+
+v2-only methods throw `FeatureNotSupportedError` on `apiVersion: 1`.
 
 ## CRUD
 
@@ -52,9 +88,15 @@ const last = await frappe.db.getLastDoc('ToDo', {
 // T | null
 ```
 
-`getDoc` / `updateDoc` / `deleteDoc` reject if the document name is missing.
+Literal `fields` arrays narrow the row type (`Pick`). `fields: '*'` (the default) keeps the full document and is sent to Frappe as `["*"]`. Pass `as const` when you want that narrowing. List results are always object-shaped, so `asDict` can only be `true`; passing `false` at runtime throws `ConfigurationError`.
 
-Literal `fields` arrays narrow the row type (`Pick`). `fields: '*'` (the default) keeps the full document. Pass `as const` when you want that narrowing.
+`insertMany` takes insert payloads with a required `doctype`; stored-document metadata such as `name`, `owner`, and timestamps is not required.
+
+### `paginate` stop conditions
+
+1. `hasNextPage === false` — stop (honored even if the page is full).
+2. `hasNextPage` is not `true` **and** `data.length < limit` — stop.
+3. Otherwise `start += limit` and fetch the next page.
 
 ### Filters
 
@@ -65,6 +107,10 @@ type Filter = [field, operator, value] | [field, 'in' | 'not in' | 'between', va
 Single-value operators: `=`, `>`, `<`, `>=`, `<=`, `<>`, `like`, `not like`, `!=`, `Timespan`, `is`, `is not`.
 
 Values are `string | number | boolean | null`. Format dates with `formatFrappeDate` / `formatFrappeDatetime`.
+
+`getCount` / `getValue` also accept object filters (`Record<string, Value>`). `getValue` additionally accepts a filter string.
+
+On Frappe 16 + `apiVersion: 2`, `orFilters` / `parent` / `expand` are sent through `GET /api/v2/method/frappe.client.get_list` because the v16 REST list handler does not honor them. See [Frappe versions](../frappe-versions.md).
 
 ## Values, count, rename, submit
 

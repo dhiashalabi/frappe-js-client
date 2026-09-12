@@ -63,6 +63,8 @@ export interface RealtimeOptions {
      * bench/nginx layout). Override for a dedicated realtime host/port.
      */
     socketUrl?: string
+    /** Allow HTTP client cookies/authorization to be sent to a different socket origin. Default `false`. */
+    allowCrossOriginCredentials?: boolean
     /** Socket.IO path. Default `/socket.io`. */
     path?: string
     /** Default `true`. */

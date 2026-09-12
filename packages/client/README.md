@@ -64,7 +64,7 @@ const realtime = createRealtime(app)
 realtime.subscribeDoc('ToDo', 'TD-1', (event) => console.log(event))
 ```
 
-Full guides: [documentation](https://dhiashalabi.github.io/frappe-js-client/docs/getting-started).
+Full guides: [documentation](https://dhiashalabi.github.io/frappe-js-client/docs/getting-started). API reference: [Client API](https://dhiashalabi.github.io/frappe-js-client/docs/api) · [Codegen](https://dhiashalabi.github.io/frappe-js-client/docs/codegen).
 
 ## Development
 
@@ -82,7 +82,12 @@ pnpm build
 pnpm docs:start
 ```
 
-Unit tests: `pnpm test`. Integration tests (not CI): `FRAPPE_TEST_URL=http://127.0.0.1:8000 pnpm test:integration`.
+Unit tests: `pnpm test`. Integration and browser tests require a separately managed Frappe site:
+
+```bash
+FRAPPE_TEST_URL=http://frappe14.localhost:8000 pnpm test:integration
+FRAPPE_TEST_URL=http://frappe14.localhost:8000 pnpm test:browser
+```
 
 Live tests need a running site. Do not commit credentials (`.env` / `.env.live` are gitignored):
 
