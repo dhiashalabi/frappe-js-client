@@ -40,7 +40,7 @@ pnpm changeset
 pnpm test
 ```
 
-Integration tests (local Frappe site, not in CI):
+Integration tests against a separately managed Frappe site:
 
 ```bash
 # copy .env.example → .env and fill values, or export:
@@ -54,6 +54,16 @@ FRAPPE_LIVE_URL=http://127.0.0.1:8001 pnpm test:live
 ```
 
 Do not commit credentials. `.env` is gitignored; `.env.example` is the template.
+
+Browser tests run the built package in Chromium, Firefox, and WebKit. Cancellation and binary-error cases are served locally. Login and upload go to a separately managed Frappe site:
+
+```bash
+FRAPPE_TEST_URL=http://frappe14.localhost:8000 pnpm test:browser
+```
+
+Use the site hostname in `FRAPPE_TEST_URL` (not `127.0.0.1`) when the bench is multi-tenant. The helper connects on loopback so `*.localhost` works in Node, and it sends that hostname as the Frappe site name. Frappe 14 is detected automatically (no `/api/v2`); override with `FRAPPE_TEST_API_VERSION=1` and `FRAPPE_TEST_FRAPPE_VERSION=14` if needed. If the URL host is an IP address, set `FRAPPE_TEST_SITE_NAME` to the real site.
+
+Install the Playwright browsers and their operating-system dependencies before running locally.
 
 ## Coding standards
 
