@@ -18,6 +18,21 @@ import {
 
 const DEFAULT_PAGE_SIZE = 20
 
+function validatePagination(args?: { limit?: number; start?: number }): void {
+    if (
+        args?.limit !== undefined &&
+        (!Number.isFinite(args.limit) || !Number.isInteger(args.limit) || args.limit <= 0)
+    ) {
+        throw new ConfigurationError('Pagination `limit` must be a finite, positive integer.')
+    }
+    if (
+        args?.start !== undefined &&
+        (!Number.isFinite(args.start) || !Number.isInteger(args.start) || args.start < 0)
+    ) {
+        throw new ConfigurationError('Pagination `start` must be a finite, non-negative integer.')
+    }
+}
+
 /**
  * Document CRUD and query operations. v1/v2 REST differences are isolated in the `ApiAdapter`
  * this module is constructed with.
@@ -54,11 +69,11 @@ class FrappeDBImpl<Docs extends object = object> {
         return this.executor.run<FrappeDoc<object>>(this.adapter.getDoc(doctype, name, args), options)
     }
 
-    getDocList<K extends string & keyof Docs, F extends FieldsArg<DocFromMap<Docs, K>> = '*'>(
-        doctype: K,
-        args?: GetDocListArgs<DocFromMap<Docs, K>, F>,
-        options?: RequestOptions,
-    ): Promise<RowFor<DocFromMap<Docs, K>, F>[]>
+    getDocList<
+        K extends string & keyof Docs,
+        T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>,
+        F extends FieldsArg<T> = '*',
+    >(doctype: K, args?: GetDocListArgs<T, F>, options?: RequestOptions): Promise<RowFor<T, F>[]>
     getDocList<T extends FrappeDoc<object>, F extends FieldsArg<T> = '*'>(
         doctype: string,
         args?: GetDocListArgs<T, F>,
@@ -74,11 +89,11 @@ class FrappeDBImpl<Docs extends object = object> {
     }
 
     /** Same as `getDocList` but includes `hasNextPage` when the server reports it (v2 REST). */
-    getDocListPage<K extends string & keyof Docs, F extends FieldsArg<DocFromMap<Docs, K>> = '*'>(
-        doctype: K,
-        args?: GetDocListArgs<DocFromMap<Docs, K>, F>,
-        options?: RequestOptions,
-    ): Promise<GetDocListPage<RowFor<DocFromMap<Docs, K>, F>>>
+    getDocListPage<
+        K extends string & keyof Docs,
+        T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>,
+        F extends FieldsArg<T> = '*',
+    >(doctype: K, args?: GetDocListArgs<T, F>, options?: RequestOptions): Promise<GetDocListPage<RowFor<T, F>>>
     getDocListPage<T extends FrappeDoc<object>, F extends FieldsArg<T> = '*'>(
         doctype: string,
         args?: GetDocListArgs<T, F>,
@@ -89,8 +104,14 @@ class FrappeDBImpl<Docs extends object = object> {
         args?: GetDocListArgs<FrappeDoc<object>>,
         options?: RequestOptions,
     ): Promise<GetDocListPage<FrappeDoc<object>>> {
+        validatePagination(args)
+        if ((args as { asDict?: boolean } | undefined)?.asDict === false) {
+            throw new ConfigurationError(
+                'getDocList requires `asDict` to be true; tuple-shaped rows are not supported.',
+            )
+        }
         const req = this.adapter.list(doctype, {
-            fields: args?.fields,
+            fields: args?.fields === '*' || args?.fields === undefined ? ['*'] : args.fields,
             filters: args?.filters,
             orFilters: args?.orFilters,
             orderBy: args?.orderBy as { field: string; order?: 'asc' | 'desc' } | undefined,
@@ -110,11 +131,11 @@ class FrappeDBImpl<Docs extends object = object> {
      * Lazily paginate an entire DocType listing, `limit`-sized page at a time. Never fetches an
      * unbounded collection — each page is a normal, bounded `getDocListPage` call.
      */
-    paginate<K extends string & keyof Docs, F extends FieldsArg<DocFromMap<Docs, K>> = '*'>(
-        doctype: K,
-        args?: GetDocListArgs<DocFromMap<Docs, K>, F>,
-        options?: RequestOptions,
-    ): AsyncGenerator<RowFor<DocFromMap<Docs, K>, F>, void, void>
+    paginate<
+        K extends string & keyof Docs,
+        T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>,
+        F extends FieldsArg<T> = '*',
+    >(doctype: K, args?: GetDocListArgs<T, F>, options?: RequestOptions): AsyncGenerator<RowFor<T, F>, void, void>
     paginate<T extends FrappeDoc<object>, F extends FieldsArg<T> = '*'>(
         doctype: string,
         args?: GetDocListArgs<T, F>,
@@ -125,6 +146,7 @@ class FrappeDBImpl<Docs extends object = object> {
         args?: GetDocListArgs<FrappeDoc<object>>,
         options?: RequestOptions,
     ): AsyncGenerator<FrappeDoc<object>, void, void> {
+        validatePagination(args)
         const limit = args?.limit ?? DEFAULT_PAGE_SIZE
         let start = args?.start ?? 0
 
@@ -148,11 +170,11 @@ class FrappeDBImpl<Docs extends object = object> {
      * `creation`, ...) are filled in by Frappe. The first argument is the DocType; `doctype` on
      * the body is optional.
      */
-    createDoc<K extends string & keyof Docs>(
+    createDoc<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
         doctype: K,
-        value: FrappeInsert<DocFromMap<Docs, K>>,
+        value: FrappeInsert<T>,
         options?: RequestOptions,
-    ): Promise<DocFromMap<Docs, K>>
+    ): Promise<T>
     createDoc<T extends FrappeDoc<object> = FrappeDoc<object>>(
         doctype: string,
         value: Record<string, unknown>,
@@ -163,12 +185,12 @@ class FrappeDBImpl<Docs extends object = object> {
     }
 
     /** Patch fields on an existing document. v1 uses PUT; v2 uses PATCH. */
-    updateDoc<K extends string & keyof Docs>(
+    updateDoc<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
         doctype: K,
         name: string | null,
-        value: Partial<DocFromMap<Docs, K>>,
+        value: Partial<T>,
         options?: RequestOptions,
-    ): Promise<DocFromMap<Docs, K>>
+    ): Promise<T>
     updateDoc<T extends FrappeDoc<object>>(
         doctype: string,
         name: string | null,
@@ -194,11 +216,11 @@ class FrappeDBImpl<Docs extends object = object> {
         await this.executor.run<unknown>(this.adapter.delete(doctype, name), options)
     }
 
-    async getLastDoc<K extends string & keyof Docs>(
+    async getLastDoc<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
         doctype: K,
-        args?: GetLastDocArgs<DocFromMap<Docs, K>>,
+        args?: GetLastDocArgs<T>,
         options?: RequestOptions,
-    ): Promise<DocFromMap<Docs, K> | null>
+    ): Promise<T | null>
     async getLastDoc<T extends FrappeDoc<object>>(
         doctype: string,
         args?: GetLastDocArgs<T>,
@@ -291,7 +313,10 @@ class FrappeDBImpl<Docs extends object = object> {
         )
     }
 
-    getSingle<K extends string & keyof Docs>(doctype: K, options?: RequestOptions): Promise<DocFromMap<Docs, K>>
+    getSingle<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
+        doctype: K,
+        options?: RequestOptions,
+    ): Promise<T>
     getSingle<T extends FrappeDoc<object>>(doctype: string, options?: RequestOptions): Promise<T>
     getSingle(doctype: string, options?: RequestOptions): Promise<FrappeDoc<object>> {
         return this.executor.call<FrappeDoc<object>>(
@@ -332,12 +357,12 @@ class FrappeDBImpl<Docs extends object = object> {
      * Copy is not inserted. Requires `apiVersion: 2`.
      * @throws FeatureNotSupportedError on classic REST.
      */
-    async copyDoc<K extends string & keyof Docs>(
+    async copyDoc<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
         doctype: K,
         name: string,
         ignoreNoCopy?: boolean,
         options?: RequestOptions,
-    ): Promise<DocFromMap<Docs, K>>
+    ): Promise<T>
     async copyDoc<T extends FrappeDoc<object>>(
         doctype: string,
         name: string,
@@ -375,7 +400,18 @@ class FrappeDBImpl<Docs extends object = object> {
         return this.executor.run<T>(this.adapter.docMethod(doctype, name, method, args), options)
     }
 
-    insertMany<T extends FrappeDoc<object>>(docs: T[], options?: RequestOptions): Promise<string[]> {
+    insertMany<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
+        docs: Array<FrappeInsert<T> & { doctype: K }>,
+        options?: RequestOptions,
+    ): Promise<string[]>
+    insertMany<T extends FrappeDoc<object>>(
+        docs: Array<FrappeInsert<T> & { doctype: string }>,
+        options?: RequestOptions,
+    ): Promise<string[]>
+    insertMany(
+        docs: Array<Record<string, unknown> & { doctype: string }>,
+        options?: RequestOptions,
+    ): Promise<string[]> {
         return this.executor.call<string[]>(
             { method: 'POST', url: this.adapter.method('frappe.client.insert_many'), data: { docs } },
             'envelope',

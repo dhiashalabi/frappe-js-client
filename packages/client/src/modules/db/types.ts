@@ -36,7 +36,8 @@ export interface GetDocListArgs<T = FrappeDoc<object>, F extends FieldsArg<T> = 
     limit?: number
     parent?: string
     debug?: boolean
-    asDict?: boolean
+    /** Object-shaped rows are required by this typed API. Defaults to `true`. */
+    asDict?: true
     orFilters?: Filter<T>[]
     expand?: string[]
 }

@@ -133,6 +133,161 @@ describe('core/auth — strategies', () => {
         expect(empty.Authorization).toBeUndefined()
         await expect(noRefresh.onUnauthorized?.()).resolves.toBe(false)
     })
+
+    it('authentication strategies replace authorization headers case-insensitively', async () => {
+        const headers = { authorization: 'stale' }
+        await bearerAuth({ token: () => 'fresh' }).apply(headers, { method: 'GET', url: 'https://example.com' })
+        expect(headers).toEqual({ Authorization: 'Bearer fresh' })
+    })
+
+    it('oauthAuth deduplicates concurrent refreshes', async () => {
+        let refreshCalls = 0
+        let release!: (token: string) => void
+        const refreshed = new Promise<string>((resolve) => {
+            release = resolve
+        })
+        const auth = oauthAuth({
+            getToken: () => 'old',
+            refresh: () => {
+                refreshCalls++
+                return refreshed
+            },
+        })
+
+        const first = auth.onUnauthorized!()
+        const second = auth.onUnauthorized!()
+        expect(refreshCalls).toBe(1)
+        release('new')
+        await expect(Promise.all([first, second])).resolves.toEqual([true, true])
+    })
+
+    it('oauthAuth deduplicates concurrent initial token loads', async () => {
+        let loads = 0
+        let release!: (token: string) => void
+        const auth = oauthAuth({
+            getToken: () => {
+                loads++
+                return new Promise<string>((resolve) => {
+                    release = resolve
+                })
+            },
+        })
+        const first: Record<string, string> = {}
+        const second: Record<string, string> = {}
+        const pending = Promise.all([
+            auth.apply(first, { method: 'GET', url: 'https://example.com' }),
+            auth.apply(second, { method: 'GET', url: 'https://example.com' }),
+        ])
+        expect(loads).toBe(1)
+        release('shared')
+        await pending
+        expect(first.Authorization).toBe('Bearer shared')
+        expect(second.Authorization).toBe('Bearer shared')
+    })
+
+    it('oauthAuth reset prevents a late refresh from restoring an obsolete token', async () => {
+        let release!: (token: string) => void
+        const auth = oauthAuth({
+            getToken: () => 'initial',
+            refresh: () =>
+                new Promise<string>((resolve) => {
+                    release = resolve
+                }),
+        })
+        const refreshing = auth.onUnauthorized!()
+        auth.reset!()
+        release('obsolete')
+        await refreshing
+
+        const headers: Record<string, string> = {}
+        await auth.apply(headers, { method: 'GET', url: 'https://example.com' })
+        expect(headers.Authorization).toBe('Bearer initial')
+    })
+
+    it('oauthAuth reset starts a new refresh instead of sharing the obsolete in-flight refresh', async () => {
+        const releases: Array<(token: string) => void> = []
+        const auth = oauthAuth({
+            getToken: () => 'initial',
+            refresh: () =>
+                new Promise<string>((resolve) => {
+                    releases.push(resolve)
+                }),
+        })
+
+        const obsolete = auth.onUnauthorized!()
+        auth.reset!()
+        const current = auth.onUnauthorized!()
+        expect(releases).toHaveLength(2)
+
+        releases[0]('obsolete')
+        await expect(obsolete).resolves.toBe(false)
+        releases[1]('current')
+        await expect(current).resolves.toBe(true)
+
+        const headers: Record<string, string> = {}
+        await auth.apply(headers, { method: 'GET', url: 'https://example.com' })
+        expect(headers.Authorization).toBe('Bearer current')
+    })
+
+    it('oauthAuth: late initial load must not overwrite a successful refresh (plan regression)', async () => {
+        // Exact reproduction from the implementation plan:
+        // hold getToken(), trigger onUnauthorized(), complete refresh with 'fresh',
+        // then resolve the initial load with 'old' — apply() must use 'Bearer fresh'.
+        let resolveLoad!: (token: string) => void
+        const auth = oauthAuth({
+            getToken: () =>
+                new Promise<string>((resolve) => {
+                    resolveLoad = resolve
+                }),
+            refresh: async () => 'fresh',
+        })
+        const initial = auth.apply({}, { method: 'GET', url: 'https://example.com' })
+        await auth.onUnauthorized?.()
+        resolveLoad('old')
+        await initial
+        const headers: Record<string, string> = {}
+        await auth.apply(headers, { method: 'GET', url: 'https://example.com' })
+        expect(headers.Authorization).toBe('Bearer fresh')
+    })
+
+    it('oauthAuth: failed refresh followed by successful one recovers correctly', async () => {
+        let attempt = 0
+        const auth = oauthAuth({
+            getToken: () => undefined,
+            refresh: async () => {
+                attempt++
+                if (attempt === 1) throw new Error('network error')
+                return 'recovered'
+            },
+        })
+        await expect(auth.onUnauthorized?.()).rejects.toThrow('network error')
+        const result = await auth.onUnauthorized?.()
+        expect(result).toBe(true)
+        const headers: Record<string, string> = {}
+        await auth.apply(headers, { method: 'GET', url: 'https://example.com' })
+        expect(headers.Authorization).toBe('Bearer recovered')
+    })
+
+    it('oauthAuth: reset during in-flight load prevents the stale result from being cached', async () => {
+        const loads: Array<(token: string) => void> = []
+        const auth = oauthAuth({
+            getToken: () =>
+                new Promise<string>((resolve) => {
+                    loads.push(resolve)
+                }),
+        })
+        const firstApply = auth.apply({}, { method: 'GET', url: 'https://example.com' })
+        auth.reset!()
+        loads[0]('stale')
+        await firstApply
+
+        const headers: Record<string, string> = {}
+        const freshApply = auth.apply(headers, { method: 'GET', url: 'https://example.com' })
+        expect(loads).toHaveLength(2)
+        loads[1]('fresh-after-reset')
+        await freshApply
+        expect(headers.Authorization).toBe('Bearer fresh-after-reset')
+    })
 })
 
 describe('core/auth — cookie edge cases', () => {
@@ -173,7 +328,47 @@ describe('core/auth — cookie edge cases', () => {
         expect(jar.size).toBe(0)
         mergeSetCookie(['sid=abc; Path=/app'], jar, Date.now(), 'example.com')
         mergeSetCookie('sid=; Path=/', jar, Date.now(), 'example.com')
-        expect(jar.has('sid')).toBe(false)
+        expect(serializeCookieJar(jar, 'https://example.com/app')).toBe('sid=abc')
+    })
+
+    it('keeps same-name cookies with different paths and selects the most specific match', () => {
+        const jar = new Map()
+        mergeSetCookie('sid=root; Path=/', jar, Date.now(), 'example.com')
+        mergeSetCookie('sid=app; Path=/app', jar, Date.now(), 'example.com')
+        mergeSetCookie('sid=admin; Path=/admin', jar, Date.now(), 'example.com')
+
+        expect(serializeCookieJar(jar, 'https://example.com/')).toBe('sid=root')
+        expect(serializeCookieJar(jar, 'https://example.com/app/page')).toBe('sid=app; sid=root')
+    })
+
+    it('replaces a cookie only within the same scope', () => {
+        const jar = new Map()
+        mergeSetCookie('sid=old; Path=/app', jar, Date.now(), 'example.com')
+        mergeSetCookie('sid=new; Path=/app', jar, Date.now(), 'example.com')
+
+        expect(serializeCookieJar(jar, 'https://example.com/app')).toBe('sid=new')
+    })
+
+    it('deletes only a same-name cookie with the matching scope', () => {
+        const jar = new Map()
+        mergeSetCookie('sid=root; Path=/', jar, Date.now(), 'example.com')
+        mergeSetCookie('sid=app; Path=/app', jar, Date.now(), 'example.com')
+        mergeSetCookie('sid=; Path=/app', jar, Date.now(), 'example.com')
+
+        expect(serializeCookieJar(jar, 'https://example.com/app')).toBe('sid=root')
+    })
+
+    it('applies a CSRF cookie only when it is scoped to the request URL', async () => {
+        const auth = cookieAuth()
+        await auth.onResponse?.(new Headers({ 'set-cookie': 'csrf_token=private; Path=/private' }), {
+            method: 'GET',
+            url: 'https://example.com/private',
+        })
+        const headers: Record<string, string> = {}
+
+        await auth.apply(headers, { method: 'POST', url: 'https://example.com/api/method/x' })
+
+        expect(headers['X-Frappe-CSRF-Token']).toBeUndefined()
     })
 
     it('serializeCookieJar drops expired cookies, host mismatches, path mismatches, and invalid URLs', () => {

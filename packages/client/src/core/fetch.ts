@@ -17,7 +17,7 @@ import {
     TimeoutError,
 } from './errors'
 import { emitLog, type FrappeLogEvent, requestLogPath } from './logger'
-import { composeMiddleware, type FrappeRequest as MwRequest, type FrappeResponse as MwResponse } from './middleware'
+import { composeMiddleware, type NextFn } from './middleware'
 import type { Transport, TransportRequest, TransportResponse } from './transport'
 import { buildUrl, toSearchParams } from './url'
 import { requestViaXhr } from './xhr-upload'
@@ -35,11 +35,11 @@ function isBrowserEnvironment(): boolean {
     return typeof window !== 'undefined' && typeof document !== 'undefined'
 }
 
-function composeSignals(signals: AbortSignal[]): AbortSignal {
+function composeSignals(signals: AbortSignal[]): { signal: AbortSignal; cleanup: () => void } {
     const live = signals.filter(Boolean)
-    if (live.length === 1) return live[0]
+    if (live.length === 1) return { signal: live[0], cleanup() {} }
     if (typeof (AbortSignal as any).any === 'function') {
-        return (AbortSignal as any).any(live)
+        return { signal: (AbortSignal as any).any(live), cleanup() {} }
     }
     const controller = new AbortController()
     const listeners: Array<() => void> = []
@@ -59,7 +59,7 @@ function composeSignals(signals: AbortSignal[]): AbortSignal {
         s.addEventListener('abort', onAbort, { once: true })
         listeners.push(() => s.removeEventListener('abort', onAbort))
     }
-    return controller.signal
+    return { signal: controller.signal, cleanup }
 }
 
 function headerName(headers: Record<string, string>, name: string): string | undefined {
@@ -74,6 +74,34 @@ function hasHeader(headers: Record<string, string>, name: string): boolean {
 function deleteHeader(headers: Record<string, string>, name: string): void {
     const key = headerName(headers, name)
     if (key) delete headers[key]
+}
+
+function mergeHeaders(...sources: Array<Readonly<Record<string, string>> | undefined>): Record<string, string> {
+    const merged: Record<string, string> = {}
+    for (const source of sources) {
+        if (!source) continue
+        for (const [name, value] of Object.entries(source)) {
+            deleteHeader(merged, name)
+            merged[name] = value
+        }
+    }
+    return merged
+}
+
+function withDeadline<T>(
+    operation: Promise<T>,
+    signal: AbortSignal | undefined,
+    request: FrappeRequestContext,
+): Promise<T> {
+    if (!signal) return operation
+    if (signal.aborted) {
+        return Promise.reject(new TimeoutError({ status: 0, message: 'Request deadline exceeded', request }))
+    }
+    return new Promise<T>((resolve, reject) => {
+        const onAbort = () => reject(new TimeoutError({ status: 0, message: 'Request deadline exceeded', request }))
+        signal.addEventListener('abort', onAbort, { once: true })
+        operation.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort))
+    })
 }
 
 /** Reads a response body as text, then attempts JSON parsing. Always decodes bytes to text — never leaves an error body as an opaque Blob/ArrayBuffer (a binary error body is still Frappe's JSON error envelope). */
@@ -134,11 +162,7 @@ export class FetchTransport implements Transport {
         const timeoutMs = req.timeout ?? config.timeout
         const isBrowser = isBrowserEnvironment()
 
-        const headers: Record<string, string> = {
-            Accept: 'application/json',
-            ...config.headers,
-            ...req.headers,
-        }
+        const headers = mergeHeaders({ Accept: 'application/json' }, config.headers, req.headers)
         const isFormLike = typeof FormData !== 'undefined' && req.data instanceof FormData
         if (!isFormLike && req.data !== undefined && !hasHeader(headers, 'Content-Type')) {
             headers['Content-Type'] = 'application/json; charset=utf-8'
@@ -154,11 +178,6 @@ export class FetchTransport implements Transport {
             headers['X-Frappe-Site-Name'] ??= window.location.hostname
         }
 
-        await config.auth.apply(headers, { method: req.method, url })
-
-        const credentials: RequestCredentials =
-            config.credentials ?? (config.auth.name === 'cookie' && isBrowser ? 'include' : 'same-origin')
-
         const deadlineController = new AbortController()
         let deadlineHandle: ReturnType<typeof setTimeout> | undefined
         if (req.deadline !== undefined) {
@@ -172,6 +191,16 @@ export class FetchTransport implements Transport {
                 )
             }
         }
+
+        const deadlineSignal = req.deadline === undefined ? undefined : deadlineController.signal
+        await withDeadline(
+            Promise.resolve(config.auth.apply(headers, { method: req.method, url })),
+            deadlineSignal,
+            request,
+        )
+
+        const credentials: RequestCredentials =
+            config.credentials ?? (config.auth.name === 'cookie' && isBrowser ? 'include' : 'same-origin')
 
         const body = isFormLike ? (req.data as FormData) : req.data !== undefined ? JSON.stringify(req.data) : undefined
         if (isFormLike) {
@@ -188,19 +217,21 @@ export class FetchTransport implements Transport {
         // Each attempt (including retries driven by middleware) gets its own timeout window, so
         // a `retry` middleware's later attempts are not starved by the first attempt's timeout.
         // `req.deadline`, in contrast, is shared across every attempt.
-        const terminal = async (mwReq: MwRequest): Promise<MwResponse> => {
+        let authReplayUsed = false
+        const terminal: NextFn = async (mwReq) => {
             const timeoutController = new AbortController()
             const timeoutHandle = setTimeout(
                 () => timeoutController.abort(new DOMException('Timeout', 'TimeoutError')),
                 timeoutMs,
             )
-            const signal = composeSignals(
+            const composed = composeSignals(
                 [
-                    req.signal,
+                    mwReq.signal,
                     req.deadline !== undefined ? deadlineController.signal : undefined,
                     timeoutController.signal,
                 ].filter(Boolean) as AbortSignal[],
             )
+            const { signal } = composed
 
             let res: Response
             req.onUploadProgress?.({ loaded: 0 })
@@ -213,7 +244,20 @@ export class FetchTransport implements Transport {
                         signal,
                         credentials,
                     })
-                    if (res.status === 401 && (await this.refreshAuth(mwReq.headers, req, url))) {
+                    await config.auth.onResponse?.(res.headers, { method: req.method, url })
+                    const canReplayAuth = res.status === 401 && !authReplayUsed
+                    if (canReplayAuth) {
+                        authReplayUsed = true
+                    }
+                    if (
+                        canReplayAuth &&
+                        (await withDeadline(this.refreshAuth(mwReq.headers, req, url), deadlineSignal, request))
+                    ) {
+                        try {
+                            await res.body?.cancel()
+                        } catch {
+                            // Replaying must not retain the rejected response's connection.
+                        }
                         res = await fetchImpl(mwReq.url, {
                             method: mwReq.method,
                             headers: mwReq.headers,
@@ -221,6 +265,7 @@ export class FetchTransport implements Transport {
                             signal,
                             credentials,
                         })
+                        await config.auth.onResponse?.(res.headers, { method: req.method, url })
                     }
                 } catch (error) {
                     // Pass the timeout-specific signal (not the merged one) so a caller-provided
@@ -228,8 +273,6 @@ export class FetchTransport implements Transport {
                     throw mapNetworkError(error, request, timeoutMs, timeoutController.signal)
                 }
                 req.onUploadProgress?.({ loaded: 1, total: 1 })
-
-                await config.auth.onResponse?.(res.headers, { method: req.method, url })
 
                 let parsed: unknown
                 let text: string | undefined
@@ -240,7 +283,11 @@ export class FetchTransport implements Transport {
                 }
 
                 if (timeoutController.signal.aborted) {
-                    throw new TimeoutError({ status: 0, message: `Request timed out after ${timeoutMs}ms`, request })
+                    throw new TimeoutError({
+                        status: 0,
+                        message: `Request timed out after ${timeoutMs}ms`,
+                        request,
+                    })
                 }
 
                 if (!res.ok) {
@@ -256,6 +303,7 @@ export class FetchTransport implements Transport {
                 }
             } finally {
                 clearTimeout(timeoutHandle)
+                composed.cleanup()
             }
         }
 
@@ -266,29 +314,48 @@ export class FetchTransport implements Transport {
         // reported best-effort (0% then 100%) around a normal fetch. This never affects
         // non-upload requests.
         if (req.onUploadProgress && typeof XMLHttpRequest !== 'undefined') {
-            clearTimeout(deadlineHandle)
             const xhrStart = performance.now()
-            return requestViaXhr<T>({
-                req,
-                url,
-                headers,
-                body,
-                requestId,
-                timeoutMs,
-                isBrowser,
-                credentials,
-                onResponse: (h) => config.auth.onResponse?.(h, { method: req.method, url }),
-                refreshAuth: (nextHeaders) => this.refreshAuth(nextHeaders, req, url),
-                log: (outcome) => this.logRequest(req.method, url, requestId, xhrStart, outcome),
+            const xhrSignal = composeSignals([req.signal, deadlineSignal].filter(Boolean) as AbortSignal[])
+            return withDeadline(
+                requestViaXhr<T>({
+                    req: { ...req, signal: xhrSignal.signal },
+                    url,
+                    headers,
+                    body,
+                    requestId,
+                    timeoutMs,
+                    isBrowser,
+                    credentials,
+                    onResponse: (h) => config.auth.onResponse?.(h, { method: req.method, url }),
+                    refreshAuth: (nextHeaders) => this.refreshAuth(nextHeaders, req, url),
+                    log: (outcome) => this.logRequest(req.method, url, requestId, xhrStart, outcome),
+                }),
+                deadlineSignal,
+                request,
+            ).finally(() => {
+                clearTimeout(deadlineHandle)
+                xhrSignal.cleanup()
             })
         }
 
         const start = performance.now()
         try {
-            const res = await pipeline({ method: req.method, url, headers, body, signal: req.signal, requestId })
+            const res = await withDeadline(
+                pipeline({
+                    method: req.method,
+                    url,
+                    headers,
+                    body,
+                    signal: req.signal,
+                    deadline: req.deadline,
+                    requestId,
+                }),
+                deadlineSignal,
+                request,
+            )
             if (!isHttpOk(res.status)) {
                 throw mapServerError(
-                    { status: res.status, statusText: res.statusText },
+                    { status: res.status, statusText: res.statusText, headers: res.headers },
                     res.body,
                     res.responseText,
                     request,

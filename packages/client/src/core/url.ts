@@ -16,6 +16,17 @@ function assertSafeSegment(value: string, kind = 'path segment'): string {
     return encodeURIComponent(v)
 }
 
+function assertSafeDocumentName(value: string): string {
+    const name = String(value)
+    if (!name || name.includes('\0') || name.includes('\\')) {
+        throw new ConfigurationError(`Invalid document name: ${JSON.stringify(value)}`)
+    }
+    return name
+        .split('/')
+        .map((part) => assertSafeSegment(part, 'document name'))
+        .join('/')
+}
+
 function decodeOnce(value: string): string {
     try {
         return decodeURIComponent(value)
@@ -48,7 +59,7 @@ export function methodPath(apiVersion: ApiVersion, path: string): string {
 export function resourcePath(apiVersion: ApiVersion, doctype: string, name?: string | null): string {
     const dt = assertSafeSegment(doctype, 'doctype')
     if (name) {
-        const n = assertSafeSegment(name, 'document name')
+        const n = assertSafeDocumentName(name)
         return apiVersion === 2 ? `/api/v2/document/${dt}/${n}` : `/api/resource/${dt}/${n}`
     }
     return apiVersion === 2 ? `/api/v2/document/${dt}` : `/api/resource/${dt}`
@@ -59,7 +70,7 @@ export function doctypePath(doctype: string, action: 'meta' | 'count'): string {
 }
 
 export function documentMethodPath(doctype: string, name: string, method: string): string {
-    return `/api/v2/document/${assertSafeSegment(doctype, 'doctype')}/${assertSafeSegment(name, 'document name')}/method/${assertSafeSegment(method, 'method')}`
+    return `/api/v2/document/${assertSafeSegment(doctype, 'doctype')}/${assertSafeDocumentName(name)}/method/${assertSafeSegment(method, 'method')}`
 }
 
 /** Encode a v2 `{Doctype}/{method}` controller path. Dotted RPC names are not encoded here. */
@@ -68,7 +79,7 @@ export function doctypeMethodPath(doctype: string, method: string): string {
 }
 
 export function documentCopyPath(doctype: string, name: string): string {
-    return `/api/v2/document/${assertSafeSegment(doctype, 'doctype')}/${assertSafeSegment(name, 'document name')}/copy`
+    return `/api/v2/document/${assertSafeSegment(doctype, 'doctype')}/${assertSafeDocumentName(name)}/copy`
 }
 
 /** JSON-stringify objects/arrays; pass strings through; drop `null`/`undefined`. */

@@ -202,7 +202,7 @@ describe('frappe-js-client/extended modules', () => {
                 body: { nope: true },
                 once: true,
             })
-            expect(await client.report.download('c')).toBeInstanceOf(Blob)
+            await expect(client.report.download('c')).rejects.toMatchObject({ name: 'ResponseError' })
         })
     })
 

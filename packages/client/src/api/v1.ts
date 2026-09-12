@@ -3,7 +3,7 @@
  * @description Classic Frappe REST: `/api/method` + `/api/resource`. Works on v14, v15, v16.
  */
 
-import { FeatureNotSupportedError } from '../core/errors'
+import { FeatureNotSupportedError, ResponseError } from '../core/errors'
 import { classicMethodPath, jsonParam, resourcePath } from '../core/url'
 import { type AdapterRequest, type ApiAdapter, createCapabilities, type ListParams, type ListResult } from './adapter'
 
@@ -120,6 +120,7 @@ export class V1Adapter implements ApiAdapter {
     unwrapList<T>(body: unknown): ListResult<T> {
         const b = body as any
         const data = b && typeof b === 'object' && 'data' in b ? b.data : b
-        return { data: Array.isArray(data) ? data : [] }
+        if (!Array.isArray(data)) throw new ResponseError('Document list received an unexpected response shape.')
+        return { data }
     }
 }

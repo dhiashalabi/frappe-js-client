@@ -86,6 +86,66 @@ describe('FrappeFile', () => {
         await expect(client.file.upload(123 as any, {})).rejects.toThrow(/unsupported/)
     })
 
+    it('cancels a ReadableStream while it is being buffered', async () => {
+        const { client } = createTestClient()
+        const abort = new AbortController()
+        let streamCancelled = false
+        const stream = new ReadableStream<Uint8Array>({
+            pull() {
+                return new Promise<void>(() => undefined)
+            },
+            cancel() {
+                streamCancelled = true
+            },
+        })
+
+        const pending = client.file.upload(stream, {}, { signal: abort.signal })
+        await Promise.resolve()
+        abort.abort()
+
+        await expect(pending).rejects.toMatchObject({ name: 'CancelledError' })
+        expect(streamCancelled).toBe(true)
+    })
+
+    it('enforces a deadline while a ReadableStream is being buffered', async () => {
+        const { client } = createTestClient()
+        let streamCancelled = false
+        const stream = new ReadableStream<Uint8Array>({
+            pull() {
+                return new Promise<void>(() => undefined)
+            },
+            cancel() {
+                streamCancelled = true
+            },
+        })
+
+        await expect(client.file.upload(stream, {}, { deadline: Date.now() + 5 })).rejects.toMatchObject({
+            name: 'TimeoutError',
+        })
+        expect(streamCancelled).toBe(true)
+    })
+
+    it('propagates stream read failures and handles an already-aborted signal', async () => {
+        const { client } = createTestClient()
+        const failed = new ReadableStream<Uint8Array>({
+            pull(controller) {
+                controller.error(new Error('stream failed'))
+            },
+        })
+        await expect(client.file.upload(failed, {})).rejects.toThrow('stream failed')
+
+        const abort = new AbortController()
+        abort.abort()
+        const neverRead = new ReadableStream<Uint8Array>({
+            pull() {
+                return new Promise<void>(() => undefined)
+            },
+        })
+        await expect(client.file.upload(neverRead, {}, { signal: abort.signal })).rejects.toMatchObject({
+            name: 'CancelledError',
+        })
+    })
+
     it('download wraps ArrayBuffer, Blob, and other bodies', async () => {
         const { client, transport } = createTestClient()
         transport.mock({ method: 'GET', path: '/api/method/download_file', body: new ArrayBuffer(2), once: true })
@@ -95,7 +155,7 @@ describe('FrappeFile', () => {
         transport.mock({ method: 'GET', path: '/api/method/download_file', body: 'plain text', once: true })
         expect(await client.file.download('/d')).toBeInstanceOf(Blob)
         transport.mock({ method: 'GET', path: '/api/method/download_file', body: { not: 'bytes' }, once: true })
-        expect(await client.file.download('/c')).toBeInstanceOf(Blob)
+        await expect(client.file.download('/c')).rejects.toMatchObject({ name: 'ResponseError' })
         transport.mock({ method: 'GET', path: '/api/method/download_file', body: new Uint8Array([9, 8]), once: true })
         expect(await client.file.download('/e')).toBeInstanceOf(Blob)
     })

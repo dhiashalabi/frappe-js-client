@@ -5,6 +5,11 @@
  * strategy can load or refresh a token before the request is sent.
  */
 
+/**
+ * `{ method, url }` passed to an {@link AuthStrategy}. Never headers or body.
+ *
+ * Distinct from {@link FrappeRequest} (middleware) and {@link FrappeRequestContext} (errors).
+ */
 export interface FrappeRequestInfo {
     method: string
     url: string
@@ -28,6 +33,17 @@ export interface AuthStrategy {
     onUnauthorized?(): Promise<boolean> | boolean
 }
 
+function removeAuthorization(headers: Record<string, string>): void {
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === 'authorization') delete headers[key]
+    }
+}
+
+function setAuthorization(headers: Record<string, string>, value?: string): void {
+    removeAuthorization(headers)
+    if (value) headers.Authorization = value
+}
+
 /** No authentication headers are added. Used for public/whitelisted-guest endpoints. */
 export function anonymousAuth(): AuthStrategy {
     return {
@@ -48,7 +64,7 @@ export function tokenAuth(options: TokenAuthOptions): AuthStrategy {
     return {
         name: 'token',
         apply(headers) {
-            headers.Authorization = `token ${options.apiKey}:${options.apiSecret}`
+            setAuthorization(headers, `token ${options.apiKey}:${options.apiSecret}`)
         },
     }
 }
@@ -67,11 +83,7 @@ export function bearerAuth(options: BearerAuthOptions): AuthStrategy {
         name: 'bearer',
         async apply(headers) {
             const token = await options.token()
-            if (token) {
-                headers.Authorization = `${scheme} ${token}`
-            } else {
-                delete headers.Authorization
-            }
+            setAuthorization(headers, token ? `${scheme} ${token}` : undefined)
         },
     }
 }
@@ -92,25 +104,49 @@ export interface OAuthAuthOptions {
  */
 export function oauthAuth(options: OAuthAuthOptions): AuthStrategy {
     let cachedToken: string | undefined
+    let tokenPromise: Promise<string | undefined> | undefined
+    let refreshPromise: Promise<string> | undefined
+    let generation = 0
+
+    async function loadToken(): Promise<string | undefined> {
+        if (cachedToken !== undefined) return cachedToken
+        const startedAt = generation
+        const pending = (tokenPromise ??= Promise.resolve(options.getToken()))
+        try {
+            const token = await pending
+            if (startedAt !== generation) return cachedToken
+            if (cachedToken !== undefined) return cachedToken
+            cachedToken = token
+            return token
+        } finally {
+            if (tokenPromise === pending) tokenPromise = undefined
+        }
+    }
+
     return {
         name: 'oauth',
         async apply(headers) {
-            const token = (cachedToken ??= await options.getToken())
-            if (token) {
-                headers.Authorization = `Bearer ${token}`
-            } else {
-                delete headers.Authorization
-            }
+            const token = await loadToken()
+            setAuthorization(headers, token ? `Bearer ${token}` : undefined)
         },
         async onUnauthorized() {
             if (!options.refresh) {
                 return false
             }
-            cachedToken = await options.refresh()
-            return Boolean(cachedToken)
+            const startedAt = generation
+            const pending = (refreshPromise ??= Promise.resolve(options.refresh()).finally(() => {
+                if (refreshPromise === pending) refreshPromise = undefined
+            }))
+            const token = await pending
+            if (startedAt !== generation) return false
+            cachedToken = token
+            return Boolean(token)
         },
         reset() {
+            generation++
             cachedToken = undefined
+            tokenPromise = undefined
+            refreshPromise = undefined
         },
     }
 }
@@ -119,12 +155,26 @@ export function oauthAuth(options: OAuthAuthOptions): AuthStrategy {
  * Session cookies stored by `cookieAuth()` in Node.
  */
 export interface CookieRecord {
+    /** Cookie name. Optional only for backward-compatible, caller-created jar entries. */
+    name?: string
     value: string
     path: string
     expiresAt?: number
     secure?: boolean
     domain?: string
     host: string
+}
+
+function cookieName(key: string, record: CookieRecord): string {
+    return record.name ?? key
+}
+
+function sameCookieScope(record: CookieRecord, path: string, domain: string | undefined, host: string): boolean {
+    return record.path === path && record.domain === domain && (domain !== undefined || record.host === host)
+}
+
+function cookieStorageKey(name: string, record: CookieRecord): string {
+    return JSON.stringify([name, record.domain ?? null, record.host, record.path])
 }
 
 /** Parse one `Set-Cookie` line. Returns `null` if the line has no `name=value` pair. */
@@ -226,22 +276,44 @@ export function mergeSetCookie(
         const parsed = parseSetCookieLine(raw, now)
         if (!parsed) continue
         if (parsed.domain && host && !cookieDomainMatchesHost(parsed.domain, host)) continue
+        const matching = [...jar.entries()].filter(([key, record]) => cookieName(key, record) === parsed.name)
         if (parsed.delete) {
-            jar.delete(parsed.name)
+            for (const [key, record] of matching) {
+                if (sameCookieScope(record, parsed.path, parsed.domain, host)) jar.delete(key)
+            }
             continue
         }
-        jar.set(parsed.name, {
+        const record: CookieRecord = {
+            name: parsed.name,
             value: parsed.value,
             path: parsed.path,
             expiresAt: parsed.expiresAt,
             secure: parsed.secure,
             domain: parsed.domain,
             host,
-        })
+        }
+        const existingScope = matching.find(([, current]) => sameCookieScope(current, parsed.path, parsed.domain, host))
+        if (existingScope) {
+            jar.set(existingScope[0], record)
+        } else if (matching.length === 0) {
+            jar.set(parsed.name, record)
+        } else {
+            for (const [key, current] of matching) {
+                if (key === parsed.name) {
+                    jar.delete(key)
+                    jar.set(cookieStorageKey(parsed.name, current), { ...current, name: parsed.name })
+                }
+            }
+            jar.set(cookieStorageKey(parsed.name, record), record)
+        }
     }
 }
 
-export function serializeCookieJar(jar: Map<string, CookieRecord>, requestUrl?: string, now = Date.now()): string {
+function matchingCookieEntries(
+    jar: Map<string, CookieRecord>,
+    requestUrl: string | undefined,
+    now: number,
+): Array<{ name: string; record: CookieRecord }> {
     let path = '/'
     let protocol: string | undefined
     let hostname: string | undefined
@@ -252,14 +324,14 @@ export function serializeCookieJar(jar: Map<string, CookieRecord>, requestUrl?: 
             hostname = parsed.hostname
             path = parsed.pathname
         } catch {
-            return ''
+            return []
         }
     }
 
-    const pairs: string[] = []
-    for (const [name, record] of jar) {
+    const matches: Array<{ name: string; record: CookieRecord }> = []
+    for (const [key, record] of jar) {
         if (record.expiresAt !== undefined && record.expiresAt <= now) {
-            jar.delete(name)
+            jar.delete(key)
             continue
         }
         if (record.secure && protocol !== 'https:') continue
@@ -271,9 +343,15 @@ export function serializeCookieJar(jar: Map<string, CookieRecord>, requestUrl?: 
             }
         }
         if (!cookieMatchesPath(record.path, path)) continue
-        pairs.push(`${name}=${record.value}`)
+        matches.push({ name: cookieName(key, record), record })
     }
-    return pairs.join('; ')
+    return matches.sort((a, b) => b.record.path.length - a.record.path.length)
+}
+
+export function serializeCookieJar(jar: Map<string, CookieRecord>, requestUrl?: string, now = Date.now()): string {
+    return matchingCookieEntries(jar, requestUrl, now)
+        .map(({ name, record }) => `${name}=${record.value}`)
+        .join('; ')
 }
 
 function isBrowserEnvironment(): boolean {
@@ -340,7 +418,8 @@ export function cookieAuth(): AuthStrategy & {
             }
             const cookieHeader = serializeCookieJar(jar, req.url)
             if (cookieHeader) headers.Cookie = cookieHeader
-            const csrf = jar.get('csrf_token')?.value
+            const csrf = matchingCookieEntries(jar, req.url, Date.now()).find(({ name }) => name === 'csrf_token')
+                ?.record.value
             if (csrf) headers['X-Frappe-CSRF-Token'] = csrf
         },
         reset() {
