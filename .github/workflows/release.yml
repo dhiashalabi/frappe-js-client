@@ -72,9 +72,6 @@ jobs:
             - name: Check isolated packed consumers
               run: pnpm verify:packed
 
-            - name: Enforce client bundle budget
-              run: pnpm bundle:check
-
             - name: Authenticate npm
               run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
               env:

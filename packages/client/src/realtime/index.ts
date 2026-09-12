@@ -65,16 +65,11 @@ function comparableOrigin(value: string): string {
     return url.origin
 }
 
-function extraHeadersFrom(ctx: RealtimeAuthContext): Record<string, string> {
-    const headers: Record<string, string> = {}
-    if (ctx.cookie) headers.Cookie = ctx.cookie
-    if (ctx.authorization) headers.Authorization = ctx.authorization
-    return headers
-}
-
-function assignExtraHeaders(target: Record<string, string>, ctx: RealtimeAuthContext): void {
-    for (const key of Object.keys(target)) delete target[key]
-    Object.assign(target, extraHeadersFrom(ctx))
+function applyAuthHeaders(target: Record<string, string>, ctx: RealtimeAuthContext): void {
+    if (ctx.cookie) target.Cookie = ctx.cookie
+    else delete target.Cookie
+    if (ctx.authorization) target.Authorization = ctx.authorization
+    else delete target.Authorization
 }
 
 function subscriptionKey(doctype: string, name?: string): string {
@@ -156,7 +151,8 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
             const initialHandshake = await handshakeFrom(authCtx)
             assertOpen() // guard against close() during slow custom auth callback
 
-            const extraHeaders = extraHeadersFrom(authCtx)
+            const extraHeaders: Record<string, string> = {}
+            applyAuthHeaders(extraHeaders, authCtx)
             let deliveredInitialHandshake = false
             const authProvider: SocketAuthProvider = (callback) => {
                 if (!deliveredInitialHandshake) {
@@ -166,7 +162,7 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
                 }
                 void (async () => {
                     const context = await getAuthContext()
-                    assignExtraHeaders(extraHeaders, context)
+                    applyAuthHeaders(extraHeaders, context)
                     return handshakeFrom(context)
                 })().then(callback, () => callback({}))
             }
