@@ -2,32 +2,32 @@
 # (`build` and `docs`). The Checks UI may display them as "CI / build"; Mergify still
 # matches the job name, not the workflow prefix.
 pull_request_rules:
-  - name: Automatic squash on CI success and review
-    conditions:
-      - -draft
-      - -conflict
-      - label!=dont-merge
-      - label!=merge-commit
-      - '#approved-reviews-by>=1'
-      - check-success=build
-      - check-success=docs
-    actions:
-      merge:
-        method: squash
-        commit_message_format:
-          title: pr-title
-          body: pr-body
-  - name: Automatic merge commit on CI success and review
-    conditions:
-      - -draft
-      - -conflict
-      - label!=dont-merge
-      - label=merge-commit
-      - '#approved-reviews-by>=1'
-      - check-success=build
-      - check-success=docs
-    actions:
-      merge:
-        method: merge
+    - name: Automatic squash on CI success and review
+      conditions:
+          - -draft
+          - -conflict
+          - label!=dont-merge
+          - label!=merge-commit
+          - '#approved-reviews-by>=1'
+          - check-success=build
+          - check-success=docs
+      actions:
+          merge:
+              method: squash
+              commit_message_format:
+                  title: pr-title
+                  body: pr-body
+    - name: Automatic merge commit on CI success and review
+      conditions:
+          - -draft
+          - -conflict
+          - label!=dont-merge
+          - label=merge-commit
+          - '#approved-reviews-by>=1'
+          - check-success=build
+          - check-success=docs
+      actions:
+          merge:
+              method: merge
 merge_queue:
-  status_comments: all
+    status_comments: all
