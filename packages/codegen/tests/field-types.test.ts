@@ -102,10 +102,10 @@ describe('mapFieldType', () => {
         expect(mapFieldType(field('Link'))).toBe('string')
     })
 
-    it('maps Select value:label and value,label lines to the value side', () => {
-        expect(mapFieldType(field('Select', { options: 'open: Open\nclosed,Closed' }))).toBe('"open" | "closed"')
-        expect(mapFieldType(field('Select', { options: 'only,label' }))).toBe('"only"')
-        expect(mapFieldType(field('Select', { options: 'a:b,c' }))).toBe('"a"')
+    it('preserves commas and colons in Select values', () => {
+        expect(mapFieldType(field('Select', { options: 'Open: Today\nLast, First' }))).toBe(
+            '"Open: Today" | "Last, First"',
+        )
     })
 
     it('maps an unknown/future fieldtype to unknown without throwing', () => {

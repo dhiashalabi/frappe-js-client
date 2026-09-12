@@ -20,7 +20,7 @@ export interface GenerateOptions {
 }
 
 const DEFAULTS: Required<GenerateOptions> = {
-    includeHidden: false,
+    includeHidden: true,
     includeLabels: true,
     emitDocTypeMap: true,
 }
@@ -38,18 +38,29 @@ export function toInterfaceName(doctype: string): string {
 
 export function assertUniqueInterfaceNames(metas: readonly DocTypeMeta[]): void {
     const byName = new Map<string, string[]>()
+    const reserve = (symbol: string, source: string) => {
+        const list = byName.get(symbol) ?? []
+        list.push(source)
+        byName.set(symbol, list)
+    }
+    for (const symbol of ['FrappeDoc', 'FrappeInsert', 'Link', 'GeneratedDocTypes', 'GeneratedInserts']) {
+        reserve(symbol, `reserved ${symbol}`)
+    }
     for (const meta of metas) {
         const id = toInterfaceName(meta.name)
-        const list = byName.get(id) ?? []
-        list.push(meta.name)
-        byName.set(id, list)
+        reserve(id, meta.name)
+        reserve(`${id}Insert`, `${meta.name} insert alias`)
     }
     const collisions = [...byName.entries()].filter(([, names]) => names.length > 1)
     if (collisions.length === 0) return
     const detail = collisions
         .map(([id, names]) => `${id} <= ${names.map((n) => JSON.stringify(n)).join(', ')}`)
         .join('; ')
-    throw new Error(`frappe-codegen: interface name collision: ${detail}`)
+    throw new Error(`frappe-codegen: interface name collision / generated symbol collision: ${detail}`)
+}
+
+function commentText(value: string): string {
+    return value.replace(/\*\//g, '*∕')
 }
 
 function shouldEmitField(field: DocField, options: Required<GenerateOptions>): boolean {
@@ -118,7 +129,7 @@ export function generateInterface(
             : `export type ${interfaceName}Insert = FrappeInsert<Omit<${interfaceName}, ${checkKeys.map((k) => JSON.stringify(k)).join(' | ')}> & Partial<Pick<${interfaceName}, ${checkKeys.map((k) => JSON.stringify(k)).join(' | ')}>>>`
 
     return [
-        `/** Generated from DocType \`${meta.name}\`. Do not edit by hand — regenerate with \`frappe-codegen --help\`. */`,
+        `/** Generated from DocType \`${commentText(meta.name)}\`. Do not edit by hand — regenerate with \`frappe-codegen --help\`. */`,
         `export type ${interfaceName} = FrappeDoc<${body}>`,
         insertAlias,
     ].join('\n')

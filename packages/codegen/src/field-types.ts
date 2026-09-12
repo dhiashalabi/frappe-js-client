@@ -58,20 +58,6 @@ export function selectLiterals(options: string | undefined): string[] {
         .split('\n')
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
-        .map(selectValue)
-}
-
-/** `value: Label`, `value,Label`, or a bare value. */
-function selectValue(line: string): string {
-    const colon = line.indexOf(':')
-    const comma = line.indexOf(',')
-    if (colon > 0 && (comma < 0 || colon < comma)) {
-        return line.slice(0, colon).trim()
-    }
-    if (comma > 0) {
-        return line.slice(0, comma).trim()
-    }
-    return line
 }
 
 export interface FieldTypeContext {
