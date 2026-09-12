@@ -28,6 +28,7 @@ const config: Config = {
         [
             'docusaurus-plugin-typedoc',
             {
+                id: 'client-api',
                 entryPoints: [
                     '../packages/client/src/index.ts',
                     '../packages/client/src/extended.ts',
@@ -38,6 +39,23 @@ const config: Config = {
                 ],
                 tsconfig: '../packages/client/tsconfig.json',
                 out: './docs/api',
+                readme: 'none',
+                excludePrivate: true,
+                excludeInternal: true,
+                skipErrorChecking: true,
+                sidebar: {
+                    pretty: true,
+                },
+            },
+        ],
+        [
+            'docusaurus-plugin-typedoc',
+            {
+                id: 'codegen-api',
+                entryPoints: ['../packages/codegen/src/index.ts'],
+                tsconfig: '../packages/codegen/tsconfig.docs.json',
+                out: './docs/api-codegen',
+                name: 'frappe-codegen',
                 readme: 'none',
                 excludePrivate: true,
                 excludeInternal: true,
@@ -125,8 +143,12 @@ const config: Config = {
                             to: '/docs/codegen',
                         },
                         {
-                            label: 'API reference',
+                            label: 'Client API',
                             to: '/docs/api',
+                        },
+                        {
+                            label: 'Codegen API',
+                            to: '/docs/api-codegen',
                         },
                     ],
                 },

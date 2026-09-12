@@ -40,6 +40,9 @@ Classic success bodies unwrap `{ message }`. API v2 unwraps `{ data }`.
 ## Limitations
 
 - `frappe-codegen` reads DocType meta from `GET /api/v2/doctype/{dt}/meta` (Frappe v15+). There is no v1 fallback.
-- `cookieAuth()` in browsers cannot read `HttpOnly` cookies (the browser still sends them). After `login()` in a headless SPA, `window.csrf_token` is not refreshed automatically — Desk embeds are fine; SPAs need a CSRF bootstrap.
+- `cookieAuth()` in browsers cannot read `HttpOnly` cookies (the browser still sends them). After `login()` in a headless SPA, `window.csrf_token` is not refreshed automatically — Desk embeds are fine; SPAs need a CSRF bootstrap. CSRF is read from `window.csrf_token`, `<meta name="csrf_token">`, or the `csrf_token` cookie.
 - Upload progress cannot be combined with client middleware (`ConfigurationError`).
 - Realtime is a separate optional entry (`frappe-js-client/realtime`) and needs `socket.io-client`.
+- Login, logout, password reset, upload, and download always use classic `/api/method/...`, including on `apiVersion: 2`.
+- Filter values cannot be `Date` objects — format with `formatFrappeDate` / `formatFrappeDatetime`.
+- Pagination is always bounded (`limit` default 20). There is no “fetch all”.
