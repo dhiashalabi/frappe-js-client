@@ -9,7 +9,7 @@ export default defineConfig(
     { ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'temp/**'] },
     pluginJs.configs.recommended,
     {
-        files: ['**/*.ts'],
+        files: ['**/*.ts', '**/*.mts'],
         extends: [...tseslint.configs.recommended],
         plugins: {
             'simple-import-sort': simpleImportSort,

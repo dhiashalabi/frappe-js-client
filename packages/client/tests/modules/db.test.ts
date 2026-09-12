@@ -31,6 +31,55 @@ describe('FrappeDB (via MemoryTransport, v2 default)', () => {
         const list = await client.db.getDocList('User')
         expect(list).toEqual([fixtureUser])
         expect(transport.requests[0]?.params?.limit).toBe(20)
+        expect(transport.requests[0]?.params?.fields).toBe('["*"]')
+    })
+
+    it('normalizes the full-document field selector for Frappe JSON parsing', async () => {
+        const { client, transport } = createTestClient()
+        transport.mock({ method: 'GET', path: '/api/v2/document/User', body: { data: [fixtureUser] } })
+
+        await client.db.getDocList('User', { fields: '*' })
+
+        expect(transport.requests[0]?.params?.fields).toBe('["*"]')
+    })
+
+    it('supports document names containing path separators', async () => {
+        const { client, transport } = createTestClient()
+        transport.mock({
+            method: 'GET',
+            path: '/api/v2/document/Sales Invoice/INV/2026/0001',
+            body: { data: { ...fixtureUser, doctype: 'Sales Invoice', name: 'INV/2026/0001' } },
+        })
+
+        const doc = await client.db.getDoc('Sales Invoice', 'INV/2026/0001')
+
+        expect(doc.name).toBe('INV/2026/0001')
+    })
+
+    it('rejects invalid pagination bounds before issuing a request', async () => {
+        const { client, transport } = createTestClient()
+        for (const limit of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+            await expect(client.db.getDocList('User', { limit })).rejects.toBeInstanceOf(ConfigurationError)
+        }
+        for (const start of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+            await expect(client.db.getDocList('User', { start })).rejects.toBeInstanceOf(ConfigurationError)
+        }
+        expect(transport.requests).toHaveLength(0)
+    })
+
+    it('rejects tuple-shaped list responses instead of returning them as documents', async () => {
+        const { client, transport } = createTestClient()
+        await expect(client.db.getDocList('User', { asDict: false } as any)).rejects.toBeInstanceOf(ConfigurationError)
+        expect(transport.requests).toHaveLength(0)
+    })
+
+    it('validates request timing for injected transports too', async () => {
+        const { client, transport } = createTestClient()
+        await expect(client.auth.ping({ timeout: Number.NaN })).rejects.toBeInstanceOf(ConfigurationError)
+        await expect(client.auth.ping({ deadline: Number.POSITIVE_INFINITY })).rejects.toBeInstanceOf(
+            ConfigurationError,
+        )
+        expect(transport.requests).toHaveLength(0)
     })
 
     it('paginate() yields documents across pages without ever requesting an unbounded page', async () => {
@@ -63,6 +112,13 @@ describe('FrappeDB (via MemoryTransport, v2 default)', () => {
         }
         expect(seen).toHaveLength(2)
         expect(transport.requests).toHaveLength(1)
+    })
+
+    it('rejects a malformed list response instead of hiding it as an empty page', async () => {
+        const { client, transport } = createTestClient()
+        transport.mock({ method: 'GET', path: '/api/v2/document/User', body: { data: { unexpected: true } } })
+
+        await expect(client.db.getDocList('User')).rejects.toMatchObject({ name: 'ResponseError' })
     })
 
     it('createDoc POSTs to the resource endpoint', async () => {

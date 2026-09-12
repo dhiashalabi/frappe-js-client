@@ -100,6 +100,7 @@ export interface CookieRecord {
     expiresAt?: number;
     // (undocumented)
     host: string;
+    name?: string;
     // (undocumented)
     path: string;
     // (undocumented)
@@ -175,10 +176,10 @@ export type Filter<T = FrappeDoc<object>> = SingleValueFilter<T> | MultiValueFil
 export type FilterVar<T> = keyof T | (string & Record<never, never>);
 
 // @public
-export function formatFrappeDate(date: Date): string;
+export function formatFrappeDate(date: Date, timeZone?: string): string;
 
 // @public
-export function formatFrappeDatetime(date: Date): string;
+export function formatFrappeDatetime(date: Date, timeZone?: string): string;
 
 // Warning: (ae-forgotten-export) The symbol "FrappeAuthImpl" needs to be exported by the entry point index.d.ts
 //
@@ -294,6 +295,8 @@ export class FrappeError extends Error {
     // (undocumented)
     readonly responseText?: string;
     // (undocumented)
+    readonly retryAfterMs?: number;
+    // (undocumented)
     readonly serverMessages: ServerMessage[];
     // (undocumented)
     readonly status: number;
@@ -313,6 +316,7 @@ export interface FrappeErrorInit {
     // (undocumented)
     request?: FrappeRequestContext;
     responseText?: string;
+    retryAfterMs?: number;
     // (undocumented)
     serverMessages?: ServerMessage[];
     status: number;
@@ -357,6 +361,7 @@ export interface FrappeLogger {
 export interface FrappeRequest {
     // (undocumented)
     body?: unknown;
+    deadline?: number;
     // (undocumented)
     headers: Record<string, string>;
     // (undocumented)
@@ -444,8 +449,7 @@ export interface GetDocArgs {
 
 // @public (undocumented)
 export interface GetDocListArgs<T = FrappeDoc<object>, F extends FieldsArg<T> = '*'> {
-    // (undocumented)
-    asDict?: boolean;
+    asDict?: true;
     // (undocumented)
     debug?: boolean;
     // (undocumented)
@@ -504,6 +508,8 @@ export interface GetValueArgs<T = object> {
 
 // @public (undocumented)
 export interface HttpErrorSource {
+    // (undocumented)
+    headers?: Pick<Headers, 'get'>;
     // (undocumented)
     status: number;
     // (undocumented)
@@ -590,6 +596,11 @@ export interface RequestOptions {
     requestId?: string;
     signal?: AbortSignal;
     timeout?: number;
+}
+
+// @public
+export class ResponseError extends FrappeError {
+    constructor(message: string, extra?: Partial<FrappeErrorInit>);
 }
 
 // @public
@@ -723,6 +734,7 @@ export interface TransportResponse<T> {
 // @public (undocumented)
 export interface UploadOptions {
     apiPath?: string;
+    deadline?: number;
     filename?: string;
     // (undocumented)
     headers?: Record<string, string>;

@@ -1,6 +1,45 @@
+import { CancelledError, ResponseError, TimeoutError } from '../../core/errors'
+import { validateRequestOptions } from '../../core/executor'
 import type { RequestOptions } from '../../core/types'
 import type { ModuleDeps } from '../deps'
 import type { FileArgs, FileDoc, FrappeUploadInput, UploadOptions } from './types'
+
+function readStreamChunk(
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    options: Pick<UploadOptions, 'signal' | 'deadline'> | undefined,
+): Promise<ReadableStreamReadResult<Uint8Array>> {
+    return new Promise((resolve, reject) => {
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const cleanup = () => {
+            options?.signal?.removeEventListener('abort', onAbort)
+            clearTimeout(timer)
+        }
+        const onAbort = () => {
+            cleanup()
+            reject(new CancelledError({ status: 0, message: 'Upload preparation was cancelled' }))
+        }
+        options?.signal?.addEventListener('abort', onAbort, { once: true })
+        if (options?.deadline !== undefined) {
+            timer = setTimeout(
+                () => {
+                    cleanup()
+                    reject(new TimeoutError({ status: 0, message: 'Upload deadline exceeded' }))
+                },
+                Math.max(0, options.deadline - Date.now()),
+            )
+        }
+        reader.read().then(
+            (result) => {
+                cleanup()
+                resolve(result)
+            },
+            (error) => {
+                cleanup()
+                reject(error)
+            },
+        )
+    })
+}
 
 function toBlob(data: unknown): Blob {
     if (data instanceof Blob) return data
@@ -11,10 +50,13 @@ function toBlob(data: unknown): Blob {
     }
     if (data instanceof ArrayBuffer) return new Blob([data])
     if (typeof data === 'string') return new Blob([data])
-    return new Blob([])
+    throw new ResponseError('File download received an unexpected response body.')
 }
 
-async function toUploadBlob(file: FrappeUploadInput): Promise<{ blob: Blob; filename?: string }> {
+async function toUploadBlob(
+    file: FrappeUploadInput,
+    options?: Pick<UploadOptions, 'signal' | 'deadline'>,
+): Promise<{ blob: Blob; filename?: string }> {
     if (typeof File !== 'undefined' && file instanceof File) {
         return { blob: file, filename: file.name }
     }
@@ -28,13 +70,25 @@ async function toUploadBlob(file: FrappeUploadInput): Promise<{ blob: Blob; file
         return { blob: new Blob([file]) }
     }
     if (typeof ReadableStream !== 'undefined' && file instanceof ReadableStream) {
+        if (options?.deadline !== undefined && options.deadline <= Date.now()) {
+            throw new TimeoutError({ status: 0, message: 'Upload deadline exceeded' })
+        }
         const chunks: Uint8Array[] = []
         const reader = file.getReader()
-
-        while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-            if (value) chunks.push(value)
+        try {
+            while (true) {
+                if (options?.signal?.aborted) {
+                    throw new CancelledError({ status: 0, message: 'Upload preparation was cancelled' })
+                }
+                const { done, value } = await readStreamChunk(reader, options)
+                if (done) break
+                if (value) chunks.push(value)
+            }
+        } catch (error) {
+            await reader.cancel(error).catch(() => undefined)
+            throw error
+        } finally {
+            reader.releaseLock()
         }
         return { blob: new Blob(chunks as BlobPart[]) }
     }
@@ -59,7 +113,8 @@ class FrappeFileImpl {
      * run the middleware pipeline.
      */
     async upload<T = FileDoc>(file: FrappeUploadInput, args: FileArgs, options?: UploadOptions): Promise<T> {
-        const { blob, filename: inferredFilename } = await toUploadBlob(file)
+        validateRequestOptions(options)
+        const { blob, filename: inferredFilename } = await toUploadBlob(file, options)
         const filename = options?.filename ?? inferredFilename ?? 'upload.bin'
 
         const formData = new FormData()
@@ -93,6 +148,7 @@ class FrappeFileImpl {
                 headers: options?.headers,
                 signal: options?.signal,
                 timeout: options?.timeout,
+                deadline: options?.deadline,
                 requestId: options?.requestId,
             },
         )

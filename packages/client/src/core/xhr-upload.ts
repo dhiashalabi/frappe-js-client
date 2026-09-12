@@ -132,18 +132,19 @@ export function requestViaXhr<T>(ctx: XhrUploadContext): Promise<TransportRespon
                     new TransportError({ status: 0, message: 'Network request failed', request: requestContext(ctx) }),
                 )
             instance.onload = () => {
-                void handleXhrLoad(
+                handleXhrLoad(
                     instance,
                     ctx,
                     responseType,
                     refreshed,
                     () => {
+                        if (settled) return
                         refreshed = true
                         attach(new XMLHttpRequest())
                         xhr.send(body as XMLHttpRequestBodyInit | undefined)
                     },
                     finish,
-                )
+                ).catch(finish)
             }
         }
 
@@ -183,7 +184,14 @@ async function handleXhrLoad<T>(
     }
 
     if (!okStatus) {
-        finish(mapServerError({ status: xhr.status, statusText: xhr.statusText }, parsed, text, requestContext(ctx)))
+        finish(
+            mapServerError(
+                { status: xhr.status, statusText: xhr.statusText, headers: responseHeaders },
+                parsed,
+                text,
+                requestContext(ctx),
+            ),
+        )
         return
     }
     finish(undefined, { data: parsed as T, status: xhr.status, statusText: xhr.statusText, headers: responseHeaders })

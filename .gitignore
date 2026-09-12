@@ -29,6 +29,9 @@ lerna-debug.log*
 
 # Coverage and caches
 coverage/
+test-results/
+playwright-report/
+blob-report/
 .cache/
 .worktrees/
 
@@ -39,3 +42,4 @@ temp/
 docs/build/
 docs/.docusaurus/
 docs/docs/api/
+docs/docs/api-codegen/

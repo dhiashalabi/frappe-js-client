@@ -2,6 +2,8 @@
 
 Extended module. Use `withExtended`. Comments, ToDo assignments, tags, and document share.
 
+Every method accepts trailing [`RequestOptions`](../client.md#per-request-options). `removeTag` / `unassign` drop a reversible association. Destroying a document is `db.deleteDoc`.
+
 ```typescript
 import { createFrappeClient } from 'frappe-js-client'
 import { withExtended } from 'frappe-js-client/extended'
@@ -63,4 +65,40 @@ await frappe.desk.share.setPermission({
 await frappe.desk.share.getUsers('ToDo', 'abc')
 ```
 
+## Comments
+
+| Method                         | Returns        | Notes                                                                           |
+| ------------------------------ | -------------- | ------------------------------------------------------------------------------- |
+| `addComment(args)`             | `CommentDoc`   | `referenceDoctype` / `referenceName` / `content` / `commentEmail` / `commentBy` |
+| `updateComment(name, content)` | `unknown`      |                                                                                 |
+| `getComments(doctype, name)`   | `CommentDoc[]` | Newest first. Same list builder as `db`                                         |
+
+## Assignments
+
+| Method                                     | Returns           | Notes                                |
+| ------------------------------------------ | ----------------- | ------------------------------------ |
+| `assign(args)`                             | `AssignmentRow[]` | `assignTo` is `string` or `string[]` |
+| `assignMultiple(args)`                     | `unknown`         | `names: string[]` instead of `name`  |
+| `unassign(doctype, name, assignTo)`        | `AssignmentRow[]` |                                      |
+| `closeAssignment(doctype, name, assignTo)` | `AssignmentRow[]` |                                      |
+
+`AssignArgs`: `doctype`, `name`, `assignTo`, optional `description`, `priority`, `date`, `assignedBy`, `assignmentRule`. `AssignmentRow` is `{ owner, name }`.
+
+## Tags
+
+| Method                               | Returns    | Notes               |
+| ------------------------------------ | ---------- | ------------------- |
+| `addTag(tag, doctype, name, color?)` | `string`   | Color optional      |
+| `removeTag(tag, doctype, name)`      | `unknown`  |                     |
+| `getTags(doctype, txt?)`             | `string[]` | `txt` defaults `''` |
+| `getTaggedDocs(doctype, tag)`        | `unknown`  |                     |
+
+## Share (`frappe.desk.share`)
+
 Share flags accept `boolean | number`. `name` on share args is `string | number`.
+
+| Method                          | Returns            | Defaults                                              |
+| ------------------------------- | ------------------ | ----------------------------------------------------- |
+| `share.add(args)`               | `DocShare`         | `read: 1`, `write/submit/share/everyone/notify: 0`    |
+| `share.setPermission(args)`     | `DocShare \| null` | `value: 1`, `everyone: 0`. `permissionTo` is required |
+| `share.getUsers(doctype, name)` | `DocShare[]`       |                                                       |

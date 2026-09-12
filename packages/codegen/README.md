@@ -31,7 +31,7 @@ the binary with no flags (or a `package.json` script).
 {
     "url": "https://frappe.example.com",
     "out": "src/generated/frappe-types.ts",
-    "includeHidden": false,
+    "includeHidden": true,
     "followTables": true,
     "doctypes": ["ToDo", "User"],
     "modules": ["Desk"]
@@ -108,14 +108,14 @@ config `doctypes` / `modules`).
 | `-o`, `--out <path>`                                 | `./frappe-types.generated.ts`               | Output `.ts` file. Parent dirs are created       |
 | `--config <path>`                                    | `./frappe-codegen.config.json` if it exists | Config file path                                 |
 | `--follow-tables` / `--no-follow-tables`             | follow (on)                                 | Also generate Table / Table MultiSelect children |
-| `--include-hidden`                                   | off                                         | Emit form-hidden fields                          |
+| `--include-hidden` / `--no-include-hidden`           | hidden on                                   | Emit form-hidden fields                          |
 | `--include-labels` / `--no-include-labels`           | labels on                                   | `/** label */` above each field                  |
 | `--include-doctype-map` / `--no-include-doctype-map` | map on                                      | Emit `GeneratedDocTypes` / `GeneratedInserts`    |
 | `--dry-run`                                          | off                                         | Print `name<TAB>seed\|child` and exit (no file)  |
 | `-h`, `--help`                                       | —                                           | Print help                                       |
 
-Frappe `hidden` is **form visibility**, not “missing on the document”. Reminder’s required `user`
-and `notified` need `--include-hidden`.
+Frappe `hidden` is **form visibility**, not “missing on the document”, so hidden fields are
+included by default. Use `--no-include-hidden` when you intentionally want to omit them.
 
 Virtual fields (`is_virtual`) and layout fieldtypes (`Section Break`, `Image`, `Button`, …) are
 never emitted.
@@ -142,6 +142,9 @@ Each DocType becomes a read type (`FrappeDoc<{ doctype: "…", … }>`) plus `So
 Link fields with a target become `Link<"Customer">`. Table children are generated when follow is
 on (default) or when you list the child DocType yourself.
 
+Select options become string literals from each complete trimmed line. Colons and commas remain
+part of the stored option value.
+
 ## Programmatic API
 
 ```ts
@@ -156,3 +159,7 @@ const names = await resolveDocTypes(client, {
 const metas = await fetchWithOptionalFollow(client, names, true)
 const source = generateModule(metas, { includeHidden: true })
 ```
+
+Library exports: config (`loadConfigFile`, `mergeConfig`, …), meta (`fetchDocTypeMeta` / `fetchDocTypeMetas`), resolve (`resolveDocTypes`, `followChildTables`, `fetchWithOptionalFollow`), generate (`generateModule`, `generateInterface`, `toInterfaceName`, `assertUniqueInterfaceNames`).
+
+Full signatures: [Codegen docs](https://dhiashalabi.github.io/frappe-js-client/docs/codegen).

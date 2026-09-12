@@ -27,11 +27,11 @@ describe('mergeConfig', () => {
         else process.env[key] = value
     }
 
-    it('defaults out, includeHidden false, followTables true', () => {
+    it('defaults out, includeHidden true, followTables true', () => {
         const merged = mergeConfig(undefined, {})
         expect(merged).toMatchObject({
             out: './frappe-types.generated.ts',
-            includeHidden: false,
+            includeHidden: true,
             followTables: true,
             doctypes: [],
             modules: [],

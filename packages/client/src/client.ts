@@ -44,11 +44,11 @@ export interface FrappeClient<Docs extends object = object> {
     withHeaders(headers: Record<string, string>): FrappeClient<Docs>
 }
 
-const internals = new WeakMap<object, FrappeClientInternal>()
+const INTERNAL_SYMBOL = Symbol('FrappeClientInternal')
 
 /** @internal Used by `frappe-js-client/extended`. Not part of the stable API. */
 export function getClientInternal(client: object): FrappeClientInternal {
-    const internal = internals.get(client)
+    const internal = (client as any)[INTERNAL_SYMBOL]
     if (!internal) {
         throw new ConfigurationError('getClientInternal: client was not created by createFrappeClient')
     }
@@ -57,7 +57,12 @@ export function getClientInternal(client: object): FrappeClientInternal {
 
 /** @internal Copies transport wiring onto a derived client object (e.g. `withExtended`). */
 export function copyClientInternal(from: object, to: object): void {
-    internals.set(to, getClientInternal(from))
+    Object.defineProperty(to, INTERNAL_SYMBOL, {
+        value: getClientInternal(from),
+        enumerable: false,
+        configurable: false,
+        writable: false,
+    })
 }
 
 function buildAdapter(config: FrappeClientConfig): ApiAdapter {
@@ -92,7 +97,12 @@ function buildClient<Docs extends object = object>(config: FrappeClientConfig): 
             buildClient<Docs>(deriveConfig(config, { middleware: [...config.middleware, ...middleware] })),
         withHeaders: (headers) => buildClient<Docs>(deriveConfig(config, { headers })),
     }
-    internals.set(client, { deps, transport, config })
+    Object.defineProperty(client, INTERNAL_SYMBOL, {
+        value: { deps, transport, config },
+        enumerable: false,
+        configurable: false,
+        writable: false,
+    })
     return client
 }
 

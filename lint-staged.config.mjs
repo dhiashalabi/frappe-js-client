@@ -12,7 +12,7 @@ function eslintIn(pkg) {
 }
 
 export default {
-    'packages/client/**/*.{js,cjs,mjs,ts}': eslintIn('packages/client'),
-    'packages/codegen/**/*.{js,cjs,mjs,ts}': eslintIn('packages/codegen'),
-    '**/*.{js,cjs,mjs,ts,json,md,yml,yaml,css}': 'prettier --write',
+    'packages/client/**/*.{js,cjs,mjs,ts,mts}': eslintIn('packages/client'),
+    'packages/codegen/**/*.{js,cjs,mjs,ts,mts}': eslintIn('packages/codegen'),
+    '**/*.{js,cjs,mjs,ts,mts,json,md,yml,yaml,css}': 'prettier --write',
 }

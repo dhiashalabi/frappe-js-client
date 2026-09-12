@@ -71,6 +71,9 @@ jobs:
             - name: Check type resolution across module systems (attw)
               run: pnpm attw
 
+            - name: Check isolated packed consumers
+              run: pnpm verify:packed
+
             - name: Check changeset
               if: github.event_name == 'pull_request' && !contains(join(github.event.pull_request.labels.*.name, ','), 'skip-changeset') && !startsWith(github.head_ref, 'changeset-release/')
               run: |

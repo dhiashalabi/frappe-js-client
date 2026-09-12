@@ -42,9 +42,10 @@ DocTypes:
 
 Options:
   --config <path>                    JSON config file (default: ./frappe-codegen.config.json if present)
-  --include-hidden                   Emit fields marked "hidden" on the form (default: excluded).
+  --include-hidden                   Emit fields marked "hidden" on the form (default: included).
                                      Frappe "hidden" is form visibility, not "not on the document" —
-                                     e.g. Reminder.user and Reminder.notified need this flag.
+                                     e.g. Reminder.user and Reminder.notified.
+  --no-include-hidden                Omit form-hidden fields
   --include-labels                   Emit a "/** label */" doc comment above each field (default: true)
   --no-include-labels                Omit field labels
   --include-doctype-map              Emit GeneratedDocTypes / GeneratedInserts (default: true)
@@ -53,7 +54,7 @@ Options:
 
 Example:
   frappe-codegen --url https://frappe.example.com --api-key $FRAPPE_API_KEY --api-secret $FRAPPE_API_SECRET \\
-    --doctype "Sales Order" --include-hidden --out src/generated/frappe-types.ts
+    --doctype "Sales Order" --out src/generated/frappe-types.ts
 `
 
 export function parseCliArgs(argv: string[]): CliOverlay | { help: true } {

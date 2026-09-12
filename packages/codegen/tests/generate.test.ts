@@ -63,19 +63,19 @@ describe('generateInterface', () => {
         expect(source).not.toContain('description?:')
     })
 
-    it('excludes hidden fields by default and includes them when includeHidden is true', () => {
+    it('includes hidden document fields by default and excludes them only when requested', () => {
         const todo = meta('ToDo', [
             { fieldname: 'description', fieldtype: 'Text' },
             { fieldname: 'idx', fieldtype: 'Int', hidden: 1, label: 'Index' },
         ])
         const hidden = generateInterface(todo, [todo], { includeLabels: false })
-        expect(hidden).not.toContain('idx')
+        expect(hidden).toContain('    idx?: number')
 
         const shown = generateInterface(todo, [todo], {
-            includeHidden: true,
+            includeHidden: false,
             includeLabels: false,
         })
-        expect(shown).toContain('    idx?: number')
+        expect(shown).not.toContain('idx')
     })
 
     it("emits Reminder's form-hidden data fields only when includeHidden is true", () => {
@@ -121,6 +121,7 @@ describe('generateInterface', () => {
         ])
 
         const withoutHidden = generateInterface(reminder, [reminder], {
+            includeHidden: false,
             includeLabels: false,
         })
         expect(withoutHidden).toContain('    remind_at: string')
@@ -322,6 +323,18 @@ describe('generateModule', () => {
         ).toThrow(/interface name collision/)
     })
 
+    it('rejects collisions with generated insert aliases and imported helper types', () => {
+        expect(() => generateModule([meta('Task', []), meta('Task Insert', [])])).toThrow(/symbol collision/)
+        expect(() => generateModule([meta('Frappe Doc', [])])).toThrow(/symbol collision/)
+        expect(() => generateModule([meta('Generated Doc Types', [])])).toThrow(/symbol collision/)
+    })
+
+    it('escapes DocType names before placing them in generated comments', () => {
+        const source = generateModule([meta('Unsafe */ export const injected = true; /*', [])])
+        expect(source).toContain('Unsafe *∕ export const injected = true; /*')
+        assertSyntacticallyValidTs(source)
+    })
+
     it('generates ToDo types from the fixture metadata', () => {
         const source = generateModule([todoFixture], { includeLabels: false })
         expect(source).toContain('export type ToDo = FrappeDoc<{')
@@ -331,7 +344,7 @@ describe('generateModule', () => {
         expect(source).toContain('    allocated_to?: Link<"User">')
         expect(source).toContain('    reference_name?: string')
         expect(source).toContain('"ToDo": ToDo')
-        expect(source).not.toContain('sender')
+        expect(source).toContain('sender')
         expect(source).not.toContain('section_break_reference')
     })
 

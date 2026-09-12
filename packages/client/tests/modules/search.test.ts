@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest'
 import { createTestClient } from '../../src/testing'
 
 describe('FrappeSearch', () => {
+    it('rejects an unexpected search_link response shape', async () => {
+        const { client, transport } = createTestClient()
+        transport.mock({
+            method: 'GET',
+            path: '/api/v2/method/frappe.desk.search.search_link',
+            body: { data: { unexpected: true } },
+        })
+
+        await expect(client.search.searchLink('User', 'a')).rejects.toMatchObject({ name: 'ResponseError' })
+    })
     it('searchLink queries frappe.desk.search.search_link', async () => {
         const { client, transport } = createTestClient()
         transport.mock({
@@ -40,14 +50,14 @@ describe('FrappeSearch', () => {
         await expect(client.search.searchLink('User', 'adm')).resolves.toEqual([{ value: 'x', description: 'y' }])
     })
 
-    it('falls back to an empty array for an unrecognized response shape', async () => {
+    it('rejects an unrecognized response shape instead of hiding it as an empty result', async () => {
         const { client, transport } = createTestClient()
         transport.mock({
             method: 'GET',
             path: '/api/v2/method/frappe.desk.search.search_link',
             body: { data: { unexpected: true } },
         })
-        await expect(client.search.searchLink('User', 'adm')).resolves.toEqual([])
+        await expect(client.search.searchLink('User', 'adm')).rejects.toMatchObject({ name: 'ResponseError' })
     })
 
     it('searchWidget queries frappe.desk.search.search_widget', async () => {

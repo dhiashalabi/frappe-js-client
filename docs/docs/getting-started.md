@@ -71,8 +71,9 @@ See [Packages](./packages.md) for the codegen CLI as well.
 
 ## Next
 
-- [Creating a client](./client.md) — every `createFrappeClient` option
+- [Creating a client](./client.md) — every `createFrappeClient` option, logging, transport
 - [Frappe versions](./frappe-versions.md) — `apiVersion` vs `frappeVersion`
-- [Authentication](./authentication.md)
+- [Authentication](./authentication.md) / [Auth module](./modules/auth.md)
 - [Database](./modules/database.md)
 - [Codegen](./codegen.md)
+- Generated API (Client API / Codegen API in the sidebar)

@@ -17,9 +17,10 @@
     "include": [
         "src",
         "tests",
-        "vitest.config.ts",
-        "vitest.live.config.ts",
-        "vitest.integration.config.ts",
+        "vitest.config.mts",
+        "vitest.realtime.config.mts",
+        "vitest.live.config.mts",
+        "vitest.integration.config.mts",
         "tsup.config.ts"
     ]
 }

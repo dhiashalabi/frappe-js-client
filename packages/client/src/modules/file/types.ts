@@ -29,6 +29,8 @@ export interface UploadOptions {
     onProgress?: (progress: UploadProgressEvent) => void
     signal?: AbortSignal
     timeout?: number
+    /** Hard wall-clock deadline, including any ReadableStream buffering before upload. */
+    deadline?: number
     headers?: Record<string, string>
     requestId?: string
     /** Defaults to `upload_file`. */

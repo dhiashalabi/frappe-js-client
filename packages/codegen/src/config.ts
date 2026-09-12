@@ -90,7 +90,7 @@ export function mergeConfig(file: CodegenFileConfig | undefined, overlay: CliOve
     return {
         url: overlay.url ?? envUrl ?? file?.url,
         out: overlay.out ?? file?.out ?? './frappe-types.generated.ts',
-        includeHidden: overlay.includeHidden ?? file?.includeHidden ?? false,
+        includeHidden: overlay.includeHidden ?? file?.includeHidden ?? true,
         followTables: overlay.followTables ?? file?.followTables ?? true,
         doctypes: [...new Set(doctypes)],
         modules: [...new Set(modules)],

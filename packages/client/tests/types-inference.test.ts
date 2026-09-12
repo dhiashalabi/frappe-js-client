@@ -30,6 +30,14 @@ describe('generated DocType map inference', () => {
             remind_at: string
             notified: 0 | 1
         }>()
+        expectTypeOf(frappe.db.insertMany).toBeCallableWith([
+            {
+                doctype: 'Reminder',
+                user: 'Administrator',
+                remind_at: '2026-01-01 09:00:00',
+                notified: 0,
+            },
+        ])
     })
 
     it('untyped getDoc returns a generic FrappeDoc', () => {
