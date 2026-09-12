@@ -2,8 +2,8 @@ tests:
     - changed-files:
           - any-glob-to-any-file:
                 - packages/*/tests/**
-                - packages/*/vitest.config.ts
-                - packages/*/vitest.*.ts
+                - packages/*/vitest.config.mts
+                - packages/*/vitest.*.mts
 
 docs:
     - changed-files:
