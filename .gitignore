@@ -30,6 +30,7 @@ lerna-debug.log*
 # Coverage and caches
 coverage/
 .cache/
+.worktrees/
 
 # API Extractor scratch output (etc/*.api.md is tracked)
 temp/
