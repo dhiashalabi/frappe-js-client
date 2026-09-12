@@ -167,6 +167,7 @@ describe('createRealtime', () => {
         const rt = createRealtime(client(auth), { autoConnect: false, socketUrl: 'wss://rt.example.com' })
         await rt.connect()
         expect(mock.state.url).toBe('wss://rt.example.com')
+        expect(mock.state.opts?.withCredentials).toBe(false)
         expect((mock.state.opts?.extraHeaders as Record<string, string>).Cookie).toBeUndefined()
         rt.close()
     })
@@ -193,6 +194,7 @@ describe('createRealtime', () => {
             allowCrossOriginCredentials: true,
         })
         await rt.connect()
+        expect(mock.state.opts?.withCredentials).toBe(true)
         expect((mock.state.opts?.extraHeaders as Record<string, string>).Cookie).toContain('sid=abc')
         rt.close()
 
@@ -215,12 +217,36 @@ describe('createRealtime', () => {
             autoConnect: false,
         })
         await rt.connect()
+        const headers = mock.state.opts?.extraHeaders as Record<string, string>
+        expect(headers.Authorization).toBe('Bearer first')
         const provider = mock.state.opts?.auth as (callback: (payload: Record<string, unknown>) => void) => void
         const first = await new Promise<Record<string, unknown>>((resolve) => provider(resolve))
         value = 'second'
         const second = await new Promise<Record<string, unknown>>((resolve) => provider(resolve))
         expect(first.authorization).toBe('Bearer first')
         expect(second.authorization).toBe('Bearer second')
+        expect(headers.Authorization).toBe('Bearer second')
+        rt.close()
+    })
+
+    it('invokes functional socket auth once per handshake', async () => {
+        let calls = 0
+        const rt = createRealtime(client(), {
+            autoConnect: false,
+            auth: () => {
+                calls++
+                return { token: `n${calls}` }
+            },
+        })
+        await rt.connect()
+        expect(calls).toBe(1)
+        const provider = mock.state.opts?.auth as (callback: (payload: Record<string, unknown>) => void) => void
+        const first = await new Promise<Record<string, unknown>>((resolve) => provider(resolve))
+        expect(calls).toBe(1)
+        expect(first).toEqual({ token: 'n1' })
+        const second = await new Promise<Record<string, unknown>>((resolve) => provider(resolve))
+        expect(calls).toBe(2)
+        expect(second).toEqual({ token: 'n2' })
         rt.close()
     })
 
@@ -236,6 +262,9 @@ describe('createRealtime', () => {
         })
         await rt.connect()
         const provider = mock.state.opts?.auth as (callback: (payload: Record<string, unknown>) => void) => void
+        await expect(new Promise<Record<string, unknown>>((resolve) => provider(resolve))).resolves.toEqual({
+            token: 'initial',
+        })
         await expect(new Promise<Record<string, unknown>>((resolve) => provider(resolve))).resolves.toEqual({})
         rt.close()
     })

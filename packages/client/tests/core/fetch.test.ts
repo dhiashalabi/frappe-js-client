@@ -128,6 +128,26 @@ describe('FetchTransport', () => {
         )
     })
 
+    it('clears the deadline timer when authentication setup fails', async () => {
+        vi.useFakeTimers()
+        const transport = new FetchTransport({
+            config: normalizeConfig({
+                url: 'https://example.com',
+                auth: {
+                    name: 'failing',
+                    apply() {
+                        return Promise.reject(new Error('auth exploded'))
+                    },
+                },
+            }),
+        })
+
+        await expect(transport.request({ method: 'GET', url: '/x', deadline: Date.now() + 60_000 })).rejects.toThrow(
+            'auth exploded',
+        )
+        expect(vi.getTimerCount()).toBe(0)
+    })
+
     it('removes query values from error request context', async () => {
         globalThis.fetch = vi.fn(async () => jsonResponse({ message: 'denied' }, 403)) as any
         const transport = new FetchTransport({ config: normalizeConfig({ url: 'https://example.com' }) })

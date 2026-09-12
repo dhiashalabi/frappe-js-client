@@ -65,6 +65,18 @@ function comparableOrigin(value: string): string {
     return url.origin
 }
 
+function extraHeadersFrom(ctx: RealtimeAuthContext): Record<string, string> {
+    const headers: Record<string, string> = {}
+    if (ctx.cookie) headers.Cookie = ctx.cookie
+    if (ctx.authorization) headers.Authorization = ctx.authorization
+    return headers
+}
+
+function assignExtraHeaders(target: Record<string, string>, ctx: RealtimeAuthContext): void {
+    for (const key of Object.keys(target)) delete target[key]
+    Object.assign(target, extraHeadersFrom(ctx))
+}
+
 function subscriptionKey(doctype: string, name?: string): string {
     return JSON.stringify([doctype, name ?? null])
 }
@@ -137,25 +149,30 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
                 comparableOrigin(socketUrl) === comparableOrigin(client.config.baseUrl)
             const getAuthContext = () =>
                 includeClientCredentials ? resolveAuthContext(client) : Promise.resolve({} as RealtimeAuthContext)
-            const resolveHandshakeAuth = async (): Promise<Record<string, unknown>> => {
-                const context = await getAuthContext()
-                return typeof options.auth === 'function' ? options.auth(context) : { ...context, ...options.auth }
-            }
+            const handshakeFrom = async (context: RealtimeAuthContext): Promise<Record<string, unknown>> =>
+                typeof options.auth === 'function' ? options.auth(context) : { ...context, ...options.auth }
             const authCtx = await getAuthContext()
             assertOpen()
-            await resolveHandshakeAuth()
+            const initialHandshake = await handshakeFrom(authCtx)
             assertOpen() // guard against close() during slow custom auth callback
 
-            const extraHeaders: Record<string, string> = {}
-            if (authCtx.cookie) extraHeaders.Cookie = authCtx.cookie
-            if (authCtx.authorization) extraHeaders.Authorization = authCtx.authorization
-
+            const extraHeaders = extraHeadersFrom(authCtx)
+            let deliveredInitialHandshake = false
             const authProvider: SocketAuthProvider = (callback) => {
-                void resolveHandshakeAuth().then(callback, () => callback({}))
+                if (!deliveredInitialHandshake) {
+                    deliveredInitialHandshake = true
+                    callback(initialHandshake)
+                    return
+                }
+                void (async () => {
+                    const context = await getAuthContext()
+                    assignExtraHeaders(extraHeaders, context)
+                    return handshakeFrom(context)
+                })().then(callback, () => callback({}))
             }
             const created = io(socketUrl, {
                 path: options.path ?? '/socket.io',
-                withCredentials: true,
+                withCredentials: includeClientCredentials,
                 reconnection: options.reconnection ?? true,
                 reconnectionAttempts: options.reconnectionAttempts ?? Infinity,
                 reconnectionDelay: options.reconnectionDelay ?? 1000,

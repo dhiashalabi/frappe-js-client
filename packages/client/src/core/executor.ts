@@ -20,7 +20,8 @@ export interface RequestConfig {
     onUploadProgress?: (event: UploadProgressEvent) => void
 }
 
-function validateRequestOptions(options?: RequestOptions): void {
+/** @internal Shared by `Executor.call` and file uploads so timing options fail before work starts. */
+export function validateRequestOptions(options?: RequestOptions): void {
     if (options?.timeout !== undefined && (!Number.isFinite(options.timeout) || options.timeout <= 0)) {
         throw new ConfigurationError('Request `timeout` must be a finite, positive number of milliseconds.')
     }

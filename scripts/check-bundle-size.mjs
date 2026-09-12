@@ -2,8 +2,9 @@
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const root = resolve(new URL('..', import.meta.url).pathname)
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const budget = JSON.parse(readFileSync(resolve(root, 'test/bundle-budget.json'), 'utf8'))
 const dist = resolve(root, 'packages/client/dist')
 const files = readdirSync(dist).filter((name) => name.endsWith('.mjs') && !name.endsWith('.mjs.map'))

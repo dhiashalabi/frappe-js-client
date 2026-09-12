@@ -2,7 +2,7 @@
 
 `frappe.search` is on the core client. Every method accepts trailing [`RequestOptions`](../client.md#per-request-options).
 
-`searchLink` normalizes both Frappe 14 (`{ results: [...] }`) and Frappe 15+ (bare array) to `LinkSearchResult[]` (`value`, `description`, optional `label`). Unrecognized bodies become `[]`.
+`searchLink` normalizes both Frappe 14 (`{ results: [...] }`) and Frappe 15+ (bare array) to `LinkSearchResult[]` (`value`, `description`, optional `label`). Unrecognized bodies reject with `ResponseError`.
 
 ## Methods
 

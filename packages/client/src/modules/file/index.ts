@@ -1,4 +1,5 @@
 import { CancelledError, ResponseError, TimeoutError } from '../../core/errors'
+import { validateRequestOptions } from '../../core/executor'
 import type { RequestOptions } from '../../core/types'
 import type { ModuleDeps } from '../deps'
 import type { FileArgs, FileDoc, FrappeUploadInput, UploadOptions } from './types'
@@ -69,6 +70,9 @@ async function toUploadBlob(
         return { blob: new Blob([file]) }
     }
     if (typeof ReadableStream !== 'undefined' && file instanceof ReadableStream) {
+        if (options?.deadline !== undefined && options.deadline <= Date.now()) {
+            throw new TimeoutError({ status: 0, message: 'Upload deadline exceeded' })
+        }
         const chunks: Uint8Array[] = []
         const reader = file.getReader()
         try {
@@ -109,6 +113,7 @@ class FrappeFileImpl {
      * run the middleware pipeline.
      */
     async upload<T = FileDoc>(file: FrappeUploadInput, args: FileArgs, options?: UploadOptions): Promise<T> {
+        validateRequestOptions(options)
         const { blob, filename: inferredFilename } = await toUploadBlob(file, options)
         const filename = options?.filename ?? inferredFilename ?? 'upload.bin'
 

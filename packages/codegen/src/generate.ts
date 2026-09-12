@@ -9,7 +9,7 @@ import { DocField, DocTypeMeta } from './metadata'
 
 export interface GenerateOptions {
     /**
-     * Include fields marked `hidden` in the meta. Default `false`.
+     * Include fields marked `hidden` in the meta. Default `true`.
      * Frappe `hidden` is form visibility (e.g. Reminder `user` / `notified`), not "absent from the document".
      */
     includeHidden?: boolean

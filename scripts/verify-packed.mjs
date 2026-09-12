@@ -4,8 +4,9 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const root = resolve(new URL('..', import.meta.url).pathname)
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const fixture = mkdtempSync(join(tmpdir(), 'frappe-js-client-packed-'))
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 const node = process.execPath

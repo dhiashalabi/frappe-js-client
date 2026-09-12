@@ -193,11 +193,16 @@ export class FetchTransport implements Transport {
         }
 
         const deadlineSignal = req.deadline === undefined ? undefined : deadlineController.signal
-        await withDeadline(
-            Promise.resolve(config.auth.apply(headers, { method: req.method, url })),
-            deadlineSignal,
-            request,
-        )
+        try {
+            await withDeadline(
+                Promise.resolve(config.auth.apply(headers, { method: req.method, url })),
+                deadlineSignal,
+                request,
+            )
+        } catch (error) {
+            clearTimeout(deadlineHandle)
+            throw error
+        }
 
         const credentials: RequestCredentials =
             config.credentials ?? (config.auth.name === 'cookie' && isBrowser ? 'include' : 'same-origin')

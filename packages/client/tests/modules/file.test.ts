@@ -125,6 +125,40 @@ describe('FrappeFile', () => {
         expect(streamCancelled).toBe(true)
     })
 
+    it('validates timeout before buffering a ReadableStream', async () => {
+        const { client } = createTestClient()
+        const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+                controller.enqueue(new Uint8Array([1]))
+                controller.close()
+            },
+        })
+
+        await expect(client.file.upload(stream, {}, { timeout: -1 })).rejects.toMatchObject({
+            name: 'ConfigurationError',
+        })
+        const { done, value } = await stream.getReader().read()
+        expect(done).toBe(false)
+        expect(value).toEqual(new Uint8Array([1]))
+    })
+
+    it('rejects an already-expired deadline before buffering a ReadableStream', async () => {
+        const { client } = createTestClient()
+        const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+                controller.enqueue(new Uint8Array([1, 2, 3]))
+                controller.close()
+            },
+        })
+
+        await expect(client.file.upload(stream, {}, { deadline: Date.now() - 1 })).rejects.toMatchObject({
+            name: 'TimeoutError',
+        })
+        const { done, value } = await stream.getReader().read()
+        expect(done).toBe(false)
+        expect(value).toEqual(new Uint8Array([1, 2, 3]))
+    })
+
     it('propagates stream read failures and handles an already-aborted signal', async () => {
         const { client } = createTestClient()
         const failed = new ReadableStream<Uint8Array>({
