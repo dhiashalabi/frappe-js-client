@@ -1,5 +1,6 @@
 import { CancelledError, ResponseError, TimeoutError } from '../../core/errors'
 import { validateRequestOptions } from '../../core/executor'
+import { raceOperation } from '../../core/lifecycle'
 import type { RequestOptions } from '../../core/types'
 import type { ModuleDeps } from '../deps'
 import type { FileArgs, FileDoc, FrappeUploadInput, UploadOptions } from './types'
@@ -8,37 +9,7 @@ function readStreamChunk(
     reader: ReadableStreamDefaultReader<Uint8Array>,
     options: Pick<UploadOptions, 'signal' | 'deadline'> | undefined,
 ): Promise<ReadableStreamReadResult<Uint8Array>> {
-    return new Promise((resolve, reject) => {
-        let timer: ReturnType<typeof setTimeout> | undefined
-        const cleanup = () => {
-            options?.signal?.removeEventListener('abort', onAbort)
-            clearTimeout(timer)
-        }
-        const onAbort = () => {
-            cleanup()
-            reject(new CancelledError({ status: 0, message: 'Upload preparation was cancelled' }))
-        }
-        options?.signal?.addEventListener('abort', onAbort, { once: true })
-        if (options?.deadline !== undefined) {
-            timer = setTimeout(
-                () => {
-                    cleanup()
-                    reject(new TimeoutError({ status: 0, message: 'Upload deadline exceeded' }))
-                },
-                Math.max(0, options.deadline - Date.now()),
-            )
-        }
-        reader.read().then(
-            (result) => {
-                cleanup()
-                resolve(result)
-            },
-            (error) => {
-                cleanup()
-                reject(error)
-            },
-        )
-    })
+    return raceOperation(reader.read(), { signal: options?.signal, deadline: options?.deadline })
 }
 
 function toBlob(data: unknown): Blob {
@@ -85,7 +56,7 @@ async function toUploadBlob(
                 if (value) chunks.push(value)
             }
         } catch (error) {
-            await reader.cancel(error).catch(() => undefined)
+            void reader.cancel(error).catch(() => undefined)
             throw error
         } finally {
             reader.releaseLock()
@@ -108,9 +79,7 @@ class FrappeFileImpl {
     }
 
     /**
-     * Browser upload progress uses XHR when no middleware is configured.
-     * Combining `onProgress` with client middleware throws `ConfigurationError` — XHR cannot
-     * run the middleware pipeline.
+     * Browser upload progress uses XHR; the shared request pipeline applies middleware first.
      */
     async upload<T = FileDoc>(file: FrappeUploadInput, args: FileArgs, options?: UploadOptions): Promise<T> {
         validateRequestOptions(options)

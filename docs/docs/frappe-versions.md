@@ -5,23 +5,23 @@ REST generation (`apiVersion`) and Frappe release (`frappeVersion`) are independ
 | `apiVersion`  | Paths                           | Frappe                               |
 | ------------- | ------------------------------- | ------------------------------------ |
 | `1`           | `/api/method` + `/api/resource` | v14, v15, v16                        |
-| `2` (default) | `/api/v2/*`                     | v15, v16 — **does not exist on v14** |
+| `2` (default on 15/16) | `/api/v2/*`                     | v15, v16 — **rejected on v14** |
 
 This client **never** calls `/api/v1/...`. That prefix 404s on v14. Classic unversioned paths still work on v15 and v16.
 
-Pass `frappeVersion: 14 | 15 | 16` when you know the site's release. It only affects capabilities that differ by release. When omitted, every capability uses the conservative value that is correct on every supported release — except `validateLink` on Frappe 16, which **requires** `frappeVersion: 16` because `frappe.client.validate_link` was removed.
+`frappeVersion: 14 | 15 | 16` is required. Frappe 14 defaults to API v1 and rejects API v2; Frappe 15/16 default to API v2 and also accept explicit API v1. This selects release-specific capabilities and the correct `validateLink` RPC.
 
 ## Capabilities
 
-`Capabilities` (on the internal adapter; typed from `frappe-js-client`) has three fields:
+The internal version adapter selects three release-specific behaviors:
 
 | Field                           | True when                                        | Effect                                                                                                                                                 |
 | ------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `validateLinkAndFetch`          | `frappeVersion === 16`                           | `db.validateLinkAndFetch()` is allowed; `db.validateLink()` routes to `validate_link_and_fetch`                                                        |
-| `listExpand`                    | `frappeVersion !== 14`                           | `getDocList` / `getDocListPage` / `paginate` may send `expand`. False on Frappe 14 (`FeatureNotSupportedError`). Unset → true.                         |
+| `listExpand`                    | `frappeVersion !== 14`                           | `getDocList` / `getDocListPage` / `paginate` may send `expand`. False on Frappe 14 (`FeatureNotSupportedError`).                          |
 | `restListHonorsExtendedFilters` | `apiVersion === 1` **or** `frappeVersion === 15` | v2 REST document list is used for `orFilters` / `parent` / `expand`. Otherwise those list args go through `GET /api/v2/method/frappe.client.get_list`. |
 
-`validateLink()` calls `frappe.client.validate_link` on Frappe 14/15 (and when `frappeVersion` is omitted). On Frappe 16 it calls `frappe.client.validate_link_and_fetch` (`fields` → `fields_to_fetch`). Invalid links return `{ name: null }` on 14/15 and `{}` on 16 — treat a missing/null `name` as invalid.
+`validateLink()` calls `frappe.client.validate_link` on Frappe 14/15 . On Frappe 16 it calls `frappe.client.validate_link_and_fetch` (`fields` → `fields_to_fetch`). Invalid links return `{ name: null }` on 14/15 and `{}` on 16 — treat a missing/null `name` as invalid.
 
 ## Matrix
 
@@ -38,7 +38,7 @@ Pass `frappeVersion: 14 | 15 | 16` when you know the site's release. It only aff
 | `search.searchWidget`                                                            | `{ values: [...] }` normalized to an array  | returned array             | returned array                                                           |
 | Login / logout / password reset / upload / download                              | always classic `/api/method/...`            | same                       | same                                                                     |
 
-Classic success bodies unwrap `{ message }`. API v2 unwraps `{ data }`.
+`getDoc({ expandLinks: true })` on an API v2 client uses the classic resource route so `expand_links` takes effect. `getCount({ cache })` uses the classic count RPC for the same reason. Standard success bodies must carry the expected `{ message }` or `{ data }` envelope; malformed envelopes throw `ResponseError`. Arbitrary custom RPC results remain caller-typed.
 
 ## RPC catalog vs Frappe 14 / 15 / 16
 

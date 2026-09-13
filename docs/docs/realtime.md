@@ -12,6 +12,7 @@ import { createRealtime } from 'frappe-js-client/realtime'
 
 const frappe = createFrappeClient({
     url: 'https://frappe.example.com',
+    frappeVersion: 16,
     auth: tokenAuth({ apiKey: '...', apiSecret: '...' }),
 })
 

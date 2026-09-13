@@ -17,7 +17,7 @@ describe('FrappeAuth', () => {
         })
         const res = await client.auth.login({ username: 'Administrator', password: 'admin' })
         expect(res.full_name).toBe('Administrator')
-        expect(transport.requests[0]?.data).toMatchObject({ usr: 'Administrator', pwd: 'admin' })
+        expect(JSON.parse(String(transport.requests[0]?.body))).toMatchObject({ usr: 'Administrator', pwd: 'admin' })
     })
 
     it('getLoggedUser unwraps the RPC envelope', async () => {
@@ -76,7 +76,11 @@ describe('FrappeAuth', () => {
             tmpId: 'tmp',
             device: 'desktop',
         })
-        expect(transport.requests[0]?.data).toMatchObject({ otp: '123', tmp_id: 'tmp', device: 'desktop' })
+        expect(JSON.parse(String(transport.requests[0]?.body))).toMatchObject({
+            otp: '123',
+            tmp_id: 'tmp',
+            device: 'desktop',
+        })
         await client.auth.logout()
         expect(auth.jar.size).toBe(0)
     })

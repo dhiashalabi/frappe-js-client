@@ -7,7 +7,7 @@ import { createFrappeClient } from '../src/index'
 
 describe('frappe-js-client/extended', () => {
     it('withExtended attaches the extended tier onto the same transport/config', () => {
-        const core = createFrappeClient({ url: 'https://example.com' })
+        const core = createFrappeClient({ frappeVersion: 16, url: 'https://example.com' })
         const extended = withExtended(core)
 
         expect(extended.permission).toBeDefined()
@@ -20,7 +20,7 @@ describe('frappe-js-client/extended', () => {
     })
 
     it('withAuth / withMiddleware / withHeaders keep the extended tier', () => {
-        const extended = withExtended(createFrappeClient({ url: 'https://example.com' }))
+        const extended = withExtended(createFrappeClient({ frappeVersion: 16, url: 'https://example.com' }))
         const derived = extended.withAuth(tokenAuth({ apiKey: 'k', apiSecret: 's' }))
         expect(derived.report).toBeDefined()
         expect(derived.permission).toBeDefined()

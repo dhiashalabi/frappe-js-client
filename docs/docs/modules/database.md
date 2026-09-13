@@ -160,7 +160,7 @@ await v16.db.validateLinkAndFetch('User', 'Administrator', ['full_name'], { filt
 Throws `FeatureNotSupportedError` on `apiVersion: 1`.
 
 ```typescript
-const v2 = createFrappeClient({ url, apiVersion: 2 })
+const v2 = createFrappeClient({ url, frappeVersion: 16, apiVersion: 2 })
 
 await v2.db.copyDoc('ToDo', 'abc') // ignoreNoCopy defaults to true; copy is not inserted
 await v2.db.copyDoc('ToDo', 'abc', false)

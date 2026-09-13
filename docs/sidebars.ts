@@ -17,6 +17,8 @@ const sidebars: SidebarsConfig = {
                 'realtime',
                 'typescript',
                 'codegen',
+                'migration-client-4',
+                'migration-codegen-2',
             ],
         },
         {

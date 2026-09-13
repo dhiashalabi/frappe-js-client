@@ -7,7 +7,7 @@
 
 Zero-dependency TypeScript/JavaScript client for [Frappe Framework](https://frappeframework.com) REST APIs. Uses `globalThis.fetch`.
 
-Supports **Frappe v14, v15, and v16**. Default `apiVersion` is **`2`** (`/api/v2`, Frappe 15+). Pass `{ apiVersion: 1 }` for classic `/api/method` + `/api/resource` — that is the v14-safe path, and it also works on v15 and v16.
+Supports **Frappe v14, v15, and v16**. `frappeVersion: 14 | 15 | 16` is required. API v1 is the default for Frappe 14; API v2 is the default for 15/16. Pass `{ apiVersion: 1 }` for classic `/api/method` + `/api/resource` — that is the v14-safe path, and it also works on v15 and v16.
 
 Realtime is optional: `frappe-js-client/realtime` with peer `socket.io-client`. Core stays zero-dependency.
 
@@ -30,6 +30,7 @@ import { createFrappeClient, tokenAuth, consoleLogger } from 'frappe-js-client'
 
 const frappe = createFrappeClient({
     url: 'https://frappe.example.com',
+    frappeVersion: 16,
     auth: tokenAuth({ apiKey: '...', apiSecret: '...' }),
     logger: consoleLogger(), // optional; pathname only, no query/headers/bodies
 })

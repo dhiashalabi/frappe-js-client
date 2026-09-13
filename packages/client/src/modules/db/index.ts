@@ -40,7 +40,7 @@ function validatePagination(args?: { limit?: number; start?: number }): void {
  * Destroying a document uses `deleteDoc`. Reversible associations (tags, assignments) live
  * on `desk` and use `remove*`.
  */
-class FrappeDBImpl<Docs extends object = object> {
+class FrappeDBImpl<Docs extends object = object, Inserts extends object = object> {
     private readonly adapter: ModuleDeps['adapter']
     private readonly executor: ModuleDeps['executor']
 
@@ -176,13 +176,18 @@ class FrappeDBImpl<Docs extends object = object> {
      * `creation`, ...) are filled in by Frappe. The first argument is the DocType; `doctype` on
      * the body is optional.
      */
-    createDoc<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
+    createDoc<K extends string & keyof Docs>(
         doctype: K,
-        value: FrappeInsert<T>,
+        value: K extends keyof Inserts ? Inserts[K] : FrappeInsert<DocFromMap<Docs, K>>,
         options?: RequestOptions,
-    ): Promise<T>
+    ): Promise<DocFromMap<Docs, K>>
+    createDoc<S extends string>(
+        doctype: S extends keyof Docs ? never : S,
+        value: Record<string, unknown>,
+        options?: RequestOptions,
+    ): Promise<FrappeDoc<object>>
     createDoc<T extends FrappeDoc<object> = FrappeDoc<object>>(
-        doctype: string,
+        doctype: keyof Docs extends never ? string : never,
         value: Record<string, unknown>,
         options?: RequestOptions,
     ): Promise<T>
@@ -191,14 +196,20 @@ class FrappeDBImpl<Docs extends object = object> {
     }
 
     /** Patch fields on an existing document. v1 uses PUT; v2 uses PATCH. */
-    updateDoc<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
+    updateDoc<K extends string & keyof Docs>(
         doctype: K,
         name: string | null,
-        value: Partial<T>,
+        value: Partial<DocFromMap<Docs, K>>,
         options?: RequestOptions,
-    ): Promise<T>
+    ): Promise<DocFromMap<Docs, K>>
+    updateDoc<S extends string>(
+        doctype: S extends keyof Docs ? never : S,
+        name: string | null,
+        value: Record<string, unknown>,
+        options?: RequestOptions,
+    ): Promise<FrappeDoc<object>>
     updateDoc<T extends FrappeDoc<object>>(
-        doctype: string,
+        doctype: keyof Docs extends never ? string : never,
         name: string | null,
         value: Partial<T> | Record<string, unknown>,
         options?: RequestOptions,
@@ -406,18 +417,23 @@ class FrappeDBImpl<Docs extends object = object> {
         return this.executor.run<T>(this.adapter.docMethod(doctype, name, method, args), options)
     }
 
-    insertMany<K extends string & keyof Docs, T extends DocFromMap<Docs, K> = DocFromMap<Docs, K>>(
-        docs: Array<FrappeInsert<T> & { doctype: K }>,
+    insertMany<K extends string & keyof Docs>(
+        docs: Array<
+            {
+                [P in K]: (P extends keyof Inserts ? Inserts[P] : FrappeInsert<DocFromMap<Docs, P>>) & { doctype: P }
+            }[K]
+        >,
+        options?: RequestOptions,
+    ): Promise<string[]>
+    insertMany<S extends string>(
+        docs: Array<Record<string, unknown> & { doctype: S extends keyof Docs ? never : S }>,
         options?: RequestOptions,
     ): Promise<string[]>
     insertMany<T extends FrappeDoc<object>>(
-        docs: Array<FrappeInsert<T> & { doctype: string }>,
+        docs: keyof Docs extends never ? Array<FrappeInsert<T> & { doctype: string }> : never,
         options?: RequestOptions,
     ): Promise<string[]>
-    insertMany(
-        docs: Array<Record<string, unknown> & { doctype: string }>,
-        options?: RequestOptions,
-    ): Promise<string[]> {
+    insertMany(docs: Array<{ doctype: string }>, options?: RequestOptions): Promise<string[]> {
         return this.executor.call<string[]>(
             { method: 'POST', url: this.adapter.method('frappe.client.insert_many'), data: { docs } },
             'envelope',
@@ -543,11 +559,13 @@ class FrappeDBImpl<Docs extends object = object> {
 }
 
 /** Document CRUD and query operations. */
-export type FrappeDB<Docs extends object = object> = FrappeDBImpl<Docs>
+export type FrappeDB<Docs extends object = object, Inserts extends object = object> = FrappeDBImpl<Docs, Inserts>
 
 /** @internal */
-export function createFrappeDB<Docs extends object = object>(deps: ModuleDeps): FrappeDB<Docs> {
-    return new FrappeDBImpl<Docs>(deps)
+export function createFrappeDB<Docs extends object = object, Inserts extends object = object>(
+    deps: ModuleDeps,
+): FrappeDB<Docs, Inserts> {
+    return new FrappeDBImpl<Docs, Inserts>(deps)
 }
 
 export * from './types'

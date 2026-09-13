@@ -1,9 +1,4 @@
-/**
- * @module core/transport
- * @description Shared transport types. Kept separate from `fetch.ts` so the XHR upload path
- * can import them without a circular dependency on `FetchTransport`.
- */
-
+/** One prepared HTTP attempt. Policy and serialization belong to RequestPipeline. */
 export type ResponseType = 'json' | 'text' | 'blob' | 'arraybuffer'
 
 export interface UploadProgressEvent {
@@ -13,18 +8,13 @@ export interface UploadProgressEvent {
 
 export interface TransportRequest {
     method: string
-    /** Absolute URL or a path beginning with `/`. */
+    /** Absolute HTTP(S) URL. */
     url: string
-    params?: Record<string, unknown>
-    data?: unknown
-    headers?: Record<string, string>
+    headers: Record<string, string>
+    body?: BodyInit
+    credentials: RequestCredentials
     responseType?: ResponseType
     signal?: AbortSignal
-    /** Per-attempt timeout, in milliseconds. */
-    timeout?: number
-    /** Absolute wall-clock deadline (`Date.now() + ms`), shared across every retry attempt. */
-    deadline?: number
-    requestId?: string
     onUploadProgress?: (event: UploadProgressEvent) => void
 }
 
@@ -33,12 +23,11 @@ export interface TransportResponse<T> {
     status: number
     statusText: string
     headers: Headers
+    /** Original decoded text, when available, for server error mapping. */
+    responseText?: string
 }
 
-/**
- * The transport contract. `FetchTransport` is the default; tests and callers may supply another
- * `Transport` (for example `MemoryTransport`).
- */
+/** A transport performs exactly one HTTP attempt and returns its response, including non-2xx responses. */
 export interface Transport {
     request<T>(req: TransportRequest): Promise<TransportResponse<T>>
 }

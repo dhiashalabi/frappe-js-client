@@ -142,7 +142,7 @@ describe('frappe-js-client/extended modules', () => {
             await client.report.getQueued('My Report', {})
             await client.report.stop('PR-0001')
             const stopReq = transport.requests.find((r) => String(r.url).includes('delete_prepared_reports'))
-            expect(JSON.parse(String((stopReq?.data as { reports: string }).reports))).toEqual([{ name: 'PR-0001' }])
+            expect(JSON.parse(JSON.parse(String(stopReq?.body)).reports)).toEqual([{ name: 'PR-0001' }])
             const blob = await client.report.download('PR-0001')
             expect(blob).toBeInstanceOf(Blob)
         })
@@ -361,7 +361,7 @@ describe('frappe-js-client/extended modules', () => {
                 failed_docs: [],
             })
             const bulk = transport.requests.find((r) => String(r.url).includes('bulk_update'))
-            expect(JSON.parse(String((bulk?.data as { docs: string }).docs))).toEqual([
+            expect(JSON.parse(JSON.parse(String(bulk?.body)).docs)).toEqual([
                 { doctype: 'ToDo', name: 'TD-1', docname: 'TD-1' },
             ])
             await expect(client.db.getPassword('User', 'a@b.com', 'password')).resolves.toBe('secret')
@@ -369,8 +369,8 @@ describe('frappe-js-client/extended modules', () => {
             await expect(client.site.getTimeZone()).resolves.toEqual({ time_zone: 'UTC' })
         })
 
-        it('validateLink uses validate_link on v2 when frappeVersion is unset', async () => {
-            const { client, transport } = createExtendedTestClient()
+        it('validateLink uses validate_link on Frappe 15 with API v2', async () => {
+            const { client, transport } = createExtendedTestClient({ frappeVersion: 15 })
             transport.mock({
                 method: 'GET',
                 path: '/api/v2/method/frappe.client.validate_link',
@@ -383,7 +383,7 @@ describe('frappe-js-client/extended modules', () => {
         })
 
         it('validateLink uses validate_link on v1', async () => {
-            const { client, transport } = createExtendedTestClient({ apiVersion: 1 })
+            const { client, transport } = createExtendedTestClient({ frappeVersion: 15, apiVersion: 1 })
             transport.mock({
                 method: 'GET',
                 path: '/api/method/frappe.client.validate_link',
@@ -404,7 +404,9 @@ describe('frappe-js-client/extended modules', () => {
             await expect(client.db.validateLink('User', 'Administrator', ['name', 'full_name'])).resolves.toEqual({
                 name: 'Administrator',
             })
-            expect(transport.requests[0]?.params).toMatchObject({ fields: '["name","full_name"]' })
+            expect(Object.fromEntries(new URL(transport.requests[0]!.url).searchParams)).toMatchObject({
+                fields: '["name","full_name"]',
+            })
         })
 
         it('validateLink routes to validate_link_and_fetch when frappeVersion: 16', async () => {
@@ -418,13 +420,13 @@ describe('frappe-js-client/extended modules', () => {
                 name: 'Administrator',
                 full_name: 'Admin',
             })
-            expect(transport.requests[0]?.params).toMatchObject({
+            expect(Object.fromEntries(new URL(transport.requests[0]!.url).searchParams)).toMatchObject({
                 fields_to_fetch: '["name","full_name"]',
             })
         })
 
         it('validateLinkAndFetch rejects with FeatureNotSupportedError when frappeVersion is not 16', async () => {
-            const { client } = createExtendedTestClient()
+            const { client } = createExtendedTestClient({ frappeVersion: 15 })
             await expect(client.db.validateLinkAndFetch('User', 'Administrator', ['name'])).rejects.toThrow(/Frappe 16/)
         })
 

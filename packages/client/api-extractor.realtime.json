@@ -1,0 +1,7 @@
+{
+    "extends": "./api-extractor.json",
+    "mainEntryPointFilePath": "<projectFolder>/dist/realtime.d.ts",
+    "apiReport": {
+        "reportFileName": "frappe-js-client.realtime.api.md"
+    }
+}

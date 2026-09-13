@@ -185,7 +185,7 @@ const EXC_TYPE_TO_ERROR: Record<string, typeof ServerError> = {
 
 /** Maps an HTTP status + Frappe exception type to the most specific `ServerError` subclass. `exc_type` (when recognized) wins over status. */
 export function serverErrorFor(status: number, frappeExceptionType?: string): typeof ServerError {
-    if (frappeExceptionType && EXC_TYPE_TO_ERROR[frappeExceptionType]) {
+    if (frappeExceptionType && Object.hasOwn(EXC_TYPE_TO_ERROR, frappeExceptionType)) {
         return EXC_TYPE_TO_ERROR[frappeExceptionType]
     }
     switch (status) {

@@ -29,7 +29,43 @@ function assertSyntacticallyValidTs(source: string): void {
     expect(errors).toEqual([])
 }
 
+function semanticDiagnostics(source: string): string[] {
+    const generated = '/virtual/generated.ts'
+    const types = '/virtual/frappe-types.d.ts'
+    const files: Record<string, string> = {
+        [generated]: source,
+        [types]: `declare module 'frappe-js-client/types' {
+            export type Link<T extends string> = string & { readonly __target?: T }
+            export type FrappeDoc<T> = Omit<T, 'name' | 'owner' | 'creation' | 'modified' | 'modified_by' | 'idx' | 'docstatus' | 'parent' | 'parentfield' | 'parenttype'> & {
+                name: string; owner: string; creation: string; modified: string; modified_by: string; idx: number; docstatus: 0 | 1 | 2;
+            }
+            export type FrappeInsert<T> = Omit<T, 'name' | 'owner' | 'creation' | 'modified' | 'modified_by' | 'idx' | 'docstatus' | 'parent' | 'parentfield' | 'parenttype' | 'doctype'> & { doctype?: string }
+        }`,
+    }
+    const options: ts.CompilerOptions = {
+        strict: true,
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        skipLibCheck: true,
+    }
+    const host = ts.createCompilerHost(options)
+    const originalGetSourceFile = host.getSourceFile.bind(host)
+    host.getSourceFile = (name, languageVersion, onError, shouldCreateNewSourceFile) =>
+        files[name] === undefined
+            ? originalGetSourceFile(name, languageVersion, onError, shouldCreateNewSourceFile)
+            : ts.createSourceFile(name, files[name], languageVersion)
+    const program = ts.createProgram([generated, types], options, host)
+    return ts
+        .getPreEmitDiagnostics(program)
+        .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'))
+}
+
 describe('toInterfaceName', () => {
+    it('rejects names that shadow TypeScript utility types used by generated aliases', () => {
+        for (const name of ['Omit', 'Partial', 'Pick', 'Record']) {
+            expect(() => generateModule([meta(name, [])])).toThrow(/collision/)
+        }
+    })
     it('strips spaces: Sales Order -> SalesOrder', () => {
         expect(toInterfaceName('Sales Order')).toBe('SalesOrder')
     })
@@ -49,6 +85,30 @@ describe('toInterfaceName', () => {
 })
 
 describe('generateInterface', () => {
+    it('uses child insert types for table payloads without server fields', () => {
+        const source = generateModule([
+            meta('Parent', [
+                { fieldname: 'rows', fieldtype: 'Table', options: 'Child', reqd: 1 },
+                { fieldname: 'checked', fieldtype: 'Check' },
+            ]),
+            meta('Child', [{ fieldname: 'value', fieldtype: 'Data', reqd: 1 }]),
+        ])
+        expect(source).toContain('rows: ChildInsert[]')
+        expect(source).toContain('checked?: 0 | 1')
+        expect(source).toContain('export type ChildInsert')
+        expect(
+            semanticDiagnostics(`${source}
+            const valid: GeneratedInserts['Parent'] = { rows: [{ value: 'x' }] }
+            const validCheck: GeneratedInserts['Parent'] = { rows: [], checked: 1 }
+            // @ts-expect-error child server metadata is not an insert field
+            const childWithName: GeneratedInserts['Child'] = { value: 'x', name: 'server-assigned' }
+            // @ts-expect-error rows is required
+            const missingRows: GeneratedInserts['Parent'] = { checked: 1 }
+            // @ts-expect-error Check accepts only 0 or 1
+            const badCheck: GeneratedInserts['Parent'] = { rows: [], checked: 2 }
+        `),
+        ).toEqual([])
+    })
     it('emits a required property for reqd: 1 and an optional property otherwise', () => {
         const source = generateInterface(
             meta('ToDo', [
@@ -141,7 +201,7 @@ describe('generateInterface', () => {
         expect(withHidden).toContain('    reminder_doctype?: Link<"DocType">')
         expect(withHidden).toContain('    reminder_docname?: string')
         expect(withHidden).toContain('    notified: 0 | 1')
-        expect(withHidden).toContain('export type ReminderInsert = FrappeInsert<')
+        expect(withHidden).toContain('export type ReminderInsert = Omit<FrappeInsert<Reminder>')
         expect(withHidden).toContain('"notified"')
     })
 

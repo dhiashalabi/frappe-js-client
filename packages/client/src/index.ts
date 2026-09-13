@@ -12,6 +12,7 @@
  *
  * const frappe = createFrappeClient({
  *   url: 'https://frappe.example.com',
+ *   frappeVersion: 16,
  *   auth: tokenAuth({ apiKey: '...', apiSecret: '...' }),
  * })
  *
@@ -21,7 +22,7 @@
  * @packageDocumentation
  */
 
-export type { Capabilities, FrappeVersion } from './api/adapter'
+export type { FrappeVersion } from './api/adapter'
 export type { FrappeClient } from './client'
 export { createFrappeClient } from './client'
 export type {

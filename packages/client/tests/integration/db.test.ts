@@ -8,13 +8,13 @@ import {
     NotFoundError,
     PermissionError,
 } from '../../src/index'
-import { FRAPPE_TEST_ADMIN_PASSWORD, FRAPPE_TEST_URL } from './setup'
+import { FRAPPE_TEST_ADMIN_PASSWORD, FRAPPE_TEST_API_VERSION, FRAPPE_TEST_FRAPPE_VERSION, FRAPPE_TEST_URL } from './setup'
 
 describe('integration: db CRUD against a real Frappe (v2)', () => {
     let frappe: FrappeClient
 
     beforeAll(async () => {
-        frappe = createFrappeClient({ url: FRAPPE_TEST_URL, auth: cookieAuth() })
+        frappe = createFrappeClient({ frappeVersion: FRAPPE_TEST_FRAPPE_VERSION, apiVersion: FRAPPE_TEST_API_VERSION, url: FRAPPE_TEST_URL, auth: cookieAuth() })
         await frappe.auth.login({ username: 'Administrator', password: FRAPPE_TEST_ADMIN_PASSWORD })
     })
 
@@ -51,7 +51,7 @@ describe('integration: db CRUD against a real Frappe (v2)', () => {
     })
 
     it('a read on a permission-denied doctype raises PermissionError, not a generic error', async () => {
-        const guest = createFrappeClient({ url: FRAPPE_TEST_URL })
+        const guest = createFrappeClient({ frappeVersion: FRAPPE_TEST_FRAPPE_VERSION, apiVersion: FRAPPE_TEST_API_VERSION, url: FRAPPE_TEST_URL })
         await expect(guest.db.getDoc('User', 'Administrator')).rejects.toBeInstanceOf(PermissionError)
     })
 

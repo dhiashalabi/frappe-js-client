@@ -28,11 +28,11 @@ const ext = createExtendedTestClient({ apiVersion: 1, frappeVersion: 15 })
 | ------------------------------------ | -------------------------------------------------------------- |
 | `createTestClient(options?)`         | `{ client: FrappeClient, transport: MemoryTransport }`         |
 | `createExtendedTestClient(options?)` | `{ client: ExtendedFrappeClient, transport: MemoryTransport }` |
-| `new MemoryTransport({ auth? })`     | In-memory `Transport` you can pass as `transport` yourself     |
+| `new MemoryTransport()`              | In-memory `Transport` you can pass as `transport` yourself     |
 
-Both helpers call `createFrappeClient({ url: 'https://test.local', transport, auth, ...options })`. Default `auth` is `anonymousAuth()`. Pass `apiVersion`, `frappeVersion`, `auth`, `headers`, `timeout`, `logger`, `middleware` the same way you would in production.
+Both helpers use `https://test.local`, Frappe 16, and API v2 by default. Pass `apiVersion`, `frappeVersion`, `auth`, `headers`, `timeout`, `logger`, or `middleware` to override them.
 
-When `auth` is supplied, `MemoryTransport` calls `auth.onResponse` with each mocked response's headers — the same hook `FetchTransport` uses (cookie jar tests work).
+The shared pipeline invokes authentication and response hooks for memory responses, including cookie-jar updates. `MemoryTransport` itself owns only mocked HTTP attempts.
 
 ## Mocking routes
 
@@ -47,7 +47,7 @@ transport.mock({
 transport.mock({
     method: 'GET',
     path: /^\/api\/v2\/document\/User/,
-    match: (req) => req.params?.q === 'yes',
+    match: (req) => new URL(req.url).searchParams.get('q') === 'yes',
     status: 200,
     headers: { 'set-cookie': 'sid=abc; Path=/' },
     body: { data: fixtureUser },
@@ -60,7 +60,7 @@ transport.mock({
 | --------- | ----------------------------------------------------------------------------------------------------------- |
 | `method`  | HTTP method (compared case-insensitively)                                                                   |
 | `path`    | Exact path or `RegExp` against the path **without** the query string (URL-decoded)                          |
-| `status`  | Default `200`. Status `>= 400` is mapped through `mapServerError`                                           |
+| `status`  | Default `200`. The client pipeline maps status `>= 400` through `mapServerError`                      |
 | `headers` | Become a `Headers` object; `cookieAuth().onResponse` sees them                                              |
 | `body`    | Response body (already unwrapped later by the executor, so wrap `{ data }` / `{ message }` as Frappe would) |
 | `once`    | Remove the route after one match                                                                            |
@@ -68,17 +68,17 @@ transport.mock({
 
 `mock()` returns `this` so you can chain.
 
-Non-2xx mocked responses (`status >= 400`) go through `mapServerError`, so `instanceof NotFoundError` works. An aborted `signal` throws `CancelledError`. No matching route throws a **plain** `Error` describing the missing mock (not a `FrappeError`). Status `3xx` is treated as success.
+Non-2xx mocked responses (`status >= 400`) go through `mapServerError` when used by a client, so `instanceof NotFoundError` works. A direct `MemoryTransport.request()` returns the raw response and requires an absolute URL, headers, and credentials. A cancelled client request throws `CancelledError`. No matching route throws an error describing the missing mock.
 
-`transport.requests` is the list of `TransportRequest`s issued (in order). `transport.reset()` clears routes **and** requests.
+`transport.requests` records prepared attempts (absolute URLs, merged headers, serialized bodies) in order. `transport.reset()` clears routes **and** requests.
 
 `MemoryTransport` does not simulate timeouts or network failures unless you omit the route (plain `Error`) or mock a 5xx body.
 
 ## Browser tests
 
-`FRAPPE_TEST_URL=http://frappe14.localhost:8000 pnpm test:browser` builds the package, then runs it in Chromium, Firefox, and WebKit. Cancellation and binary-error cases are local. Login, cookies, XHR upload progress, and authenticated downloads go to a separately managed Frappe site.
+`pnpm test:browser` builds the package and runs a self-contained fixture in Chromium, Firefox, and WebKit. It covers login, cookie and CSRF handling, cancellation, XHR upload progress, and authenticated download.
 
-Use the site hostname in `FRAPPE_TEST_URL` when the bench is multi-tenant. The helper connects on loopback (so `*.localhost` works in Node) and sends that hostname as `X-Frappe-Site-Name`. Frappe 14 is detected automatically; set `FRAPPE_TEST_API_VERSION` / `FRAPPE_TEST_FRAPPE_VERSION` to override. If the URL is an IP address, set `FRAPPE_TEST_SITE_NAME`.
+For a live site, run `FRAPPE_TEST_URL=http://frappe14.localhost:8000 pnpm test:browser:live` after building the client. Live mode fails at startup if the URL is missing or unreachable. Set `FRAPPE_TEST_API_VERSION`, `FRAPPE_TEST_FRAPPE_VERSION`, and `FRAPPE_TEST_SITE_NAME` as needed for the site.
 
 ## Fixtures
 

@@ -15,15 +15,10 @@ import type { ApiVersion } from './types'
 export interface FrappeClientOptions {
     /** Base URL of the Frappe site, e.g. `https://frappe.example.com`. */
     url: string
-    /** `1` for classic `/api/method` + `/api/resource` (v14-safe). `2` for `/api/v2` (v15+). Default `2`. */
+    /** `1` for classic REST, `2` for `/api/v2`. Defaults to `1` on Frappe 14 and `2` on 15/16. */
     apiVersion?: ApiVersion
-    /**
-     * Hint for release-specific behavior (`validate_link` vs `validate_link_and_fetch`, whether
-     * `get_list` accepts `expand`, whether the v2 REST list endpoint honors `orFilters`/`parent`).
-     * Optional — every behavior this hint gates has a conservative default when omitted. Frappe 16
-     * sites must pass `16` so `validateLink` does not call the removed `validate_link` RPC.
-     */
-    frappeVersion?: FrappeVersion
+    /** Required Frappe major version for routing and capability decisions. */
+    frappeVersion: FrappeVersion
     /** Default `30_000`. Overridable per-request via `RequestOptions.timeout`, applied per attempt. */
     timeout?: number
     /** Authentication strategy. Default `anonymousAuth()`. */
@@ -54,7 +49,7 @@ export interface FrappeClientOptions {
 export interface FrappeClientConfig {
     readonly baseUrl: string
     readonly apiVersion: ApiVersion
-    readonly frappeVersion?: FrappeVersion
+    readonly frappeVersion: FrappeVersion
     readonly timeout: number
     readonly siteName?: string
     readonly headers: Readonly<Record<string, string>>
@@ -86,14 +81,17 @@ function assertValidUrl(url: string): string {
 /** Builds the one normalized, frozen config every internal module reads from. */
 export function normalizeConfig(options: FrappeClientOptions): FrappeClientConfig {
     const baseUrl = assertValidUrl(options.url)
-    const apiVersion = options.apiVersion ?? 2
-    if (apiVersion !== 1 && apiVersion !== 2) {
-        throw new ConfigurationError(`FrappeClient \`apiVersion\` must be 1 or 2, got: ${String(apiVersion)}`)
-    }
-    if (options.frappeVersion !== undefined && ![14, 15, 16].includes(options.frappeVersion)) {
+    if (![14, 15, 16].includes(options.frappeVersion)) {
         throw new ConfigurationError(
             `FrappeClient \`frappeVersion\` must be 14, 15, or 16, got: ${String(options.frappeVersion)}`,
         )
+    }
+    const apiVersion = options.apiVersion ?? (options.frappeVersion === 14 ? 1 : 2)
+    if (apiVersion !== 1 && apiVersion !== 2) {
+        throw new ConfigurationError(`FrappeClient \`apiVersion\` must be 1 or 2, got: ${String(apiVersion)}`)
+    }
+    if (options.frappeVersion === 14 && apiVersion === 2) {
+        throw new ConfigurationError('Frappe 14 does not support apiVersion: 2.')
     }
     const timeout = options.timeout ?? 30_000
     if (typeof timeout !== 'number' || !Number.isFinite(timeout) || timeout <= 0) {

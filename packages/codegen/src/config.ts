@@ -10,6 +10,7 @@ export const DEFAULT_CONFIG_NAME = 'frappe-codegen.config.json'
 
 export interface CodegenFileConfig {
     url?: string
+    frappeVersion?: 15 | 16
     out?: string
     includeHidden?: boolean
     followTables?: boolean
@@ -19,6 +20,7 @@ export interface CodegenFileConfig {
 
 export interface ResolvedCodegenConfig {
     url?: string
+    frappeVersion: 15 | 16
     out: string
     includeHidden: boolean
     followTables: boolean
@@ -43,6 +45,7 @@ export function loadConfigFile(path: string): CodegenFileConfig {
     }
     return {
         url: typeof obj.url === 'string' ? obj.url : undefined,
+        frappeVersion: obj.frappeVersion === 15 || obj.frappeVersion === 16 ? obj.frappeVersion : undefined,
         out: typeof obj.out === 'string' ? obj.out : undefined,
         includeHidden: typeof obj.includeHidden === 'boolean' ? obj.includeHidden : undefined,
         followTables: typeof obj.followTables === 'boolean' ? obj.followTables : undefined,
@@ -60,6 +63,7 @@ export function findDefaultConfigPath(cwd = process.cwd()): string | undefined {
 
 export interface CliOverlay {
     url?: string
+    frappeVersion?: 15 | 16
     out?: string
     includeHidden?: boolean
     followTables?: boolean
@@ -83,12 +87,19 @@ export function mergeConfig(file: CodegenFileConfig | undefined, overlay: CliOve
     const envUrl = envString('FRAPPE_URL')
     const envKey = envString('FRAPPE_API_KEY')
     const envSecret = envString('FRAPPE_API_SECRET')
+    const envVersion = envString('FRAPPE_VERSION')
+    const frappeVersion =
+        overlay.frappeVersion ?? (envVersion === undefined ? file?.frappeVersion : Number(envVersion))
+    if (frappeVersion !== 15 && frappeVersion !== 16) {
+        throw new Error('frappe-codegen: frappeVersion must be 15 or 16 (--frappe-version, FRAPPE_VERSION, or config).')
+    }
 
     const doctypes = [...(file?.doctypes ?? []), ...(overlay.doctypes ?? [])]
     const modules = [...(file?.modules ?? []), ...(overlay.modules ?? [])]
 
     return {
         url: overlay.url ?? envUrl ?? file?.url,
+        frappeVersion,
         out: overlay.out ?? file?.out ?? './frappe-types.generated.ts',
         includeHidden: overlay.includeHidden ?? file?.includeHidden ?? true,
         followTables: overlay.followTables ?? file?.followTables ?? true,

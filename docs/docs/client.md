@@ -7,6 +7,7 @@ import { retry } from 'frappe-js-client/middleware'
 
 const frappe = createFrappeClient({
     url: 'https://frappe.example.com',
+    frappeVersion: 16,
     auth: tokenAuth({ apiKey: '...', apiSecret: '...' }),
     headers: { 'X-App': 'desk' },
     timeout: 30_000,
@@ -17,10 +18,10 @@ const frappe = createFrappeClient({
 
 `createFrappeClient` returns an immutable client: frozen `config` plus modules. Core modules are properties, not factories: `frappe.db`, `frappe.auth`, `frappe.file`, `frappe.call`, `frappe.search`.
 
-The optional `Docs` generic defaults to `object`. Pass `GeneratedDocTypes` from [`frappe-codegen`](./codegen.md) so `db.getDoc('ToDo', name)` infers the row.
+The optional `Docs` and `Inserts` generics default to `object`. Pass `GeneratedDocTypes` from [`frappe-codegen`](./codegen.md) so `db.getDoc('ToDo', name)` infers the row.
 
 ```typescript
-const typed = createFrappeClient<GeneratedDocTypes>({ url, auth })
+const typed = createFrappeClient<GeneratedDocTypes, GeneratedInserts>({ url, frappeVersion: 16, auth })
 ```
 
 ## Options
@@ -28,8 +29,8 @@ const typed = createFrappeClient<GeneratedDocTypes>({ url, auth })
 | Option          | Default            | Meaning                                                                                                                                                                                                                                                             |
 | --------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `url`           | **required**       | Site base URL (`http` or `https`). Trailing `/` is stripped. Stored as `config.baseUrl`.                                                                                                                                                                            |
-| `apiVersion`    | `2`                | `1` = classic `/api/method` + `/api/resource`. `2` = `/api/v2` (Frappe 15+). Only `1` or `2`.                                                                                                                                                                       |
-| `frappeVersion` | unset              | `14` \| `15` \| `16`. Optional hint for release-specific capabilities. Unset = conservative defaults, except Frappe 16 sites must pass `16` so `validateLink` does not call the removed `validate_link` RPC.                                                        |
+| `apiVersion`    | `1` for Frappe 14; `2` for 15/16                | `1` = classic `/api/method` + `/api/resource`. `2` = `/api/v2` (Frappe 15+). Only `1` or `2`.                                                                                                                                                                       |
+| `frappeVersion` | **required**              | `14` \| `15` \| `16`. Selects the supported server release, capability routing, and the default API generation. Frappe 14 rejects API v2. |
 | `timeout`       | `30_000`           | Milliseconds, **per attempt**. Must be finite and `> 0`.                                                                                                                                                                                                            |
 | `auth`          | `anonymousAuth()`  | See [Authentication](./authentication.md).                                                                                                                                                                                                                          |
 | `headers`       | `{}`               | Lowest precedence; per-request headers win. Frozen on `config.headers`.                                                                                                                                                                                             |
@@ -53,8 +54,8 @@ Invalid `url`, `apiVersion`, `frappeVersion`, or timing values throw `Configurat
 | Field           | Source                               |
 | --------------- | ------------------------------------ |
 | `baseUrl`       | Normalized `url` (no trailing slash) |
-| `apiVersion`    | Default `2`                          |
-| `frappeVersion` | Optional                             |
+| `apiVersion`    | Version-derived default                          |
+| `frappeVersion` | Required                             |
 | `timeout`       | Default `30_000`                     |
 | `siteName`      | Optional                             |
 | `headers`       | Frozen copy                          |
@@ -169,14 +170,14 @@ const tracing: Transport = {
     },
 }
 
-const frappe = createFrappeClient({ url, transport: tracing })
+const frappe = createFrappeClient({ url, frappeVersion: 16, transport: tracing })
 ```
 
-`TransportRequest` includes `method`, `url`, `params`, `data`, `headers`, `responseType`, `signal`, `timeout`, `deadline`, `requestId`, and `onUploadProgress`.
+`TransportRequest` describes one prepared attempt: an absolute `url`, `method`, merged `headers`, serialized `body`, `credentials`, `responseType`, `signal`, and `onUploadProgress`. The transport returns a response for every HTTP status, including errors. The pipeline owns authentication, middleware, retry, timing, and error mapping.
 
 For tests, use [`createTestClient`](./testing.md) (`MemoryTransport`) instead of a hand-rolled fake. The default `FetchTransport` is not exported.
 
-When you write a custom transport and still want `retry` / `timing`, compose them with `composeMiddleware` from `frappe-js-client/middleware`. After the pipeline, non-2xx responses are still mapped to `FrappeError` — see [Fail closed](#fail-closed).
+Custom transports automatically inherit `retry`, timing, authentication, logging, and errors from the client pipeline. HTTP failures are mapped to `FrappeError` — see [Fail closed](#fail-closed).
 
 ## Fail closed
 

@@ -7,8 +7,9 @@
  */
 
 import type { AdapterRequest, Unwrap } from '../api/adapter'
-import { ConfigurationError } from './errors'
-import type { ResponseType, Transport, UploadProgressEvent } from './transport'
+import { ConfigurationError, ResponseError } from './errors'
+import type { PipelineRequest } from './pipeline'
+import type { ResponseType, TransportResponse,UploadProgressEvent } from './transport'
 import type { ApiVersion, RequestOptions } from './types'
 
 export interface RequestConfig {
@@ -30,22 +31,23 @@ export function validateRequestOptions(options?: RequestOptions): void {
     }
 }
 
-/** Unwraps a body that may be wrapped as `{ data: ... }` (v2) or returned bare (v1). Returns `null` when the envelope carries no payload and no other keys (e.g. a `delete` that returns `{}`). */
-export function unwrapData<T>(body: unknown): T {
-    if (body == null || typeof body !== 'object') return body as T
-    const obj = body as Record<string, unknown>
-    if ('data' in obj) return obj.data as T
-    return Object.keys(obj).length === 0 ? (null as T) : (body as T)
-}
-
-/** Unwraps a classic `{ message }` envelope, otherwise returns the body as-is. Returns `null` for an empty `{}` envelope. */
-export function unwrapMessage<T>(body: unknown): T {
-    if (body != null && typeof body === 'object') {
+function unwrapStandard<T>(body: unknown, key: 'data' | 'message'): T {
+    if (body !== null && typeof body === 'object' && !Array.isArray(body)) {
         const obj = body as Record<string, unknown>
-        if ('message' in obj) return obj.message as T
+        if (Object.hasOwn(obj, key) && obj[key] !== undefined) return obj[key] as T
         if (Object.keys(obj).length === 0) return null as T
     }
-    return body as T
+    throw new ResponseError(`Expected a Frappe response envelope containing \`${key}\`.`)
+}
+
+/** Unwraps a standard `{ data: ... }` response. */
+export function unwrapData<T>(body: unknown): T {
+    return unwrapStandard<T>(body, 'data')
+}
+
+/** Unwraps a standard `{ message: ... }` response. */
+export function unwrapMessage<T>(body: unknown): T {
+    return unwrapStandard<T>(body, 'message')
 }
 
 /** Chooses `unwrapData` (v2 `{data}`) or `unwrapMessage` (v1 `{message}`) for the client's REST generation. */
@@ -60,7 +62,7 @@ export function unwrapEnvelope<T>(apiVersion: ApiVersion, body: unknown): T {
  */
 export class Executor {
     constructor(
-        private readonly transport: Transport,
+        private readonly transport: { request<T>(req: PipelineRequest): Promise<TransportResponse<T>> },
         private readonly apiVersion: ApiVersion,
     ) {}
 

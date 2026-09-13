@@ -30,7 +30,7 @@ describe('FrappeDB — remaining coverage', () => {
 
     it('getCount uses the v2 doctype/count endpoint', async () => {
         const { client, transport } = createTestClient()
-        transport.mock({ method: 'GET', path: '/api/v2/doctype/User/count', body: 4 })
+        transport.mock({ method: 'GET', path: '/api/v2/doctype/User/count', body: { data: 4 } })
         await expect(client.db.getCount('User')).resolves.toBe(4)
     })
 
@@ -42,7 +42,7 @@ describe('FrappeDB — remaining coverage', () => {
 
     it('exists() derives from getCount', async () => {
         const { client, transport } = createTestClient()
-        transport.mock({ method: 'GET', path: '/api/v2/doctype/User/count', body: 1 })
+        transport.mock({ method: 'GET', path: '/api/v2/doctype/User/count', body: { data: 1 } })
         await expect(client.db.exists('User', 'Administrator')).resolves.toBe(true)
     })
 
@@ -137,7 +137,7 @@ describe('FrappeDB — remaining coverage', () => {
 
         transport.mock({
             method: 'GET',
-            path: '/api/v2/document/User/a',
+            path: '/api/resource/User/a',
             body: { data: fixtureUser },
         })
         await client.db.getDoc('User', 'a', { expandLinks: true })
@@ -157,7 +157,7 @@ describe('FrappeDB — remaining coverage', () => {
         transport.mock({ method: 'POST', path: '/api/v2/method/frappe.client.set_value', body: { data: fixtureUser } })
         await client.db.setValue('User', 'a', { email: 'z' })
 
-        transport.mock({ method: 'GET', path: '/api/v2/doctype/User/count', body: 0 })
+        transport.mock({ method: 'GET', path: '/api/v2/doctype/User/count', body: { data: 0 } })
         await expect(client.db.exists('User', 'missing')).resolves.toBe(false)
 
         transport.mock({ method: 'GET', path: '/api/v2/doctype/User/meta', body: { data: { name: 'User' } } })

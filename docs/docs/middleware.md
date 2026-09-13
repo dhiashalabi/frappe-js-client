@@ -10,6 +10,7 @@ import { retry, timing } from 'frappe-js-client/middleware'
 
 const frappe = createFrappeClient({
     url,
+    frappeVersion: 16,
     logger: consoleLogger(),
     middleware: [
         retry({ attempts: 2, baseDelayMs: 250 }),
@@ -56,7 +57,7 @@ const addTrace: Middleware = async (req, next) => {
     return res
 }
 
-const frappe = createFrappeClient({ url, middleware: [addTrace] })
+const frappe = createFrappeClient({ url, frappeVersion: 16, middleware: [addTrace] })
 ```
 
 `FrappeRequest`: `method`, `url`, `headers`, `body`, `signal`, `deadline`, `requestId`.

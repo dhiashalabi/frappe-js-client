@@ -46,7 +46,7 @@ vi.mock('../src/metadata', () => ({
 
 import { boot, isDirectCliRun, main, parseCliArgs } from '../src/cli'
 
-const required = ['--url', 'https://frappe.example.com', '--doctype', 'ToDo']
+const required = ['--url', 'https://frappe.example.com', '--doctype', 'ToDo', '--frappe-version', '16']
 
 describe('parseCliArgs', () => {
     it('does not validate url/doctype at parse time (merge/main do)', () => {
@@ -177,7 +177,7 @@ describe('main', () => {
         fetchDocTypeMetas.mockRejectedValue(new NotFoundError({ status: 404, message: 'DocType Missing not found' }))
         const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
 
-        await main([...required.slice(0, 2), '--doctype', 'Missing'])
+        await main([...required.slice(0, 2), '--doctype', 'Missing', '--frappe-version', '16'])
 
         expect(stderr).toHaveBeenCalledWith('frappe-codegen failed: DocType Missing not found\n')
         expect(process.exitCode).toBe(1)
@@ -207,9 +207,9 @@ describe('main', () => {
 
     it('fails when url or doctypes are missing after merge', async () => {
         const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
-        await main(['--doctype', 'ToDo'])
+        await main(['--doctype', 'ToDo', '--frappe-version', '16'])
         expect(stderr).toHaveBeenCalledWith(expect.stringContaining('--url is required'))
-        await main(['--url', 'https://frappe.example.com'])
+        await main(['--url', 'https://frappe.example.com', '--frappe-version', '16'])
         expect(stderr).toHaveBeenCalledWith(expect.stringContaining('At least one --doctype or --module'))
         stderr.mockRestore()
     })
@@ -230,7 +230,15 @@ describe('main', () => {
             ])
             .mockResolvedValueOnce([{ name: 'Sales Order Item', fields: [] }])
         const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
-        await main(['--url', 'https://frappe.example.com', '--doctype', 'Sales Order', '--dry-run'])
+        await main([
+            '--url',
+            'https://frappe.example.com',
+            '--doctype',
+            'Sales Order',
+            '--frappe-version',
+            '16',
+            '--dry-run',
+        ])
         expect(stdout).toHaveBeenCalledWith('Sales Order\tseed\n')
         expect(stdout).toHaveBeenCalledWith('Sales Order Item\tchild\n')
         expect(writeFileSync).not.toHaveBeenCalled()
@@ -247,7 +255,7 @@ describe('main', () => {
 
     it('fails when --module resolves to no DocTypes', async () => {
         const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
-        await main(['--url', 'https://frappe.example.com', '--module', 'Selling'])
+        await main(['--url', 'https://frappe.example.com', '--module', 'Selling', '--frappe-version', '16'])
         expect(stderr).toHaveBeenCalledWith(expect.stringContaining('No DocTypes matched'))
         stderr.mockRestore()
     })
@@ -256,7 +264,10 @@ describe('main', () => {
         fetchDocTypeMetas.mockResolvedValue([{ name: 'ToDo', fields: [] }])
         const dir = mkdtempSync(join(tmpdir(), 'codegen-cli-'))
         const path = join(dir, 'frappe-codegen.config.json')
-        appendFileSync(path, JSON.stringify({ url: 'https://from-config.example', doctypes: ['ToDo'] }))
+        appendFileSync(
+            path,
+            JSON.stringify({ url: 'https://from-config.example', frappeVersion: 16, doctypes: ['ToDo'] }),
+        )
         await main(['--config', path])
         expect(createFrappeClient).toHaveBeenCalledWith(expect.objectContaining({ url: 'https://from-config.example' }))
         expect(writeFileSync).toHaveBeenCalled()

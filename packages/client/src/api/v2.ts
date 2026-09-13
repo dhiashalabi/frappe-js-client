@@ -95,6 +95,9 @@ export class V2Adapter implements ApiAdapter {
     }
 
     getDoc(doctype: string, name: string, _args?: { expandLinks?: boolean }): AdapterRequest {
+        if (_args?.expandLinks) {
+            return { method: 'GET', url: resourcePath(1, doctype, name), params: { expand_links: 1 }, unwrap: 'data' }
+        }
         return { method: 'GET', url: resourcePath(2, doctype, name), unwrap: 'data' }
     }
 
@@ -128,6 +131,14 @@ export class V2Adapter implements ApiAdapter {
     }
 
     count(doctype: string, args?: { filters?: unknown; debug?: boolean; cache?: boolean }): AdapterRequest {
+        if (args?.cache !== undefined) {
+            return {
+                method: 'GET',
+                url: this.classicMethod('frappe.client.get_count'),
+                params: { doctype, filters: jsonParam(args.filters), debug: args.debug, cache: args.cache },
+                unwrap: 'message',
+            }
+        }
         return {
             method: 'GET',
             url: doctypePath(doctype, 'count'),

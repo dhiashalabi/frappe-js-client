@@ -25,6 +25,10 @@ import type {
 // avoids a hard type-level dependency while keeping this file fully typed.
 interface MinimalSocket {
     readonly connected: boolean
+    readonly io: {
+        on(event: string, handler: (...args: unknown[]) => void): unknown
+        off(event: string, handler: (...args: unknown[]) => void): unknown
+    }
     connect(): MinimalSocket
     disconnect(): MinimalSocket
     emit(event: string, ...args: unknown[]): unknown
@@ -34,6 +38,8 @@ interface MinimalSocket {
 }
 type IoFactory = (url: string, opts: Record<string, unknown>) => MinimalSocket
 type SocketAuthProvider = (callback: (payload: Record<string, unknown>) => void) => void
+
+const MANAGER_EVENTS = new Set(['reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'])
 
 async function loadSocketIoClient(): Promise<IoFactory> {
     try {
@@ -119,7 +125,7 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
 
     function addRawListener(event: string, handler: (...args: unknown[]) => void): void {
         rawListeners.add({ event, handler })
-        socket?.on(event, handler)
+        if (socket) (MANAGER_EVENTS.has(event) ? socket.io : socket).on(event, handler)
     }
 
     function removeRawListener(event: string, handler: (...args: unknown[]) => void): void {
@@ -129,7 +135,7 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
                 break
             }
         }
-        socket?.off(event, handler)
+        if (socket) (MANAGER_EVENTS.has(event) ? socket.io : socket).off(event, handler)
     }
 
     async function ensureConnected(): Promise<MinimalSocket> {
@@ -180,7 +186,8 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
             })
             socket = created
 
-            for (const { event, handler } of rawListeners) created.on(event, handler)
+            for (const { event, handler } of rawListeners)
+                (MANAGER_EVENTS.has(event) ? created.io : created).on(event, handler)
             for (const subscription of subscriptions.values()) emitSubscribe(created, subscription)
             reconnectHandler = () => {
                 if (hasConnected) {
@@ -278,7 +285,7 @@ export function createRealtime(client: FrappeClient, options: RealtimeOptions = 
         // so late socket events (e.g. during disconnect) don't invoke stale handlers.
         if (socket) {
             for (const { event, handler } of rawListeners) {
-                socket.off(event, handler)
+                ;(MANAGER_EVENTS.has(event) ? socket.io : socket).off(event, handler)
             }
         }
         rawListeners.clear()

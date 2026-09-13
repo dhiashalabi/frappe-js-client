@@ -6,7 +6,23 @@ import { createRealtime } from '../src/realtime'
 
 type Handler = (...args: unknown[]) => void
 
+class FakeManager {
+    private listeners = new Map<string, Set<Handler>>()
+    on(event: string, handler: Handler): void {
+        const listeners = this.listeners.get(event) ?? new Set<Handler>()
+        listeners.add(handler)
+        this.listeners.set(event, listeners)
+    }
+    off(event: string, handler: Handler): void {
+        this.listeners.get(event)?.delete(handler)
+    }
+    fire(event: string, ...args: unknown[]): void {
+        for (const handler of this.listeners.get(event) ?? []) handler(...args)
+    }
+}
+
 class FakeSocket {
+    readonly io = new FakeManager()
     connected = false
     autoSucceed = true
     emitted: Array<{ event: string; args: unknown[] }> = []
@@ -115,10 +131,22 @@ vi.mock('socket.io-client', () => ({
 }))
 
 function client(auth?: ReturnType<typeof tokenAuth> | ReturnType<typeof cookieAuth>) {
-    return createFrappeClient({ url: 'https://frappe.example.com', auth })
+    return createFrappeClient({ frappeVersion: 16, url: 'https://frappe.example.com', auth })
 }
 
 describe('createRealtime', () => {
+    it('forwards reconnection lifecycle events from the Socket.IO manager', async () => {
+        const rt = createRealtime(client(), { autoConnect: false })
+        const seen: number[] = []
+        const stop = rt.on('reconnect', (attempt) => seen.push(attempt))
+        await rt.connect()
+        mock.state.socket!.io.fire('reconnect', 2)
+        expect(seen).toEqual([2])
+        stop()
+        mock.state.socket!.io.fire('reconnect', 3)
+        expect(seen).toEqual([2])
+        rt.close()
+    })
     beforeEach(() => {
         mock.state.autoSucceed = true
         mock.state.socket = undefined
@@ -213,7 +241,7 @@ describe('createRealtime', () => {
     it('resolves fresh authentication for every Socket.IO handshake', async () => {
         let value = 'first'
         const auth = bearerAuth({ token: () => value })
-        const rt = createRealtime(createFrappeClient({ url: 'https://frappe.example.com', auth }), {
+        const rt = createRealtime(createFrappeClient({ frappeVersion: 16, url: 'https://frappe.example.com', auth }), {
             autoConnect: false,
         })
         await rt.connect()
@@ -307,7 +335,7 @@ describe('createRealtime', () => {
                     release = resolve
                 }),
         }
-        const rt = createRealtime(createFrappeClient({ url: 'https://frappe.example.com', auth }), {
+        const rt = createRealtime(createFrappeClient({ frappeVersion: 16, url: 'https://frappe.example.com', auth }), {
             autoConnect: false,
         })
         const pending = rt.connect()

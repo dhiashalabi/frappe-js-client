@@ -125,8 +125,8 @@
         "lint:deps": "dependency-cruiser src",
         "format": "prettier --write .",
         "typecheck": "tsc --noEmit -p tsconfig.test.json",
-        "api:extract": "api-extractor run --local",
-        "api:check": "api-extractor run",
+        "api:extract": "node ../../scripts/check-api-reports.mjs --client-only --local",
+        "api:check": "node ../../scripts/check-api-reports.mjs --client-only",
         "publint": "publint",
         "attw": "attw --pack . --profile node16",
         "gate": "pnpm typecheck && pnpm lint && pnpm lint:deps && pnpm test && pnpm build && pnpm api:check && pnpm publint && pnpm attw"

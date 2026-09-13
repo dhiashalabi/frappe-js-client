@@ -6,6 +6,10 @@ import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const distEntry = join(root, 'packages/client/dist/index.mjs')
+const live = process.env.BROWSER_LIVE === '1'
+if (live && !process.env.FRAPPE_TEST_URL) {
+    throw new Error('Live browser tests require FRAPPE_TEST_URL.')
+}
 const target = new URL(process.env.FRAPPE_TEST_URL ?? 'http://127.0.0.1:8000')
 const port = Number(process.env.BROWSER_TEST_PORT ?? 4173)
 const types = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.map': 'application/json' }
@@ -144,8 +148,13 @@ async function resolveApi() {
     return 2
 }
 
-const apiVersion = await resolveApi()
-const frappeVersion = parseVersion(process.env.FRAPPE_TEST_FRAPPE_VERSION, [14, 15, 16]) ?? (apiVersion === 1 ? 14 : 16)
+const apiVersion = live ? await resolveApi() : 2
+if (live && (await probe('/api/method/ping')) === 0) {
+    throw new Error(`Live Frappe backend at ${target.origin} is unavailable.`)
+}
+const frappeVersion = live
+    ? (parseVersion(process.env.FRAPPE_TEST_FRAPPE_VERSION, [14, 15, 16]) ?? (apiVersion === 1 ? 14 : 16))
+    : 16
 config.apiVersion = apiVersion
 config.frappeVersion = frappeVersion
 
@@ -195,9 +204,57 @@ createServer((req, res) => {
         )
         return
     }
+    if (!live) {
+        const json = (status, body, headers = {}) => {
+            res.writeHead(status, { 'content-type': 'application/json', ...headers })
+            res.end(JSON.stringify(body))
+        }
+        if (pathname === '/api/method/login' && req.method === 'POST') {
+            json(
+                200,
+                { message: 'Logged In', full_name: 'Administrator' },
+                { 'set-cookie': 'sid=browser-fixture; HttpOnly; Path=/' },
+            )
+            return
+        }
+        if (pathname === '/api/v2/method/frappe.auth.get_logged_user') {
+            json(200, { data: req.headers.cookie?.includes('sid=browser-fixture') ? 'Administrator' : 'Guest' })
+            return
+        }
+        if (pathname === '/app') {
+            res.writeHead(200, { 'content-type': 'text/html' })
+            res.end('<html><meta name="csrf_token" content="browser-csrf-token"></html>')
+            return
+        }
+        if (pathname === '/api/method/upload_file' && req.method === 'POST') {
+            if (
+                !req.headers.cookie?.includes('sid=browser-fixture') ||
+                req.headers['x-frappe-csrf-token'] !== 'browser-csrf-token'
+            ) {
+                json(403, { exc_type: 'PermissionError', message: 'Missing browser session or CSRF token' })
+                return
+            }
+            req.resume()
+            req.on('end', () =>
+                json(200, { message: { name: 'FILE-1', file_url: '/private/files/browser-integration.txt' } }),
+            )
+            return
+        }
+        if (pathname === '/api/method/download_file') {
+            res.writeHead(200, { 'content-type': 'application/octet-stream' })
+            res.end('browser integration')
+            return
+        }
+        if (pathname === '/api/v2/document/File/FILE-1' && req.method === 'DELETE') {
+            json(200, {})
+            return
+        }
+        json(404, { exc_type: 'DoesNotExistError', message: `No browser fixture for ${req.method} ${pathname}` })
+        return
+    }
     proxy(req, res)
 }).listen(port, '127.0.0.1', () => {
     console.log(
-        `browser fixture listening at http://127.0.0.1:${port} (site=${siteName ?? target.hostname} api=${apiVersion} frappe=${frappeVersion})`,
+        `browser fixture listening at http://127.0.0.1:${port} (mode=${live ? 'live' : 'local'} api=${apiVersion} frappe=${frappeVersion})`,
     )
 })

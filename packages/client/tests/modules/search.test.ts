@@ -37,7 +37,11 @@ describe('FrappeSearch', () => {
             ignoreUserPermissions: true,
             linkFieldname: 'user',
         })
-        expect(t2.requests[0]?.params).toMatchObject({ query: 'q', page_length: 10, link_fieldname: 'user' })
+        expect(Object.fromEntries(new URL(t2.requests[0]!.url).searchParams)).toMatchObject({
+            query: 'q',
+            page_length: '10',
+            link_fieldname: 'user',
+        })
     })
 
     it('normalizes the Frappe 14 `{results: [...]}` response shape', async () => {
@@ -64,7 +68,7 @@ describe('FrappeSearch', () => {
         const { client, transport } = createTestClient()
         transport.mock({ method: 'GET', path: '/api/v2/method/frappe.desk.search.search_widget', body: { data: [] } })
         await expect(client.search.searchWidget('User', 'adm', { start: 0 })).resolves.toEqual([])
-        expect(transport.requests[0]?.params?.start).toBe(0)
+        expect(new URL(transport.requests[0]!.url).searchParams.get('start')).toBe('0')
         await client.search.searchWidget('User', 'adm', {
             query: 'q',
             filters: {},

@@ -1,16 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { anonymousAuth, getSetCookieHeader, oauthAuth, tokenAuth } from '../../src/core/auth'
-import { normalizeConfig } from '../../src/core/config'
-import {
-    AuthenticationError,
-    CancelledError,
-    ConfigurationError,
-    TimeoutError,
-    TransportError,
-} from '../../src/core/errors'
-import { FetchTransport } from '../../src/core/fetch'
+import { type FrappeClientConfig,normalizeConfig } from '../../src/core/config'
+import { AuthenticationError, CancelledError, TimeoutError, TransportError } from '../../src/core/errors'
+import { FetchTransport as RawFetchTransport } from '../../src/core/fetch'
 import { retry } from '../../src/core/middleware'
+import { type PipelineRequest,RequestPipeline } from '../../src/core/pipeline'
+
+class FetchTransport {
+    private readonly pipeline: RequestPipeline
+    constructor(options: { config: FrappeClientConfig }) {
+        this.pipeline = new RequestPipeline(options.config, new RawFetchTransport(options.config.fetch))
+    }
+    request<T>(request: PipelineRequest) {
+        return this.pipeline.request<T>(request)
+    }
+}
 
 function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}) {
     return new Response(JSON.stringify(body), {
@@ -27,6 +32,53 @@ describe('FetchTransport', () => {
         vi.useRealTimers()
     })
 
+    it('cancels promptly while an auth provider is pending', async () => {
+        const controller = new AbortController()
+        let sent = false
+        const transport = new FetchTransport({
+            config: normalizeConfig({
+                frappeVersion: 16,
+                url: 'https://example.com',
+                auth: { name: 'pending', apply: () => new Promise<void>(() => undefined) },
+                fetch: async () => {
+                    sent = true
+                    return jsonResponse({ data: 'ok' })
+                },
+            }),
+        })
+        const pending = transport.request({ method: 'GET', url: '/x', signal: controller.signal })
+        controller.abort()
+        const outcome = await Promise.race([
+            pending.then(
+                () => 'resolved',
+                (error: Error) => error.name,
+            ),
+            new Promise<string>((resolve) => setTimeout(() => resolve('pending'), 50)),
+        ])
+        expect(outcome).toBe('CancelledError')
+        expect(sent).toBe(false)
+    })
+
+    it('times out promptly while an auth response hook is pending', async () => {
+        const transport = new FetchTransport({
+            config: normalizeConfig({
+                frappeVersion: 16,
+                url: 'https://example.com',
+                timeout: 5,
+                auth: { name: 'pending', apply() {}, onResponse: () => new Promise<void>(() => undefined) },
+                fetch: async () => jsonResponse({ data: 'ok' }),
+            }),
+        })
+        const outcome = await Promise.race([
+            transport.request({ method: 'GET', url: '/x' }).then(
+                () => 'resolved',
+                (error: Error) => error.name,
+            ),
+            new Promise<string>((resolve) => setTimeout(() => resolve('pending'), 50)),
+        ])
+        expect(outcome).toBe('TimeoutError')
+    })
+
     it('applies the auth strategy header before sending', async () => {
         let seenHeaders: HeadersInit | undefined
         globalThis.fetch = vi.fn(async (_url, init) => {
@@ -34,7 +86,11 @@ describe('FetchTransport', () => {
             return jsonResponse({ data: 'ok' })
         }) as any
 
-        const config = normalizeConfig({ url: 'https://example.com', auth: tokenAuth({ apiKey: 'k', apiSecret: 's' }) })
+        const config = normalizeConfig({
+            frappeVersion: 16,
+            url: 'https://example.com',
+            auth: tokenAuth({ apiKey: 'k', apiSecret: 's' }),
+        })
         const transport = new FetchTransport({ config })
         await transport.request({ method: 'GET', url: '/api/v2/method/ping' })
 
@@ -43,7 +99,7 @@ describe('FetchTransport', () => {
 
     it('maps a non-2xx response to the correct FrappeError subclass', async () => {
         globalThis.fetch = vi.fn(async () => jsonResponse({ message: 'Not authenticated' }, 401)) as any
-        const config = normalizeConfig({ url: 'https://example.com', auth: anonymousAuth() })
+        const config = normalizeConfig({ frappeVersion: 16, url: 'https://example.com', auth: anonymousAuth() })
         const transport = new FetchTransport({ config })
 
         await expect(transport.request({ method: 'GET', url: '/api/v2/method/ping' })).rejects.toBeInstanceOf(
@@ -63,7 +119,7 @@ describe('FetchTransport', () => {
             refresh: async () => 'new',
         })
         const transport = new FetchTransport({
-            config: normalizeConfig({ url: 'https://example.com', auth }),
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', auth }),
         })
         const res = await transport.request({ method: 'GET', url: '/api/v2/method/ping' })
         expect(res.status).toBe(200)
@@ -90,6 +146,7 @@ describe('FetchTransport', () => {
         }) as any
         const transport = new FetchTransport({
             config: normalizeConfig({
+                frappeVersion: 16,
                 url: 'https://example.com',
                 auth: oauthAuth({ getToken: () => 'old', refresh: async () => 'new' }),
             }),
@@ -100,6 +157,20 @@ describe('FetchTransport', () => {
         expect(cancelled).toBe(true)
     })
 
+    it('continues authentication replay when rejected response cleanup fails late', async () => {
+        let calls = 0
+        globalThis.fetch = vi.fn(async () => {
+            if (++calls === 1) {
+                return new Response(new ReadableStream({ cancel: () => Promise.reject(new Error('cleanup failed')) }), { status: 401 })
+            }
+            return jsonResponse({ data: 'ok' })
+        }) as any
+        const auth = oauthAuth({ getToken: () => 'old', refresh: async () => 'new' })
+        const transport = new FetchTransport({ config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', auth }) })
+        await expect(transport.request({ method: 'GET', url: '/x' })).resolves.toMatchObject({ data: { data: 'ok' } })
+        expect(calls).toBe(2)
+    })
+
     it('applies per-request header overrides case-insensitively', async () => {
         let seen = new Headers()
         globalThis.fetch = vi.fn(async (_url, init) => {
@@ -107,7 +178,7 @@ describe('FetchTransport', () => {
             return jsonResponse({ data: 'ok' })
         }) as any
         const transport = new FetchTransport({
-            config: normalizeConfig({ url: 'https://example.com', headers: { 'X-Tenant': 'old' } }),
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', headers: { 'X-Tenant': 'old' } }),
         })
 
         await transport.request({ method: 'GET', url: '/x', headers: { 'x-tenant': 'new' } })
@@ -118,6 +189,7 @@ describe('FetchTransport', () => {
     it('enforces the deadline while asynchronous authentication is pending', async () => {
         const transport = new FetchTransport({
             config: normalizeConfig({
+                frappeVersion: 16,
                 url: 'https://example.com',
                 auth: oauthAuth({ getToken: () => new Promise<string>(() => undefined) }),
             }),
@@ -132,6 +204,7 @@ describe('FetchTransport', () => {
         vi.useFakeTimers()
         const transport = new FetchTransport({
             config: normalizeConfig({
+                frappeVersion: 16,
                 url: 'https://example.com',
                 auth: {
                     name: 'failing',
@@ -150,7 +223,9 @@ describe('FetchTransport', () => {
 
     it('removes query values from error request context', async () => {
         globalThis.fetch = vi.fn(async () => jsonResponse({ message: 'denied' }, 403)) as any
-        const transport = new FetchTransport({ config: normalizeConfig({ url: 'https://example.com' }) })
+        const transport = new FetchTransport({
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com' }),
+        })
 
         await expect(
             transport.request({ method: 'GET', url: '/x', params: { access_token: 'secret', filter: 'private' } }),
@@ -174,10 +249,37 @@ describe('FetchTransport', () => {
             },
             onUnauthorized: () => true,
         }
-        const transport = new FetchTransport({ config: normalizeConfig({ url: 'https://example.com', auth }) })
+        const transport = new FetchTransport({
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', auth }),
+        })
 
         await transport.request({ method: 'GET', url: '/x' })
         expect(seen).toEqual(['expired', 'refreshed'])
+    })
+
+    it('does not invoke authentication for an already cancelled request', async () => {
+        const apply = vi.fn()
+        const controller = new AbortController()
+        controller.abort()
+        const transport = new FetchTransport({
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', auth: { name: 'test', apply } }),
+        })
+        await expect(transport.request({ method: 'GET', url: '/x', signal: controller.signal })).rejects.toMatchObject({
+            name: 'CancelledError',
+        })
+        expect(apply).not.toHaveBeenCalled()
+    })
+
+    it('applies the per-attempt timeout to token loading', async () => {
+        const transport = new FetchTransport({
+            config: normalizeConfig({
+                frappeVersion: 16,
+                url: 'https://example.com',
+                timeout: 5,
+                auth: { name: 'pending', apply: () => new Promise<void>(() => undefined) },
+            }),
+        })
+        await expect(transport.request({ method: 'GET', url: '/x' })).rejects.toMatchObject({ name: 'TimeoutError' })
     })
 
     it('allows only one authentication replay across middleware retries', async () => {
@@ -193,6 +295,7 @@ describe('FetchTransport', () => {
         }
         const transport = new FetchTransport({
             config: normalizeConfig({
+                frappeVersion: 16,
                 url: 'https://example.com',
                 auth,
                 middleware: [retry({ attempts: 1, baseDelayMs: 0, shouldRetry: () => true })],
@@ -208,7 +311,7 @@ describe('FetchTransport', () => {
         globalThis.fetch = vi.fn(async () => {
             throw new TypeError('fetch failed')
         }) as any
-        const config = normalizeConfig({ url: 'https://example.com' })
+        const config = normalizeConfig({ frappeVersion: 16, url: 'https://example.com' })
         const transport = new FetchTransport({ config })
 
         await expect(transport.request({ method: 'GET', url: '/api/v2/method/ping' })).rejects.toBeInstanceOf(
@@ -227,7 +330,7 @@ describe('FetchTransport', () => {
             })
         }) as any
 
-        const config = normalizeConfig({ url: 'https://example.com' })
+        const config = normalizeConfig({ frappeVersion: 16, url: 'https://example.com' })
         const transport = new FetchTransport({ config })
         const promise = transport.request({ method: 'GET', url: '/api/v2/method/ping', signal: controller.signal })
         // Abort on the next microtask so the request has actually reached `fetch()` and attached
@@ -245,7 +348,7 @@ describe('FetchTransport', () => {
             })
         }) as any
 
-        const config = normalizeConfig({ url: 'https://example.com', timeout: 5 })
+        const config = normalizeConfig({ frappeVersion: 16, url: 'https://example.com', timeout: 5 })
         const transport = new FetchTransport({ config })
 
         await expect(transport.request({ method: 'GET', url: '/api/v2/method/ping' })).rejects.toBeInstanceOf(
@@ -255,7 +358,7 @@ describe('FetchTransport', () => {
 
     it('preserves the raw response text even when the body is not valid JSON', async () => {
         globalThis.fetch = vi.fn(async () => new Response('<html>oops</html>', { status: 500 })) as any
-        const config = normalizeConfig({ url: 'https://example.com' })
+        const config = normalizeConfig({ frappeVersion: 16, url: 'https://example.com' })
         const transport = new FetchTransport({ config })
 
         try {
@@ -282,7 +385,9 @@ describe('FetchTransport — remaining branches', () => {
     })
 
     function transport(overrides: Record<string, unknown> = {}) {
-        return new FetchTransport({ config: normalizeConfig({ url: 'https://example.com', ...overrides }) as any })
+        return new FetchTransport({
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', ...overrides }) as any,
+        })
     }
 
     function stubXhr(opts: { status?: number; response?: string } = {}) {
@@ -369,6 +474,7 @@ describe('FetchTransport — remaining branches', () => {
         globalThis.fetch = vi.fn(async () => jsonResponse({ data: 1 })) as any
         const t = new FetchTransport({
             config: normalizeConfig({
+                frappeVersion: 16,
                 url: 'https://example.com',
                 siteName: 'site.localhost',
                 logger: { debug },
@@ -483,7 +589,7 @@ describe('FetchTransport — remaining branches', () => {
             ),
         ) as any
         const t = new FetchTransport({
-            config: normalizeConfig({ url: 'https://example.com', logger: { debug } }),
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', logger: { debug } }),
         })
         await expect(t.request({ method: 'GET', url: '/api/v2/method/ping' })).rejects.toMatchObject({
             extra: { extra_field: 'keep' },
@@ -803,7 +909,7 @@ describe('FetchTransport — remaining branches', () => {
             },
         }
         const t = new FetchTransport({
-            config: normalizeConfig({ url: 'https://example.com', auth }),
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', auth }),
         })
         const res = await t.request({
             method: 'POST',
@@ -841,7 +947,7 @@ describe('FetchTransport — remaining branches', () => {
         }
         ;(globalThis as any).XMLHttpRequest = StubXMLHttpRequest
         const t = new FetchTransport({
-            config: normalizeConfig({ url: 'https://example.com', auth: anonymousAuth() }),
+            config: normalizeConfig({ frappeVersion: 16, url: 'https://example.com', auth: anonymousAuth() }),
         })
         await expect(
             t.request({
@@ -1141,10 +1247,47 @@ describe('FetchTransport — remaining branches', () => {
                 url: '/x',
                 data: new FormData(),
                 onUploadProgress: () => undefined,
-                deadline: Date.now() + 5,
+                deadline: Date.now() + 50,
             }),
         ).rejects.toBeInstanceOf(TimeoutError)
         expect(aborted).toBe(1)
+    })
+
+    it('maps synchronous XHR setup failures without leaving a pending operation', async () => {
+        class ThrowingXMLHttpRequest {
+            upload = { onprogress: undefined }
+            open() { throw new Error('XHR setup failed') }
+        }
+        ;(globalThis as any).XMLHttpRequest = ThrowingXMLHttpRequest
+        await expect(transport().request({ method: 'POST', url: '/x', data: new FormData(), onUploadProgress: () => undefined })).rejects.toMatchObject({ name: 'TransportError' })
+    })
+
+    it('ignores duplicate XHR completion events after settling', async () => {
+        const sent = stubXhr()
+        await transport().request({ method: 'POST', url: '/x', data: new FormData(), onUploadProgress: () => undefined })
+        sent[0].onload?.()
+        await Promise.resolve()
+        expect(sent).toHaveLength(1)
+    })
+
+    it('settles when decoding a binary XHR error body rejects', async () => {
+        class FailedBlob extends Blob {
+            override text(): Promise<string> { return Promise.reject(new Error('decode failed')) }
+        }
+        class FailedDecodeXHR {
+            upload = { onprogress: undefined }
+            responseType = 'text'
+            response = new FailedBlob()
+            status = 500
+            statusText = 'Internal Server Error'
+            onload?: () => void
+            open() {}
+            setRequestHeader() {}
+            getAllResponseHeaders() { return '' }
+            send() { queueMicrotask(() => this.onload?.()) }
+        }
+        ;(globalThis as any).XMLHttpRequest = FailedDecodeXHR
+        await expect(transport().request({ method: 'GET', url: '/x', responseType: 'blob', onUploadProgress: () => undefined })).rejects.toMatchObject({ name: 'TransportError' })
     })
 
     it('sets X-Frappe-Site-Name from window.location in a browser without siteName, and does not send credentials for anonymousAuth', async () => {
@@ -1179,6 +1322,7 @@ describe('FetchTransport — remaining branches', () => {
         }) as any
         const t = new FetchTransport({
             config: normalizeConfig({
+                frappeVersion: 16,
                 url: 'https://example.com',
                 auth: (await import('../../src/core/auth')).cookieAuth(),
             }),
@@ -1191,6 +1335,7 @@ describe('FetchTransport — remaining branches', () => {
         globalThis.fetch = vi.fn(async () => jsonResponse({})) as any
         const t = new FetchTransport({
             config: normalizeConfig({
+                frappeVersion: 16,
                 url: 'https://example.com',
                 logger: { debug },
                 middleware: [
@@ -1207,6 +1352,7 @@ describe('FetchTransport — remaining branches', () => {
         const nonErrorRejection = { type: 'non-error-rejection' as const }
         const t2 = new FetchTransport({
             config: normalizeConfig({
+                frappeVersion: 16,
                 url: 'https://example.com',
                 logger: { debug },
                 middleware: [
@@ -1220,20 +1366,20 @@ describe('FetchTransport — remaining branches', () => {
         expect(debug.mock.calls[0][0]).toMatchObject({ error: 'UnknownError', path: '/x' })
     })
 
-    it('throws ConfigurationError when onUploadProgress is combined with middleware', async () => {
-        globalThis.fetch = vi.fn(async () => jsonResponse({})) as any
+    it('runs middleware for an XHR upload-progress request', async () => {
+        const sent = stubXhr()
+        const middleware = vi.fn(async (req: any, next: any) => next(req))
         await expect(
-            transport({
-                middleware: [async (req: any, next: any) => next(req)],
-            }).request({
+            transport({ middleware: [middleware] }).request({
                 method: 'POST',
                 url: '/x',
                 data: { a: 1 },
                 onUploadProgress: () => undefined,
                 deadline: Date.now() + 5_000,
             }),
-        ).rejects.toBeInstanceOf(ConfigurationError)
-        expect(globalThis.fetch).not.toHaveBeenCalled()
+        ).resolves.toMatchObject({ data: { data: 'ok' } })
+        expect(middleware).toHaveBeenCalledOnce()
+        expect(sent).toHaveLength(1)
     })
 
     it('maps an empty non-2xx body', async () => {

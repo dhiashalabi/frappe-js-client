@@ -28,7 +28,7 @@ await frappe.call.delete('custom.delete', { name: 'a' })
 Throws `FeatureNotSupportedError` on `apiVersion: 1`.
 
 ```typescript
-const frappe = createFrappeClient({ url, apiVersion: 2 })
+const frappe = createFrappeClient({ url, frappeVersion: 16, apiVersion: 2 })
 
 await frappe.call.doctypeMethod('ToDo', 'bulk_close', { names: ['a'] })
 await frappe.call.runDocMethod('set_status', { doctype: 'ToDo', name: 'a' }, { status: 'Closed' })

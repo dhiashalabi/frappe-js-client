@@ -4,15 +4,7 @@
  *
  * @packageDocumentation
  */
-export type {
-    AdapterRequest,
-    ApiAdapter,
-    Capabilities,
-    FrappeVersion,
-    ListParams,
-    ListResult,
-    Unwrap,
-} from './api/adapter'
+export type { FrappeVersion } from './api/adapter'
 export type { FrappeClient } from './client'
 export type { AuthStrategy, CookieRecord, FrappeRequestInfo } from './core/auth'
 export type { FrappeClientConfig, FrappeClientOptions } from './core/config'

@@ -13,6 +13,7 @@ import { ConfigurationError } from './core/errors'
 import { Executor } from './core/executor'
 import { FetchTransport } from './core/fetch'
 import type { Middleware } from './core/middleware'
+import { RequestPipeline } from './core/pipeline'
 import type { Transport } from './core/transport'
 import { createFrappeAuth, type FrappeAuth } from './modules/auth'
 import { createFrappeCall, type FrappeCall } from './modules/call'
@@ -31,17 +32,17 @@ export interface FrappeClientInternal {
 /**
  * @stable
  */
-export interface FrappeClient<Docs extends object = object> {
+export interface FrappeClient<Docs extends object = object, Inserts extends object = object> {
     readonly config: FrappeClientConfig
     readonly auth: FrappeAuth
-    readonly db: FrappeDB<Docs>
+    readonly db: FrappeDB<Docs, Inserts>
     readonly file: FrappeFile
     readonly call: FrappeCall
     readonly search: FrappeSearch
 
-    withAuth(auth: AuthStrategy): FrappeClient<Docs>
-    withMiddleware(...middleware: Middleware[]): FrappeClient<Docs>
-    withHeaders(headers: Record<string, string>): FrappeClient<Docs>
+    withAuth(auth: AuthStrategy): FrappeClient<Docs, Inserts>
+    withMiddleware(...middleware: Middleware[]): FrappeClient<Docs, Inserts>
+    withHeaders(headers: Record<string, string>): FrappeClient<Docs, Inserts>
 }
 
 const INTERNAL_SYMBOL = Symbol('FrappeClientInternal')
@@ -70,32 +71,34 @@ function buildAdapter(config: FrappeClientConfig): ApiAdapter {
 }
 
 /** Builds the module set shared by `createFrappeClient` and `frappe-js-client/testing`'s `createTestClient`. */
-export function buildCoreModules<Docs extends object = object>(
+export function buildCoreModules<Docs extends object = object, Inserts extends object = object>(
     deps: ModuleDeps,
     auth: AuthStrategy,
-): Pick<FrappeClient<Docs>, 'auth' | 'db' | 'file' | 'call' | 'search'> {
+): Pick<FrappeClient<Docs, Inserts>, 'auth' | 'db' | 'file' | 'call' | 'search'> {
     return {
         auth: createFrappeAuth(deps, auth),
-        db: createFrappeDB<Docs>(deps),
+        db: createFrappeDB<Docs, Inserts>(deps),
         file: createFrappeFile(deps),
         call: createFrappeCall(deps),
         search: createFrappeSearch(deps),
     }
 }
 
-function buildClient<Docs extends object = object>(config: FrappeClientConfig): FrappeClient<Docs> {
+function buildClient<Docs extends object = object, Inserts extends object = object>(
+    config: FrappeClientConfig,
+): FrappeClient<Docs, Inserts> {
     const adapter = buildAdapter(config)
-    const transport = config.transport ?? new FetchTransport({ config })
-    const executor = new Executor(transport, adapter.version)
+    const transport = config.transport ?? new FetchTransport(config.fetch)
+    const executor = new Executor(new RequestPipeline(config, transport), adapter.version)
     const deps: ModuleDeps = { adapter, executor }
 
-    const client: FrappeClient<Docs> = {
+    const client: FrappeClient<Docs, Inserts> = {
         config,
-        ...buildCoreModules<Docs>(deps, config.auth),
-        withAuth: (auth) => buildClient<Docs>(deriveConfig(config, { auth })),
+        ...buildCoreModules<Docs, Inserts>(deps, config.auth),
+        withAuth: (auth) => buildClient<Docs, Inserts>(deriveConfig(config, { auth })),
         withMiddleware: (...middleware) =>
-            buildClient<Docs>(deriveConfig(config, { middleware: [...config.middleware, ...middleware] })),
-        withHeaders: (headers) => buildClient<Docs>(deriveConfig(config, { headers })),
+            buildClient<Docs, Inserts>(deriveConfig(config, { middleware: [...config.middleware, ...middleware] })),
+        withHeaders: (headers) => buildClient<Docs, Inserts>(deriveConfig(config, { headers })),
     }
     Object.defineProperty(client, INTERNAL_SYMBOL, {
         value: { deps, transport, config },
@@ -114,11 +117,14 @@ function buildClient<Docs extends object = object>(config: FrappeClientConfig): 
  * ```ts
  * const frappe = createFrappeClient({
  *   url: 'https://frappe.example.com',
+ *   frappeVersion: 16,
  *   auth: tokenAuth({ apiKey, apiSecret }),
  * })
  * const users = await frappe.db.getDocList('User', { fields: ['name', 'email'], limit: 20 })
  * ```
  */
-export function createFrappeClient<Docs extends object = object>(options: FrappeClientOptions): FrappeClient<Docs> {
-    return buildClient<Docs>(normalizeConfig(options))
+export function createFrappeClient<Docs extends object = object, Inserts extends object = object>(
+    options: FrappeClientOptions,
+): FrappeClient<Docs, Inserts> {
+    return buildClient<Docs, Inserts>(normalizeConfig(options))
 }

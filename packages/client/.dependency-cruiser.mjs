@@ -47,6 +47,27 @@ export default {
             to: { path: '^src/(core/fetch\\.ts$|api/v1\\.ts$|api/v2\\.ts$)' },
         },
         {
+            name: 'domain-modules-use-executor-only',
+            severity: 'error',
+            comment: 'Domain modules must not import the pipeline or transport implementations.',
+            from: { path: '^src/modules/' },
+            to: { path: '^src/(core/(xhr-upload|pipeline)|testing/memory-transport)' },
+        },
+        {
+            name: 'transports-do-not-own-request-policy',
+            severity: 'error',
+            comment: 'Authentication, middleware, timing, and logging belong to the request pipeline.',
+            from: { path: '^src/(core/(fetch|xhr-upload)|testing/memory-transport)' },
+            to: { path: '^src/core/(auth|config|middleware|lifecycle|logger)' },
+        },
+        {
+            name: 'production-entries-do-not-import-testing',
+            severity: 'error',
+            comment: 'Testing helpers are available only from the testing entry point.',
+            from: { path: '^src/(index|extended|errors|middleware|types|realtime)\\.ts$' },
+            to: { path: '^src/(testing\\.ts$|testing/)' },
+        },
+        {
             name: 'testing-transport-is-test-only',
             severity: 'error',
             comment:

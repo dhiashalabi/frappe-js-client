@@ -23,6 +23,7 @@ Keep **non-secrets** in `frappe-codegen.config.json`. Credentials go in the envi
 ```json title="frappe-codegen.config.json"
 {
     "url": "https://frappe.example.com",
+    "frappeVersion": 16,
     "out": "src/generated/frappe-types.ts",
     "includeHidden": true,
     "followTables": true,
@@ -31,9 +32,10 @@ Keep **non-secrets** in `frappe-codegen.config.json`. Credentials go in the envi
 }
 ```
 
-Allowed file keys: `url`, `out`, `includeHidden`, `followTables`, `doctypes`, `modules`. Other keys are ignored. Non-string entries in `doctypes` / `modules` are dropped. Non-boolean `includeHidden` / `followTables` are treated as unset. The file must be a JSON object (not `null` or an array).
+Allowed file keys: `url`, `frappeVersion` (`15` or `16`), `out`, `includeHidden`, `followTables`, `doctypes`, `modules`. Other keys are ignored. Non-string entries in `doctypes` / `modules` are dropped. Non-boolean `includeHidden` / `followTables` are treated as unset. The file must be a JSON object (not `null` or an array).
 
 ```bash
+export FRAPPE_VERSION=16
 export FRAPPE_URL="https://frappe.example.com"   # optional if url is in the file
 export FRAPPE_API_KEY="…"
 export FRAPPE_API_SECRET="…"
@@ -56,7 +58,7 @@ pnpm exec frappe-codegen
 
 `--include-labels`, `--include-doctype-map`, `--dry-run`, and secrets are CLI/env only.
 
-Env: `FRAPPE_URL`, `FRAPPE_API_KEY`, `FRAPPE_API_SECRET`. Empty env values are ignored.
+Env: `FRAPPE_VERSION`, `FRAPPE_URL`, `FRAPPE_API_KEY`, `FRAPPE_API_SECRET`. Empty env values are ignored.
 
 If both key and secret are omitted, the CLI uses **anonymous** auth (only works if Guest can read DocType meta). Supplying only one of key/secret also falls back to anonymous.
 
@@ -76,6 +78,7 @@ Required after merge: a site URL, and at least one DocType source (`--doctype`, 
 | Flag                                                 | Default                                   | Meaning                                         |
 | ---------------------------------------------------- | ----------------------------------------- | ----------------------------------------------- |
 | `-u`, `--url <url>`                                  | env / config                              | Site base URL                                   |
+| `--frappe-version <15|16>`                           | `FRAPPE_VERSION` / config `frappeVersion` | Required site release                          |
 | `-d`, `--doctype <name>`                             | —                                         | Repeatable                                      |
 | `--module <name>`                                    | —                                         | Every DocType in that Frappe module. Repeatable |
 | `--api-key` / `--api-secret`                         | `FRAPPE_API_KEY` / `FRAPPE_API_SECRET`    | Token auth                                      |
@@ -103,6 +106,7 @@ CLI failures print `frappe-codegen failed: …` to stderr and set `process.exitC
 ```bash
 pnpm exec frappe-codegen \
   --url https://frappe.example.com \
+  --frappe-version 16 \
   --api-key "$FRAPPE_API_KEY" --api-secret "$FRAPPE_API_SECRET" \
   --doctype "ToDo" --doctype "User" \
   --include-hidden \
@@ -133,7 +137,7 @@ export interface GeneratedInserts {
 }
 ```
 
-Map keys are the exact Frappe names (`"Sales Order"`). Pass the map as `createFrappeClient<GeneratedDocTypes>(...)`.
+Map keys are the exact Frappe names (`"Sales Order"`). Pass both maps as `createFrappeClient<GeneratedDocTypes, GeneratedInserts>(...)` for strict read and insert types. Child-table payloads use generated child insert types, so server-assigned metadata is excluded. Check fields default to optional on insert.
 
 A file header warns not to edit by hand. Each type has a short generated-from-DocType comment.
 
@@ -182,7 +186,7 @@ Normalized meta also keeps `istable` / `issingle` (0/1); they do not change the 
 import { createFrappeClient } from 'frappe-js-client'
 import type { GeneratedDocTypes, GeneratedInserts } from './generated/frappe-types'
 
-const frappe = createFrappeClient<GeneratedDocTypes>({ url, auth })
+const frappe = createFrappeClient<GeneratedDocTypes, GeneratedInserts>({ url, frappeVersion: 16, auth })
 const todo = await frappe.db.getDoc('ToDo', name)
 await frappe.db.createDoc('ToDo', {
     description: 'Follow up',
@@ -228,10 +232,11 @@ import {
 
 const path = findDefaultConfigPath() // DEFAULT_CONFIG_NAME in cwd, if present
 const file = path ? loadConfigFile(path) : undefined
-const config = mergeConfig(file, { doctypes: ['ToDo'] })
+const config = mergeConfig(file, { frappeVersion: 16, doctypes: ['ToDo'] })
 
 const client = createFrappeClient({
     url: config.url!,
+    frappeVersion: config.frappeVersion,
     apiVersion: 2,
     auth: tokenAuth({ apiKey: config.apiKey!, apiSecret: config.apiSecret! }),
 })

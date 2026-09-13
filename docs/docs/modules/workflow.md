@@ -6,7 +6,7 @@ Extended module. Use `withExtended`. Every method accepts trailing [`RequestOpti
 import { createFrappeClient } from 'frappe-js-client'
 import { withExtended } from 'frappe-js-client/extended'
 
-const frappe = withExtended(createFrappeClient({ url }))
+const frappe = withExtended(createFrappeClient({ url, frappeVersion: 16 }))
 const doc = { doctype: 'ToDo', name: 'abc' } // WorkflowDoc: doctype + name + extra keys
 
 const transitions = await frappe.workflow.getTransitions(doc)

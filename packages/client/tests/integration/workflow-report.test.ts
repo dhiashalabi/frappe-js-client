@@ -2,13 +2,13 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import { withExtended } from '../../src/extended'
 import { cookieAuth, createFrappeClient, FrappeClient, type FrappeDoc } from '../../src/index'
-import { FRAPPE_TEST_ADMIN_PASSWORD, FRAPPE_TEST_URL } from './setup'
+import { FRAPPE_TEST_ADMIN_PASSWORD, FRAPPE_TEST_API_VERSION, FRAPPE_TEST_FRAPPE_VERSION, FRAPPE_TEST_URL } from './setup'
 
 describe('integration: workflow transitions and report execution', () => {
     let frappe: ReturnType<typeof withExtended>
 
     beforeAll(async () => {
-        const core: FrappeClient = createFrappeClient({ url: FRAPPE_TEST_URL, auth: cookieAuth() })
+        const core: FrappeClient = createFrappeClient({ frappeVersion: FRAPPE_TEST_FRAPPE_VERSION, apiVersion: FRAPPE_TEST_API_VERSION, url: FRAPPE_TEST_URL, auth: cookieAuth() })
         await core.auth.login({ username: 'Administrator', password: FRAPPE_TEST_ADMIN_PASSWORD })
         frappe = withExtended(core)
     })

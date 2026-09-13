@@ -30,8 +30,8 @@ describe('FrappeDB (via MemoryTransport, v2 default)', () => {
         })
         const list = await client.db.getDocList('User')
         expect(list).toEqual([fixtureUser])
-        expect(transport.requests[0]?.params?.limit).toBe(20)
-        expect(transport.requests[0]?.params?.fields).toBe('["*"]')
+        expect(new URL(transport.requests[0]!.url).searchParams.get('limit')).toBe('20')
+        expect(new URL(transport.requests[0]!.url).searchParams.get('fields')).toBe('["*"]')
     })
 
     it('normalizes the full-document field selector for Frappe JSON parsing', async () => {
@@ -40,7 +40,7 @@ describe('FrappeDB (via MemoryTransport, v2 default)', () => {
 
         await client.db.getDocList('User', { fields: '*' })
 
-        expect(transport.requests[0]?.params?.fields).toBe('["*"]')
+        expect(new URL(transport.requests[0]!.url).searchParams.get('fields')).toBe('["*"]')
     })
 
     it('supports document names containing path separators', async () => {
@@ -167,7 +167,7 @@ describe('FrappeDB (via MemoryTransport, v2 default)', () => {
 
     it('updateDoc uses PUT on v1', async () => {
         const { client, transport } = createTestClient({ apiVersion: 1 })
-        transport.mock({ method: 'PUT', path: '/api/resource/User/test.user@example.com', body: fixtureUser })
+        transport.mock({ method: 'PUT', path: '/api/resource/User/test.user@example.com', body: { data: fixtureUser } })
         await client.db.updateDoc('User', 'test.user@example.com', { first_name: 'Changed' })
         expect(transport.requests[0]?.method).toBe('PUT')
     })

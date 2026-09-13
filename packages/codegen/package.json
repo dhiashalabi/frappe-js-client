@@ -61,9 +61,11 @@
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "typecheck": "tsc --noEmit -p tsconfig.json",
+        "api:extract": "node ../../scripts/check-api-reports.mjs --local",
+        "api:check": "node ../../scripts/check-api-reports.mjs",
         "publint": "publint",
         "attw": "attw --pack . --profile node16",
-        "gate": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm publint && pnpm attw"
+        "gate": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm api:check && pnpm publint && pnpm attw"
     },
     "dependencies": {
         "frappe-js-client": "workspace:^"

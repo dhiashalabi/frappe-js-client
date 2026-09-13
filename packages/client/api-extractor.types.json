@@ -1,0 +1,7 @@
+{
+    "extends": "./api-extractor.json",
+    "mainEntryPointFilePath": "<projectFolder>/dist/types.d.ts",
+    "apiReport": {
+        "reportFileName": "frappe-js-client.types.api.md"
+    }
+}

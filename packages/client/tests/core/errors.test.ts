@@ -35,6 +35,20 @@ describe('core/errors', () => {
         expect(serverErrorFor(500)).toBe(ServerError)
     })
 
+    it('unknown exception names inherited from Object still map by status', () => {
+        for (const name of ['constructor', 'toString', '__proto__']) {
+            const error = mapServerError(
+                { status: 500, statusText: 'Internal Server Error' },
+                { exc_type: name },
+                '{}',
+                { method: 'GET', url: 'https://example.com/api/method/x' },
+            )
+            expect(error).toBeInstanceOf(ServerError)
+            expect(error).toBeInstanceOf(FrappeError)
+            expect(error.frappeExceptionType).toBe(name)
+        }
+    })
+
     it('preserves the original failure via `cause`', () => {
         const original = new TypeError('network down')
         const error = new FrappeError({ status: 0, message: 'Request failed', cause: original })

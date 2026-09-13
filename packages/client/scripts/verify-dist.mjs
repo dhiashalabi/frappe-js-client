@@ -34,7 +34,7 @@ async function verifyEsm() {
     const configError = new ConfigurationError('x')
     assert.ok(configError instanceof ErrFrappeError, 'ESM: errors-entry instanceof must catch main-entry errors')
 
-    const client = createFrappeClient({ url: 'https://example.com' })
+    const client = createFrappeClient({ url: 'https://example.com', frappeVersion: 16 })
     const extended = withExtended(client)
     assert.equal(typeof extended.workflow.apply, 'function', 'ESM: withExtended must attach the extended modules')
 
@@ -63,7 +63,7 @@ function verifyCjs() {
     assert.equal(MainFrappeError, ErrFrappeError, 'CJS: FrappeError must be the same class across index/errors')
     assert.ok(new ConfigurationError('x') instanceof ErrFrappeError, 'CJS: errors-entry instanceof must work')
 
-    const client = createFrappeClient({ url: 'https://example.com' })
+    const client = createFrappeClient({ url: 'https://example.com', frappeVersion: 16 })
     const extended = withExtended(client)
     assert.equal(typeof extended.workflow.apply, 'function', 'CJS: withExtended must attach the extended modules')
 

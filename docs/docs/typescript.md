@@ -13,7 +13,7 @@ type ToDo = FrappeDoc<{
 
 type ToDoInsert = FrappeInsert<ToDo>
 
-const frappe = createFrappeClient({ url })
+const frappe = createFrappeClient({ url, frappeVersion: 16 })
 const row = await frappe.db.getDoc<ToDo>('ToDo', 'abc')
 await frappe.db.createDoc<ToDo>('ToDo', { description: 'Follow up', status: 'Open' })
 ```
@@ -55,7 +55,6 @@ Prefer importing types from `frappe-js-client/types` in generated files so runti
 | `RequestOptions`                                       | Trailing options on every public method                               |
 | `ApiVersion`                                           | `1 \| 2`                                                              |
 | `FrappeVersion`                                        | `14 \| 15 \| 16`                                                      |
-| `Capabilities`                                         | `validateLinkAndFetch`, `listExpand`, `restListHonorsExtendedFilters` |
 | `FrappeClient` / `ExtendedFrappeClient`                | Client shapes                                                         |
 | `FrappeClientOptions` / `FrappeClientConfig`           | Input vs frozen config                                                |
 | `AuthStrategy`                                         | Custom auth                                                           |
@@ -70,7 +69,7 @@ Prefer importing types from `frappe-js-client/types` in generated files so runti
 import { createFrappeClient } from 'frappe-js-client'
 import type { GeneratedDocTypes, GeneratedInserts } from './generated/frappe-types'
 
-const frappe = createFrappeClient<GeneratedDocTypes>({ url, auth })
+const frappe = createFrappeClient<GeneratedDocTypes, GeneratedInserts>({ url, frappeVersion: 16, auth })
 const todo = await frappe.db.getDoc('ToDo', name)
 await frappe.db.createDoc('ToDo', {
     description: 'Follow up',

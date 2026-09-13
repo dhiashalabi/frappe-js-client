@@ -28,6 +28,7 @@ import { createFrappeClient, tokenAuth } from 'frappe-js-client'
 
 const frappe = createFrappeClient({
     url: 'https://frappe.example.com',
+    frappeVersion: 16,
     auth: tokenAuth({ apiKey: '...', apiSecret: '...' }),
 })
 

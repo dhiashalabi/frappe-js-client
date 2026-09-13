@@ -43,7 +43,17 @@ export function assertUniqueInterfaceNames(metas: readonly DocTypeMeta[]): void 
         list.push(source)
         byName.set(symbol, list)
     }
-    for (const symbol of ['FrappeDoc', 'FrappeInsert', 'Link', 'GeneratedDocTypes', 'GeneratedInserts']) {
+    for (const symbol of [
+        'FrappeDoc',
+        'FrappeInsert',
+        'Link',
+        'GeneratedDocTypes',
+        'GeneratedInserts',
+        'Omit',
+        'Partial',
+        'Pick',
+        'Record',
+    ]) {
         reserve(symbol, `reserved ${symbol}`)
     }
     for (const meta of metas) {
@@ -108,7 +118,25 @@ export function generateInterface(
     const knownDoctypes = new Set(allMetas.map((m) => m.name))
 
     const emitted = meta.fields.filter((field) => shouldEmitField(field, options))
-    const checkKeys = emitted.filter((field) => field.fieldtype === 'Check').map((field) => field.fieldname)
+    const insertOverrides = emitted.flatMap((field) => {
+        if (field.fieldtype === 'Check') {
+            return [{ name: field.fieldname, line: `    ${propertyKey(field.fieldname)}?: 0 | 1` }]
+        }
+        if (
+            (field.fieldtype === 'Table' || field.fieldtype === 'Table MultiSelect') &&
+            field.options &&
+            knownDoctypes.has(field.options)
+        ) {
+            const child = toInterfaceName(field.options)
+            return [
+                {
+                    name: field.fieldname,
+                    line: `    ${propertyKey(field.fieldname)}${field.reqd ? '' : '?'}: ${child}Insert[]`,
+                },
+            ]
+        }
+        return []
+    })
 
     const fieldLines = emitted.map((field) => {
         const optional = field.reqd || isCheckRequiredOnRead(field) ? '' : '?'
@@ -124,9 +152,9 @@ export function generateInterface(
     const body = `{\n${inner}\n}`
 
     const insertAlias =
-        checkKeys.length === 0
+        insertOverrides.length === 0
             ? `export type ${interfaceName}Insert = FrappeInsert<${interfaceName}>`
-            : `export type ${interfaceName}Insert = FrappeInsert<Omit<${interfaceName}, ${checkKeys.map((k) => JSON.stringify(k)).join(' | ')}> & Partial<Pick<${interfaceName}, ${checkKeys.map((k) => JSON.stringify(k)).join(' | ')}>>>`
+            : `export type ${interfaceName}Insert = Omit<FrappeInsert<${interfaceName}>, ${insertOverrides.map(({ name }) => JSON.stringify(name)).join(' | ')}> & {\n${insertOverrides.map(({ line }) => line).join('\n')}\n}`
 
     return [
         `/** Generated from DocType \`${commentText(meta.name)}\`. Do not edit by hand — regenerate with \`frappe-codegen --help\`. */`,

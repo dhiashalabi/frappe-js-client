@@ -25,7 +25,7 @@ describe('subpath barrels re-export the core modules', () => {
         expect(indexBarrel.CsrfError).toBeDefined()
         expect(indexBarrel.DuplicateEntryError).toBeDefined()
         expect(indexBarrel.RateLimitError).toBeDefined()
-        const client = indexBarrel.createFrappeClient({ url: 'https://example.com' })
+        const client = indexBarrel.createFrappeClient({ frappeVersion: 16, url: 'https://example.com' })
         expect(client.db).toBeDefined()
         expect(client.auth).toBeDefined()
         expect(client.file).toBeDefined()

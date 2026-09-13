@@ -28,7 +28,7 @@ describe('fetchDocTypeMeta', () => {
         expect(meta).toEqual(raw)
         expect(transport.requests).toHaveLength(1)
         expect(transport.requests[0]?.method).toBe('GET')
-        expect(transport.requests[0]?.url).toBe('/api/v2/doctype/Sales%20Order/meta')
+        expect(transport.requests[0]?.url).toBe('https://test.local/api/v2/doctype/Sales%20Order/meta')
     })
 
     it('defaults missing optional fields without throwing', async () => {
@@ -129,7 +129,7 @@ describe('fetchDocTypeMetas', () => {
 
         expect(metas.map((m) => m.name)).toEqual(['Customer', 'Sales Order'])
         expect(transport.requests.map((r) => r.url).sort()).toEqual(
-            ['/api/v2/doctype/Customer/meta', '/api/v2/doctype/Sales%20Order/meta'].sort(),
+            ['https://test.local/api/v2/doctype/Customer/meta', 'https://test.local/api/v2/doctype/Sales%20Order/meta'].sort(),
         )
     })
 

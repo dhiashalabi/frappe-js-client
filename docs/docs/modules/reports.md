@@ -6,7 +6,7 @@ Extended module. Use `withExtended`. Other whitelist methods stay on `frappe.cal
 import { createFrappeClient } from 'frappe-js-client'
 import { withExtended } from 'frappe-js-client/extended'
 
-const frappe = withExtended(createFrappeClient({ url }))
+const frappe = withExtended(createFrappeClient({ url, frappeVersion: 16 }))
 ```
 
 ## Method catalog

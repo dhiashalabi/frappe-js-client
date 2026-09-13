@@ -13,7 +13,7 @@ describe('FrappeCall — the escape hatch', () => {
         const { client, transport } = createTestClient()
         transport.mock({ method: 'POST', path: '/api/v2/method/my_app.api.create', body: { data: { ok: true } } })
         await client.call.post('my_app.api.create', { name: 'x' })
-        expect(transport.requests[0]?.data).toEqual({ name: 'x' })
+        expect(JSON.parse(String(transport.requests[0]?.body))).toEqual({ name: 'x' })
     })
 
     it('put() and delete() route to the right verb', async () => {
@@ -48,7 +48,7 @@ describe('FrappeCall — the escape hatch', () => {
         const { client, transport } = createTestClient()
         transport.mock({ method: 'POST', path: '/api/v2/method/run_doc_method', body: { data: 'ok' } })
         await client.call.runDocMethod('do_thing', { doctype: 'ToDo', name: 'x' }, { a: 1 })
-        expect(transport.requests[0]?.data).toEqual({
+        expect(JSON.parse(String(transport.requests[0]?.body))).toEqual({
             method: 'do_thing',
             document: { doctype: 'ToDo', name: 'x' },
             kwargs: { a: 1 },

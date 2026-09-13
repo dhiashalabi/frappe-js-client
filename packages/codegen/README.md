@@ -30,6 +30,7 @@ the binary with no flags (or a `package.json` script).
 ```json
 {
     "url": "https://frappe.example.com",
+    "frappeVersion": 16,
     "out": "src/generated/frappe-types.ts",
     "includeHidden": true,
     "followTables": true,
@@ -39,6 +40,7 @@ the binary with no flags (or a `package.json` script).
 ```
 
 ```bash
+export FRAPPE_VERSION=16
 export FRAPPE_URL="https://frappe.example.com"   # optional if `url` is in the file
 export FRAPPE_API_KEY="…"
 export FRAPPE_API_SECRET="…"
@@ -67,7 +69,7 @@ Flags override env, env overrides the config file.
 `--doctype` / `--module` are **merged** with `doctypes` / `modules` from the file (union, not
 replace).
 
-Config file keys: `url`, `out`, `includeHidden`, `followTables`, `doctypes`, `modules`. Labels,
+Config file keys: `url`, `frappeVersion` (`15` or `16`), `out`, `includeHidden`, `followTables`, `doctypes`, `modules`. Labels,
 the DocType map, and `--dry-run` are CLI-only.
 
 ### Other ways to run
@@ -84,6 +86,7 @@ the DocType map, and `--dry-run` are CLI-only.
 ```bash
 pnpm exec frappe-codegen \
   --url https://frappe.example.com \
+  --frappe-version 16 \
   --api-key "$FRAPPE_API_KEY" --api-secret "$FRAPPE_API_SECRET" \
   --doctype "ToDo" --doctype "User" \
   --include-hidden \
@@ -101,6 +104,7 @@ config `doctypes` / `modules`).
 | Flag                                                 | Default                                     | Meaning                                          |
 | ---------------------------------------------------- | ------------------------------------------- | ------------------------------------------------ |
 | `-u`, `--url <url>`                                  | `FRAPPE_URL` or config `url`                | Frappe site base URL                             |
+| `--frappe-version <15|16>`                           | `FRAPPE_VERSION` or config `frappeVersion` | Required site release                            |
 | `-d`, `--doctype <name>`                             | —                                           | DocType to generate. Repeatable                  |
 | `--module <name>`                                    | —                                           | All DocTypes in that Frappe module. Repeatable   |
 | `--api-key <key>`                                    | `FRAPPE_API_KEY`                            | API key (token auth)                             |
@@ -127,9 +131,9 @@ child names.
 
 ```ts
 import { createFrappeClient } from 'frappe-js-client'
-import type { GeneratedDocTypes } from './generated/frappe-types'
+import type { GeneratedDocTypes, GeneratedInserts } from './generated/frappe-types'
 
-const frappe = createFrappeClient<GeneratedDocTypes>({ url, auth })
+const frappe = createFrappeClient<GeneratedDocTypes, GeneratedInserts>({ url, frappeVersion: 16, auth })
 const todo = await frappe.db.getDoc('ToDo', name)
 ```
 
@@ -151,7 +155,7 @@ part of the stored option value.
 import { createFrappeClient } from 'frappe-js-client'
 import { fetchWithOptionalFollow, generateModule, loadConfigFile, mergeConfig, resolveDocTypes } from 'frappe-codegen'
 
-const client = createFrappeClient({ url, apiVersion: 2, auth })
+const client = createFrappeClient({ url, frappeVersion: 16, apiVersion: 2, auth })
 const names = await resolveDocTypes(client, {
     doctypes: ['ToDo'],
     modules: [],

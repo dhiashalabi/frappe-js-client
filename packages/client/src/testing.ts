@@ -14,13 +14,12 @@
  */
 
 import { createFrappeClient, type FrappeClient } from './client'
-import { anonymousAuth } from './core/auth'
 import type { FrappeClientOptions } from './core/config'
 import { type ExtendedFrappeClient, withExtended } from './extended'
 import { MemoryTransport } from './testing/memory-transport'
 
 export * from './testing/fixtures'
-export type { MemoryRoute, MemoryTransportOptions } from './testing/memory-transport'
+export type { MemoryRoute } from './testing/memory-transport'
 export { MemoryTransport } from './testing/memory-transport'
 
 /**
@@ -28,19 +27,24 @@ export { MemoryTransport } from './testing/memory-transport'
  * `client` is a real `FrappeClient` — assignable anywhere a production client is, and produced
  * by the exact same `createFrappeClient` wiring.
  */
-export function createTestClient<Docs extends object = object>(
+export function createTestClient<Docs extends object = object, Inserts extends object = object>(
     options: Partial<FrappeClientOptions> = {},
-): { client: FrappeClient<Docs>; transport: MemoryTransport } {
-    const auth = options.auth ?? anonymousAuth()
-    const transport = new MemoryTransport({ auth })
-    const client = createFrappeClient<Docs>({ url: 'https://test.local', ...options, auth, transport })
+): { client: FrappeClient<Docs, Inserts>; transport: MemoryTransport } {
+    const url = options.url ?? 'https://test.local'
+    const transport = new MemoryTransport()
+    const client = createFrappeClient<Docs, Inserts>({
+        url,
+        ...options,
+        frappeVersion: options.frappeVersion ?? 16,
+        transport,
+    })
     return { client, transport }
 }
 
 /** Builds a core + extended tier client backed by a `MemoryTransport` instead of the network. */
-export function createExtendedTestClient<Docs extends object = object>(
+export function createExtendedTestClient<Docs extends object = object, Inserts extends object = object>(
     options: Partial<FrappeClientOptions> = {},
-): { client: ExtendedFrappeClient<Docs>; transport: MemoryTransport } {
-    const { client, transport } = createTestClient<Docs>(options)
+): { client: ExtendedFrappeClient<Docs, Inserts>; transport: MemoryTransport } {
+    const { client, transport } = createTestClient<Docs, Inserts>(options)
     return { client: withExtended(client), transport }
 }

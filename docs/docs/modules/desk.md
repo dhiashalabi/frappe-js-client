@@ -8,7 +8,7 @@ Every method accepts trailing [`RequestOptions`](../client.md#per-request-option
 import { createFrappeClient } from 'frappe-js-client'
 import { withExtended } from 'frappe-js-client/extended'
 
-const frappe = withExtended(createFrappeClient({ url }))
+const frappe = withExtended(createFrappeClient({ url, frappeVersion: 16 }))
 
 await frappe.desk.addComment({
     referenceDoctype: 'ToDo',

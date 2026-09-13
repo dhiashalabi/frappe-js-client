@@ -8,7 +8,7 @@
  * import { createFrappeClient } from 'frappe-js-client'
  * import { withExtended } from 'frappe-js-client/extended'
  *
- * const frappe = withExtended(createFrappeClient({ url: 'https://frappe.example.com' }))
+ * const frappe = withExtended(createFrappeClient({ url: 'https://frappe.example.com', frappeVersion: 16 }))
  * await frappe.workflow.apply(doc, 'Approve')
  * ```
  *
@@ -24,15 +24,18 @@ import { createFrappeReport, type FrappeReport } from './modules/report'
 import { createFrappeSite, type FrappeSite } from './modules/site'
 import { createFrappeWorkflow, type FrappeWorkflow } from './modules/workflow'
 
-export interface ExtendedFrappeClient<Docs extends object = object> extends FrappeClient<Docs> {
+export interface ExtendedFrappeClient<
+    Docs extends object = object,
+    Inserts extends object = object,
+> extends FrappeClient<Docs, Inserts> {
     readonly permission: FrappePermission
     readonly workflow: FrappeWorkflow
     readonly report: FrappeReport
     readonly desk: FrappeDesk
     readonly site: FrappeSite
-    withAuth(auth: AuthStrategy): ExtendedFrappeClient<Docs>
-    withMiddleware(...middleware: Middleware[]): ExtendedFrappeClient<Docs>
-    withHeaders(headers: Record<string, string>): ExtendedFrappeClient<Docs>
+    withAuth(auth: AuthStrategy): ExtendedFrappeClient<Docs, Inserts>
+    withMiddleware(...middleware: Middleware[]): ExtendedFrappeClient<Docs, Inserts>
+    withHeaders(headers: Record<string, string>): ExtendedFrappeClient<Docs, Inserts>
 }
 
 /**
@@ -41,9 +44,11 @@ export interface ExtendedFrappeClient<Docs extends object = object> extends Frap
  *
  * @stable
  */
-export function withExtended<Docs extends object = object>(client: FrappeClient<Docs>): ExtendedFrappeClient<Docs> {
+export function withExtended<Docs extends object = object, Inserts extends object = object>(
+    client: FrappeClient<Docs, Inserts>,
+): ExtendedFrappeClient<Docs, Inserts> {
     const { deps } = getClientInternal(client)
-    const extended: ExtendedFrappeClient<Docs> = {
+    const extended: ExtendedFrappeClient<Docs, Inserts> = {
         ...client,
         permission: createFrappePermission(deps),
         workflow: createFrappeWorkflow(deps),

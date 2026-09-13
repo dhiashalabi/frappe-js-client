@@ -9,7 +9,7 @@ import { createFrappeClient } from 'frappe-js-client'
 import { withExtended } from 'frappe-js-client/extended'
 import type { PermissionType } from 'frappe-js-client/extended'
 
-const frappe = withExtended(createFrappeClient({ url }))
+const frappe = withExtended(createFrappeClient({ url, frappeVersion: 16 }))
 
 const { has_permission } = await frappe.permission.has('User', 'Administrator') // default 'read'
 await frappe.permission.has('User', 'Administrator', 'write')

@@ -3,6 +3,22 @@ import { describe, expect, it } from 'vitest'
 import { createTestClient } from '../../src/testing'
 
 describe('FrappeFile', () => {
+    it('does not wait forever for stream cleanup after an upload deadline', async () => {
+        const { client } = createTestClient()
+        const stream = new ReadableStream<Uint8Array>({
+            pull: () => new Promise<void>(() => undefined),
+            cancel: () => new Promise<void>(() => undefined),
+        })
+        const outcome = await Promise.race([
+            client.file.upload(stream, {}, { deadline: Date.now() + 5 }).then(
+                () => 'resolved',
+                (error: Error) => error.name,
+            ),
+            new Promise<string>((resolve) => setTimeout(() => resolve('pending'), 50)),
+        ])
+        expect(outcome).toBe('TimeoutError')
+        expect(stream.locked).toBe(false)
+    })
     it('upload sends multipart/form-data to /api/method/upload_file', async () => {
         const { client, transport } = createTestClient()
         transport.mock({
@@ -13,14 +29,14 @@ describe('FrappeFile', () => {
 
         const result = await client.file.upload<{ file_url: string }>(new Blob(['hello']), { isPrivate: true })
         expect(result.file_url).toBe('/files/x.txt')
-        expect(transport.requests[0]?.data).toBeInstanceOf(FormData)
+        expect(transport.requests[0]?.body).toBeInstanceOf(FormData)
     })
 
     it('accepts a Uint8Array input', async () => {
         const { client, transport } = createTestClient()
         transport.mock({ method: 'POST', path: '/api/method/upload_file', body: { message: {} } })
         await client.file.upload(new Uint8Array([1, 2, 3]), {})
-        expect(transport.requests[0]?.data).toBeInstanceOf(FormData)
+        expect(transport.requests[0]?.body).toBeInstanceOf(FormData)
     })
 
     it('reports best-effort progress around the upload', async () => {
@@ -53,7 +69,7 @@ describe('FrappeFile', () => {
             docName: 'x',
             otherData: { foo: 'bar', is_private: 'skip' },
         })
-        const form = transport.requests.at(-1)?.data as FormData
+        const form = transport.requests.at(-1)?.body as FormData
         expect(form.get('doctype')).toBe('ToDo')
         expect(form.get('docname')).toBe('x')
         expect(form.has('fieldname')).toBe(false)

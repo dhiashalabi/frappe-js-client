@@ -74,13 +74,6 @@ export class CancelledError extends TransportError {
 }
 
 // @public
-export interface Capabilities {
-    readonly listExpand: boolean;
-    readonly restListHonorsExtendedFilters: boolean;
-    readonly validateLinkAndFetch: boolean;
-}
-
-// @public
 export class ConfigurationError extends FrappeError {
     constructor(message: string, extra?: Partial<FrappeErrorInit>);
 }
@@ -111,7 +104,7 @@ export interface CookieRecord {
 }
 
 // @public
-export function createFrappeClient<Docs extends object = object>(options: FrappeClientOptions): FrappeClient<Docs>;
+export function createFrappeClient<Docs extends object = object, Inserts extends object = object>(options: FrappeClientOptions): FrappeClient<Docs, Inserts>;
 
 // @public
 export class CsrfError extends ServerError {
@@ -193,7 +186,7 @@ export type FrappeAuth = FrappeAuthImpl;
 export type FrappeCall = FrappeCallImpl;
 
 // @public (undocumented)
-export interface FrappeClient<Docs extends object = object> {
+export interface FrappeClient<Docs extends object = object, Inserts extends object = object> {
     // (undocumented)
     readonly auth: FrappeAuth;
     // (undocumented)
@@ -201,17 +194,17 @@ export interface FrappeClient<Docs extends object = object> {
     // (undocumented)
     readonly config: FrappeClientConfig;
     // (undocumented)
-    readonly db: FrappeDB<Docs>;
+    readonly db: FrappeDB<Docs, Inserts>;
     // (undocumented)
     readonly file: FrappeFile;
     // (undocumented)
     readonly search: FrappeSearch;
     // (undocumented)
-    withAuth(auth: AuthStrategy): FrappeClient<Docs>;
+    withAuth(auth: AuthStrategy): FrappeClient<Docs, Inserts>;
     // (undocumented)
-    withHeaders(headers: Record<string, string>): FrappeClient<Docs>;
+    withHeaders(headers: Record<string, string>): FrappeClient<Docs, Inserts>;
     // (undocumented)
-    withMiddleware(...middleware: Middleware[]): FrappeClient<Docs>;
+    withMiddleware(...middleware: Middleware[]): FrappeClient<Docs, Inserts>;
 }
 
 // @public (undocumented)
@@ -227,7 +220,7 @@ export interface FrappeClientConfig {
     // (undocumented)
     readonly fetch?: typeof globalThis.fetch;
     // (undocumented)
-    readonly frappeVersion?: FrappeVersion;
+    readonly frappeVersion: FrappeVersion;
     // (undocumented)
     readonly headers: Readonly<Record<string, string>>;
     // (undocumented)
@@ -248,7 +241,7 @@ export interface FrappeClientOptions {
     auth?: AuthStrategy;
     credentials?: RequestCredentials;
     fetch?: typeof globalThis.fetch;
-    frappeVersion?: FrappeVersion;
+    frappeVersion: FrappeVersion;
     headers?: Record<string, string>;
     logger?: FrappeLogger;
     middleware?: Middleware[];
@@ -261,7 +254,7 @@ export interface FrappeClientOptions {
 // Warning: (ae-forgotten-export) The symbol "FrappeDBImpl" needs to be exported by the entry point index.d.ts
 //
 // @public
-export type FrappeDB<Docs extends object = object> = FrappeDBImpl<Docs>;
+export type FrappeDB<Docs extends object = object, Inserts extends object = object> = FrappeDBImpl<Docs, Inserts>;
 
 // @public
 export type FrappeDoc<T> = Omit<T, FrappeDocMetaKeys> & {
@@ -700,23 +693,19 @@ export class TransportError extends FrappeError {
 // @public (undocumented)
 export interface TransportRequest {
     // (undocumented)
-    data?: unknown;
-    deadline?: number;
+    body?: BodyInit;
     // (undocumented)
-    headers?: Record<string, string>;
+    credentials: RequestCredentials;
+    // (undocumented)
+    headers: Record<string, string>;
     // (undocumented)
     method: string;
     // (undocumented)
     onUploadProgress?: (event: UploadProgressEvent) => void;
     // (undocumented)
-    params?: Record<string, unknown>;
-    // (undocumented)
-    requestId?: string;
-    // (undocumented)
     responseType?: ResponseType_2;
     // (undocumented)
     signal?: AbortSignal;
-    timeout?: number;
     url: string;
 }
 
@@ -726,6 +715,7 @@ export interface TransportResponse<T> {
     data: T;
     // (undocumented)
     headers: Headers;
+    responseText?: string;
     // (undocumented)
     status: number;
     // (undocumented)

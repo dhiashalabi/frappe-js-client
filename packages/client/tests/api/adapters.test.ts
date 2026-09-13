@@ -151,6 +151,14 @@ describe('V2Adapter', () => {
 
     it('count / rename / submit / cancel / copy build the v2 REST requests', () => {
         expect(adapter.count('User', { filters: [], debug: true }).url).toBe('/api/v2/doctype/User/count')
+        expect(adapter.count('User', { cache: true })).toMatchObject({
+            url: '/api/method/frappe.client.get_count',
+            unwrap: 'message',
+        })
+        expect(adapter.getDoc('User', 'x', { expandLinks: true })).toMatchObject({
+            url: '/api/resource/User/x',
+            params: { expand_links: 1 },
+        })
         expect(adapter.rename('User', 'a', 'b', false).url).toContain('/rename')
         expect(adapter.submit('ToDo', 'x').url).toContain('/submit')
         expect(adapter.cancel('ToDo', 'x').url).toContain('/cancel')

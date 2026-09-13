@@ -24,6 +24,7 @@ Usage:
 
 Required after config/env merge:
   -u, --url <url>                    Frappe site base URL (or FRAPPE_URL / config "url")
+  --frappe-version <15|16>           Required site version (or FRAPPE_VERSION / config "frappeVersion")
   at least one --doctype, --module, or config doctypes/modules
 
 Auth (or FRAPPE_API_KEY / FRAPPE_API_SECRET; omit for anonymous meta reads):
@@ -62,6 +63,7 @@ export function parseCliArgs(argv: string[]): CliOverlay | { help: true } {
         args: argv,
         options: {
             url: { type: 'string', short: 'u' },
+            'frappe-version': { type: 'string' },
             doctype: { type: 'string', multiple: true, short: 'd' },
             module: { type: 'string', multiple: true },
             'api-key': { type: 'string' },
@@ -84,6 +86,8 @@ export function parseCliArgs(argv: string[]): CliOverlay | { help: true } {
 
     const overlay: CliOverlay = {
         url: values.url,
+        frappeVersion:
+            values['frappe-version'] === undefined ? undefined : (Number(values['frappe-version']) as 15 | 16),
         out: values.out,
         doctypes: values.doctype,
         modules: values.module,
@@ -124,7 +128,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
             config.apiKey && config.apiSecret
                 ? tokenAuth({ apiKey: config.apiKey, apiSecret: config.apiSecret })
                 : anonymousAuth()
-        const client = createFrappeClient({ url: config.url, apiVersion: 2, auth })
+        const client = createFrappeClient({ url: config.url, frappeVersion: config.frappeVersion, apiVersion: 2, auth })
 
         process.stderr.write(`Fetching DocType names from ${config.url} ...\n`)
         const names = await resolveDocTypes(client, {

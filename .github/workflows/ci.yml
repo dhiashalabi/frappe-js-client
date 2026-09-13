@@ -21,7 +21,7 @@ jobs:
     build:
         name: build
         runs-on: ubuntu-latest
-        timeout-minutes: 20
+        timeout-minutes: 40
 
         steps:
             - uses: actions/checkout@v7.0.1
@@ -61,6 +61,15 @@ jobs:
 
             - name: Build
               run: pnpm build
+
+            - name: Typecheck and build docs
+              run: pnpm docs:typecheck && pnpm docs:build
+
+            - name: Install browser engines
+              run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+            - name: Test browser fixture
+              run: pnpm test:browser
 
             - name: Check public API surface
               run: pnpm api:check
