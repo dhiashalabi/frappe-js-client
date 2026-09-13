@@ -110,6 +110,12 @@ class FrappeDBImpl<Docs extends object = object> {
                 'getDocList requires `asDict` to be true; tuple-shaped rows are not supported.',
             )
         }
+        if (args?.expand && args.expand.length > 0 && !this.adapter.capabilities.listExpand) {
+            throw new FeatureNotSupportedError(
+                'getDocList expand',
+                'requires Frappe 15+. Pass `frappeVersion: 15` or `16` to createFrappeClient, or omit `expand`.',
+            )
+        }
         const req = this.adapter.list(doctype, {
             fields: args?.fields === '*' || args?.fields === undefined ? ['*'] : args.fields,
             filters: args?.filters,
@@ -464,13 +470,32 @@ class FrappeDBImpl<Docs extends object = object> {
         )
     }
 
-    /** `frappe.client.validate_link`. Works on every Frappe release, both REST generations. */
+    /**
+     * Validates a Link value and optionally fetches fields.
+     *
+     * On Frappe 14/15 (and when `frappeVersion` is omitted) this calls `frappe.client.validate_link`.
+     * On Frappe 16 it calls `frappe.client.validate_link_and_fetch` (`fields` → `fields_to_fetch`).
+     * Pass `frappeVersion: 16` on v16 sites — `validate_link` was removed there.
+     *
+     * Invalid links return `{ name: null }` on 14/15 and `{}` on 16. Treat a missing/null `name` as invalid.
+     */
     validateLink<T = Record<string, string>>(
         doctype: string,
         name: string,
         fields: string[] = ['name'],
         options?: RequestOptions,
     ): Promise<T> {
+        if (this.adapter.capabilities.validateLinkAndFetch) {
+            return this.executor.call<T>(
+                {
+                    method: 'GET',
+                    url: this.adapter.method('frappe.client.validate_link_and_fetch'),
+                    params: { doctype, docname: name, fields_to_fetch: jsonParam(fields) },
+                },
+                'envelope',
+                options,
+            )
+        }
         return this.executor.call<T>(
             {
                 method: 'GET',
@@ -483,8 +508,9 @@ class FrappeDBImpl<Docs extends object = object> {
     }
 
     /**
-     * `frappe.client.validate_link_and_fetch`. Exists on Frappe 16+ only.
-     * @throws FeatureNotSupportedError when `frappeVersion` is not `16` (the conservative default is "unsupported" — pass `frappeVersion: 16` once your site is upgraded).
+     * `frappe.client.validate_link_and_fetch` with optional link filters. Frappe 16+ only.
+     * For existence + field fetch without filters, `validateLink()` is enough once `frappeVersion: 16` is set.
+     * @throws FeatureNotSupportedError when `frappeVersion` is not `16`.
      */
     async validateLinkAndFetch<T = Record<string, string>>(
         doctype: string,
@@ -496,7 +522,7 @@ class FrappeDBImpl<Docs extends object = object> {
         if (!this.adapter.capabilities.validateLinkAndFetch) {
             throw new FeatureNotSupportedError(
                 'validateLinkAndFetch',
-                'requires Frappe 16+. Pass `frappeVersion: 16` to createFrappeClient once your site is upgraded, or use validateLink().',
+                'requires Frappe 16+. Pass `frappeVersion: 16` to createFrappeClient once your site is upgraded.',
             )
         }
         return this.executor.call<T>(

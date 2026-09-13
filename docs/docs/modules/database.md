@@ -34,13 +34,13 @@ List pagination is always explicit. `limit` defaults to **20**. There is no “f
 | `updateMany(docs)`                                   | `BulkUpdateResponse`     | `{ failed_docs: [{ doc, exc }] }`. Wire sends `docname` (falls back to `name`)                |
 | `getPassword(doctype, name, field)`                  | `string`                 | **POST** body — not a query string                                                            |
 | `isDocumentAmended(doctype, name)`                   | `boolean`                |                                                                                               |
-| `validateLink(doctype, name, fields?)`               | dict                     | Always `frappe.client.validate_link`. `fields` defaults `['name']`                            |
-| `validateLinkAndFetch(doctype, name, fields, args?)` | dict                     | Frappe 16 only — pass `frappeVersion: 16`                                                     |
+| `validateLink(doctype, name, fields?)`               | dict                     | `validate_link` on 14/15; `validate_link_and_fetch` on 16. `fields` defaults `['name']`       |
+| `validateLinkAndFetch(doctype, name, fields, args?)` | dict                     | Frappe 16 only — pass `frappeVersion: 16`. Optional `filters`.                                |
 | `copyDoc(doctype, name, ignoreNoCopy?)`              | document                 | **v2 only**. Copy is **not** inserted. `ignoreNoCopy` defaults `true`                         |
 | `getMeta(doctype)`                                   | meta                     | **v2 only** (`GET /api/v2/doctype/{dt}/meta`)                                                 |
 | `runMethod(doctype, name, method, args?)`            | unknown                  | **v2 only** — document controller method                                                      |
 
-v2-only methods throw `FeatureNotSupportedError` on `apiVersion: 1`.
+v2-only methods throw `FeatureNotSupportedError` on `apiVersion: 1`. `getDocList` `expand` throws `FeatureNotSupportedError` when `frappeVersion: 14`.
 
 ## CRUD
 
@@ -110,7 +110,7 @@ Values are `string | number | boolean | null`. Format dates with `formatFrappeDa
 
 `getCount` / `getValue` also accept object filters (`Record<string, Value>`). `getValue` additionally accepts a filter string.
 
-On Frappe 16 + `apiVersion: 2`, `orFilters` / `parent` / `expand` are sent through `GET /api/v2/method/frappe.client.get_list` because the v16 REST list handler does not honor them. See [Frappe versions](../frappe-versions.md).
+On Frappe 16 + `apiVersion: 2`, `orFilters` / `parent` / `expand` are sent through `GET /api/v2/method/frappe.client.get_list` because the v16 REST list handler does not honor them. `expand` itself is Frappe 15+ — with `frappeVersion: 14` the client throws `FeatureNotSupportedError`. See [Frappe versions](../frappe-versions.md).
 
 ## Values, count, rename, submit
 
@@ -146,13 +146,14 @@ await frappe.db.getPassword('User', 'Administrator', 'api_secret') // POST body;
 await frappe.db.isDocumentAmended('Sales Invoice', 'SINV-0001')
 
 await frappe.db.validateLink('User', 'Administrator', ['name', 'full_name'])
-// always frappe.client.validate_link — every Frappe release
+// Frappe 14/15: frappe.client.validate_link
+// Frappe 16 (frappeVersion: 16): frappe.client.validate_link_and_fetch
 
 const v16 = createFrappeClient({ url, apiVersion: 2, frappeVersion: 16 })
 await v16.db.validateLinkAndFetch('User', 'Administrator', ['full_name'], { filters: { enabled: 1 } })
 ```
 
-`validateLinkAndFetch` throws `FeatureNotSupportedError` unless `frappeVersion: 16`. Use `validateLink()` otherwise.
+`validateLinkAndFetch` throws `FeatureNotSupportedError` unless `frappeVersion: 16`. On Frappe 16, `validateLink()` hits the same RPC without filters. Invalid links return `{ name: null }` on 14/15 and `{}` on 16.
 
 ## API v2 only (Frappe v15+)
 

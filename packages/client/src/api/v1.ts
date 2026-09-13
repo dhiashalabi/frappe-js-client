@@ -5,7 +5,14 @@
 
 import { FeatureNotSupportedError, ResponseError } from '../core/errors'
 import { classicMethodPath, jsonParam, resourcePath } from '../core/url'
-import { type AdapterRequest, type ApiAdapter, createCapabilities, type ListParams, type ListResult } from './adapter'
+import {
+    type AdapterRequest,
+    type ApiAdapter,
+    createCapabilities,
+    type FrappeVersion,
+    type ListParams,
+    type ListResult,
+} from './adapter'
 
 function v1Unsupported(feature: string): never {
     throw new FeatureNotSupportedError(feature, 'requires apiVersion: 2.')
@@ -31,7 +38,11 @@ function buildListParams(args?: ListParams): Record<string, unknown> {
 
 export class V1Adapter implements ApiAdapter {
     readonly version = 1 as const
-    readonly capabilities = createCapabilities(1)
+    readonly capabilities
+
+    constructor(frappeVersion?: FrappeVersion) {
+        this.capabilities = createCapabilities(1, frappeVersion)
+    }
 
     method(path: string): string {
         return classicMethodPath(path)

@@ -42,7 +42,7 @@ try {
 | Class                      | When                                                                                                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ConfigurationError`       | Bad client options, closed realtime instance, missing `socket.io-client`, upload progress + middleware, missing document name, invalid pagination |
-| `FeatureNotSupportedError` | v2-only method on `apiVersion: 1`, or `validateLinkAndFetch` without `frappeVersion: 16`                                                          |
+| `FeatureNotSupportedError` | v2-only method on `apiVersion: 1`, `validateLinkAndFetch` without `frappeVersion: 16`, or `getDocList` `expand` on `frappeVersion: 14`            |
 | `TransportError`           | No HTTP response (DNS, connection refused, TLS)                                                                                                   |
 | `TimeoutError`             | Per-attempt `timeout` or wall-clock `deadline` elapsed (`extends TransportError`)                                                                 |
 | `CancelledError`           | `AbortSignal` aborted the request (`extends TransportError`)                                                                                      |

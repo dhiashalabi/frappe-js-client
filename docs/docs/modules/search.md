@@ -4,6 +4,8 @@
 
 `searchLink` normalizes both Frappe 14 (`{ results: [...] }`) and Frappe 15+ (bare array) to `LinkSearchResult[]` (`value`, `description`, optional `label`). Unrecognized bodies reject with `ResponseError`.
 
+`searchWidget` normalizes Frappe 14 (`{ values: [...] }`, no return value) and Frappe 15+ (returned array, v2 `{ data }` / classic `{ message }`) to the same array payload.
+
 ## Methods
 
 | Method                              | Returns                 | Server                                                      |

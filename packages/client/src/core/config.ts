@@ -18,9 +18,10 @@ export interface FrappeClientOptions {
     /** `1` for classic `/api/method` + `/api/resource` (v14-safe). `2` for `/api/v2` (v15+). Default `2`. */
     apiVersion?: ApiVersion
     /**
-     * Hint for release-specific behavior (`validate_link_and_fetch` availability, whether the
-     * v2 REST list endpoint honors `orFilters`/`parent`). Optional — every behavior this hint
-     * gates has a conservative, correct-everywhere default when omitted.
+     * Hint for release-specific behavior (`validate_link` vs `validate_link_and_fetch`, whether
+     * `get_list` accepts `expand`, whether the v2 REST list endpoint honors `orFilters`/`parent`).
+     * Optional — every behavior this hint gates has a conservative default when omitted. Frappe 16
+     * sites must pass `16` so `validateLink` does not call the removed `validate_link` RPC.
      */
     frappeVersion?: FrappeVersion
     /** Default `30_000`. Overridable per-request via `RequestOptions.timeout`, applied per attempt. */

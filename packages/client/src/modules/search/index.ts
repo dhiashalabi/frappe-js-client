@@ -12,6 +12,32 @@ function normalizeSearchLinkResult(body: unknown): LinkSearchResult[] {
     throw new ResponseError('searchLink received an unexpected response shape.')
 }
 
+function firstArray(...candidates: unknown[]): unknown[] | undefined {
+    for (const candidate of candidates) {
+        if (Array.isArray(candidate)) return candidate
+    }
+    return undefined
+}
+
+/**
+ * Frappe 14 `search_widget` writes `frappe.response["values"]` and returns nothing. Frappe 15+
+ * returns the array (v2 `{ data }`, classic `{ message }`).
+ */
+function normalizeSearchWidgetResult(body: unknown): unknown {
+    if (Array.isArray(body)) return body
+    if (!body || typeof body !== 'object') return body
+    const obj = body as Record<string, unknown>
+    const nested =
+        obj.data && typeof obj.data === 'object' && !Array.isArray(obj.data)
+            ? (obj.data as Record<string, unknown>)
+            : undefined
+    const found = firstArray(obj.data, obj.message, obj.values, nested?.values, nested?.message, nested?.results)
+    if (found) return found
+    if ('data' in obj) return obj.data
+    if ('message' in obj) return obj.message
+    return body
+}
+
 class FrappeSearchImpl {
     private readonly adapter: ModuleDeps['adapter']
     private readonly executor: ModuleDeps['executor']
@@ -51,13 +77,13 @@ class FrappeSearchImpl {
         return normalizeSearchLinkResult(body)
     }
 
-    searchWidget<T = unknown>(
+    async searchWidget<T = unknown>(
         doctype: string,
         txt: string,
         args?: SearchWidgetArgs,
         options?: RequestOptions,
     ): Promise<T> {
-        return this.executor.call<T>(
+        const body = await this.executor.call<unknown>(
             {
                 method: 'GET',
                 url: this.adapter.method('frappe.desk.search.search_widget'),
@@ -76,9 +102,10 @@ class FrappeSearchImpl {
                     as_dict: args?.asDict,
                 },
             },
-            'envelope',
+            'none',
             options,
         )
+        return normalizeSearchWidgetResult(body) as T
     }
 
     getLinkTitle(doctype: string, name: string | number, options?: RequestOptions): Promise<string> {

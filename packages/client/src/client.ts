@@ -66,7 +66,7 @@ export function copyClientInternal(from: object, to: object): void {
 }
 
 function buildAdapter(config: FrappeClientConfig): ApiAdapter {
-    return config.apiVersion === 2 ? new V2Adapter(config.frappeVersion) : new V1Adapter()
+    return config.apiVersion === 2 ? new V2Adapter(config.frappeVersion) : new V1Adapter(config.frappeVersion)
 }
 
 /** Builds the module set shared by `createFrappeClient` and `frappe-js-client/testing`'s `createTestClient`. */
