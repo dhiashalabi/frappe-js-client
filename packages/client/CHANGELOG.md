@@ -1,5 +1,11 @@
 # frappe-js-client
 
+## 3.5.0
+
+### Minor Changes
+
+- [#12](https://github.com/dhiashalabi/frappe-js-client/pull/12) [`fec85a7`](https://github.com/dhiashalabi/frappe-js-client/commit/fec85a7b92a794b224585b6ab19603b5bd24e8f9) Thanks [@dhiashalabi](https://github.com/dhiashalabi)! - Route `db.validateLink` to `frappe.client.validate_link_and_fetch` on Frappe 16 (`fields` → `fields_to_fetch`). `validate_link` was removed in Frappe 16 — pass `frappeVersion: 16`. Normalize `search.searchWidget` for the Frappe 14 `{ values }` envelope. Throw `FeatureNotSupportedError` when `getDocList` `expand` is used with `frappeVersion: 14`.
+
 ## 3.4.0
 
 ### Minor Changes
