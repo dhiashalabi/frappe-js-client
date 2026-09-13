@@ -75,6 +75,7 @@ export class CancelledError extends TransportError {
 
 // @public
 export interface Capabilities {
+    readonly listExpand: boolean;
     readonly restListHonorsExtendedFilters: boolean;
     readonly validateLinkAndFetch: boolean;
 }

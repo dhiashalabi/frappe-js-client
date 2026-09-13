@@ -7,12 +7,23 @@ import { FeatureNotSupportedError } from '../../src/core/errors'
 
 describe('createCapabilities', () => {
     it('is conservative when frappeVersion is unset', () => {
-        expect(createCapabilities(2)).toEqual({ validateLinkAndFetch: false, restListHonorsExtendedFilters: false })
+        expect(createCapabilities(2)).toEqual({
+            validateLinkAndFetch: false,
+            listExpand: true,
+            restListHonorsExtendedFilters: false,
+        })
     })
 
     it('resolves validateLinkAndFetch only for Frappe 16', () => {
         expect(createCapabilities(2, 15).validateLinkAndFetch).toBe(false)
         expect(createCapabilities(2, 16).validateLinkAndFetch).toBe(true)
+    })
+
+    it('resolves listExpand false only for Frappe 14', () => {
+        expect(createCapabilities(1, 14).listExpand).toBe(false)
+        expect(createCapabilities(1, 15).listExpand).toBe(true)
+        expect(createCapabilities(2).listExpand).toBe(true)
+        expect(createCapabilities(2, 16).listExpand).toBe(true)
     })
 
     it('resolves restListHonorsExtendedFilters for apiVersion 1 (always) and v2+Frappe15', () => {

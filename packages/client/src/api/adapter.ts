@@ -54,11 +54,21 @@ export type FrappeVersion = 14 | 15 | 16
  */
 export interface Capabilities {
     /**
-     * `frappe.client.validate_link_and_fetch` exists. Confirmed present on Frappe 16
-     * (`develop`), absent on Frappe 15 (`version-15`). Unknown -> `false` (use `validate_link`,
-     * which exists on every release).
+     * `frappe.client.validate_link_and_fetch` exists. Confirmed present on Frappe 16, absent on
+     * Frappe 14/15 (`validate_link` was removed in Frappe 16). Unknown -> `false`.
+     *
+     * When this is true, `db.validateLink()` routes to `validate_link_and_fetch` (mapping `fields`
+     * → `fields_to_fetch`). When false, `validateLink()` calls `validate_link` (Frappe 14/15).
+     * Frappe 16 sites must pass `frappeVersion: 16` so `validateLink` does not hit the deleted RPC.
      */
     readonly validateLinkAndFetch: boolean
+    /**
+     * `frappe.client.get_list` accepts `expand`. Confirmed present on Frappe 15 and 16, absent on
+     * Frappe 14 (unexpected kwarg). Unknown -> `true` (do not throw; omit `frappeVersion: 14` and
+     * `expand` together). When false, `getDocList` / `getDocListPage` / `paginate` throw
+     * `FeatureNotSupportedError` if `expand` is set.
+     */
+    readonly listExpand: boolean
     /**
      * The REST list endpoint (`/api/resource/{doctype}` on `apiVersion: 1`,
      * `/api/v2/document/{doctype}` on `apiVersion: 2`) forwards to `frappe.client.get_list`
@@ -76,6 +86,7 @@ export interface Capabilities {
 export function createCapabilities(apiVersion: ApiVersion, frappeVersion?: FrappeVersion): Capabilities {
     return {
         validateLinkAndFetch: frappeVersion === 16,
+        listExpand: frappeVersion !== 14,
         restListHonorsExtendedFilters: apiVersion === 1 || frappeVersion === 15,
     }
 }

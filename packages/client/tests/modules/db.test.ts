@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ConfigurationError } from '../../src/core/errors'
+import { ConfigurationError, FeatureNotSupportedError } from '../../src/core/errors'
 import { createTestClient } from '../../src/testing'
 import { fixtureUser } from '../../src/testing/fixtures'
 
@@ -119,6 +119,32 @@ describe('FrappeDB (via MemoryTransport, v2 default)', () => {
         transport.mock({ method: 'GET', path: '/api/v2/document/User', body: { data: { unexpected: true } } })
 
         await expect(client.db.getDocList('User')).rejects.toMatchObject({ name: 'ResponseError' })
+    })
+
+    it('getDocList expand throws FeatureNotSupportedError on frappeVersion 14', async () => {
+        const { client } = createTestClient({ apiVersion: 1, frappeVersion: 14 })
+        await expect(client.db.getDocList('User', { expand: ['owner'] })).rejects.toBeInstanceOf(
+            FeatureNotSupportedError,
+        )
+        await expect(client.db.getDocList('User', { expand: ['owner'] })).rejects.toThrow(/Frappe 15/)
+    })
+
+    it('getDocList expand is allowed when frappeVersion is unset or 15+', async () => {
+        const unset = createTestClient()
+        unset.transport.mock({
+            method: 'GET',
+            path: '/api/v2/method/frappe.client.get_list',
+            body: { message: [fixtureUser] },
+        })
+        await expect(unset.client.db.getDocList('User', { expand: ['owner'] })).resolves.toEqual([fixtureUser])
+
+        const v15 = createTestClient({ frappeVersion: 15 })
+        v15.transport.mock({
+            method: 'GET',
+            path: '/api/v2/document/User',
+            body: { data: [fixtureUser] },
+        })
+        await expect(v15.client.db.getDocList('User', { expand: ['owner'] })).resolves.toEqual([fixtureUser])
     })
 
     it('createDoc POSTs to the resource endpoint', async () => {

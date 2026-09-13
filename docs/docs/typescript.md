@@ -45,22 +45,22 @@ Prefer importing types from `frappe-js-client/types` in generated files so runti
 
 ## Core types (from `frappe-js-client` / `frappe-js-client/types`)
 
-| Type                                                   | Role                                                    |
-| ------------------------------------------------------ | ------------------------------------------------------- |
-| `FrappeDoc<T>`                                         | Stored document + meta                                  |
-| `FrappeInsert<T>`                                      | Create payload                                          |
-| `FrappeDocMetaKeys`                                    | `'name' \| 'owner' \| …`                                |
-| `Link<DocType>`                                        | Branded string                                          |
-| `DocFromMap<Docs, K>`                                  | Map lookup with `FrappeDoc<object>` fallback            |
-| `RequestOptions`                                       | Trailing options on every public method                 |
-| `ApiVersion`                                           | `1 \| 2`                                                |
-| `FrappeVersion`                                        | `14 \| 15 \| 16`                                        |
-| `Capabilities`                                         | `validateLinkAndFetch`, `restListHonorsExtendedFilters` |
-| `FrappeClient` / `ExtendedFrappeClient`                | Client shapes                                           |
-| `FrappeClientOptions` / `FrappeClientConfig`           | Input vs frozen config                                  |
-| `AuthStrategy`                                         | Custom auth                                             |
-| `Filter` / `Value` / `GetDocListArgs` / `RowFor`       | List queries                                            |
-| `Transport` / `TransportRequest` / `TransportResponse` | Custom network layer                                    |
+| Type                                                   | Role                                                                  |
+| ------------------------------------------------------ | --------------------------------------------------------------------- |
+| `FrappeDoc<T>`                                         | Stored document + meta                                                |
+| `FrappeInsert<T>`                                      | Create payload                                                        |
+| `FrappeDocMetaKeys`                                    | `'name' \| 'owner' \| …`                                              |
+| `Link<DocType>`                                        | Branded string                                                        |
+| `DocFromMap<Docs, K>`                                  | Map lookup with `FrappeDoc<object>` fallback                          |
+| `RequestOptions`                                       | Trailing options on every public method                               |
+| `ApiVersion`                                           | `1 \| 2`                                                              |
+| `FrappeVersion`                                        | `14 \| 15 \| 16`                                                      |
+| `Capabilities`                                         | `validateLinkAndFetch`, `listExpand`, `restListHonorsExtendedFilters` |
+| `FrappeClient` / `ExtendedFrappeClient`                | Client shapes                                                         |
+| `FrappeClientOptions` / `FrappeClientConfig`           | Input vs frozen config                                                |
+| `AuthStrategy`                                         | Custom auth                                                           |
+| `Filter` / `Value` / `GetDocListArgs` / `RowFor`       | List queries                                                          |
+| `Transport` / `TransportRequest` / `TransportResponse` | Custom network layer                                                  |
 
 ## Generate types from your site
 

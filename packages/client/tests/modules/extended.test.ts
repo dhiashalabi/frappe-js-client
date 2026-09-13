@@ -369,7 +369,7 @@ describe('frappe-js-client/extended modules', () => {
             await expect(client.site.getTimeZone()).resolves.toEqual({ time_zone: 'UTC' })
         })
 
-        it('validateLink always uses validate_link on v2 (works on every Frappe release)', async () => {
+        it('validateLink uses validate_link on v2 when frappeVersion is unset', async () => {
             const { client, transport } = createExtendedTestClient()
             transport.mock({
                 method: 'GET',
@@ -391,6 +391,35 @@ describe('frappe-js-client/extended modules', () => {
             })
             await expect(client.db.validateLink('User', 'Administrator')).resolves.toEqual({
                 name: 'Administrator',
+            })
+        })
+
+        it('validateLink uses validate_link on frappeVersion 15', async () => {
+            const { client, transport } = createExtendedTestClient({ frappeVersion: 15 })
+            transport.mock({
+                method: 'GET',
+                path: '/api/v2/method/frappe.client.validate_link',
+                body: { data: { name: 'Administrator' } },
+            })
+            await expect(client.db.validateLink('User', 'Administrator', ['name', 'full_name'])).resolves.toEqual({
+                name: 'Administrator',
+            })
+            expect(transport.requests[0]?.params).toMatchObject({ fields: '["name","full_name"]' })
+        })
+
+        it('validateLink routes to validate_link_and_fetch when frappeVersion: 16', async () => {
+            const { client, transport } = createExtendedTestClient({ frappeVersion: 16 })
+            transport.mock({
+                method: 'GET',
+                path: '/api/v2/method/frappe.client.validate_link_and_fetch',
+                body: { data: { name: 'Administrator', full_name: 'Admin' } },
+            })
+            await expect(client.db.validateLink('User', 'Administrator', ['name', 'full_name'])).resolves.toEqual({
+                name: 'Administrator',
+                full_name: 'Admin',
+            })
+            expect(transport.requests[0]?.params).toMatchObject({
+                fields_to_fetch: '["name","full_name"]',
             })
         })
 
