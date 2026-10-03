@@ -1,5 +1,15 @@
 # frappe-js-client
 
+## 3.5.0
+
+### Minor Changes
+
+- [#12](https://github.com/dhiashalabi/frappe-js-client/pull/12) [`fec85a7`](https://github.com/dhiashalabi/frappe-js-client/commit/fec85a7b92a794b224585b6ab19603b5bd24e8f9) Thanks [@dhiashalabi](https://github.com/dhiashalabi)! - Route `db.validateLink` to `frappe.client.validate_link_and_fetch` on Frappe 16 (`fields` → `fields_to_fetch`). `validate_link` was removed in Frappe 16 — pass `frappeVersion: 16`. Normalize `search.searchWidget` for the Frappe 14 `{ values }` envelope. Throw `FeatureNotSupportedError` when `getDocList` `expand` is used with `frappeVersion: 14`.
+
+### Patch Changes
+
+- [#25](https://github.com/dhiashalabi/frappe-js-client/pull/25) [`27816fb`](https://github.com/dhiashalabi/frappe-js-client/commit/27816fba48d84a569c1fb7c323f6b9b93e3c482a) Thanks [@dhiashalabi](https://github.com/dhiashalabi)! - Deprecate `frappe-js-client` and `frappe-codegen`. They get no new features and no fixes, including security fixes. Use [`@frappeforge/client`](https://www.npmjs.com/package/@frappeforge/client) instead; see [DEPRECATION.md](https://github.com/dhiashalabi/frappe-js-client/blob/master/DEPRECATION.md) for the reasons and a migration table.
+
 ## 3.4.0
 
 ### Minor Changes
