@@ -1,5 +1,20 @@
 # Frappe JS Client
 
+> [!CAUTION]
+> **`frappe-js-client` is deprecated.** It gets no new features and no fixes, including security fixes.
+> Use [`@frappeforge/client`](https://www.npmjs.com/package/@frappeforge/client) instead.
+
+**Why:** fixing the design of 3.x would break every app that uses it, so the fix is a new package.
+
+1. **Frappe 16 needs a flag you have to remember.** `db.validateLink` calls an API Frappe 16 removed unless you pass `frappeVersion: 16`; the client never checks the server's version.
+2. **Errors carry the server's Python traceback** (`FrappeError.exc`) into logs, error trackers and browsers.
+3. **Two builds, two `FrappeError` classes.** The CommonJS and ES module builds can both load, and then `instanceof FrappeError` is `false` for a real Frappe error.
+4. **Pagination can skip or repeat rows** when data changes during the walk, because it pages by offset.
+5. **It targets end-of-life platforms:** Node.js 20 and Frappe v14.
+6. **Method names don't match Frappe** (`db.getDoc` for `get_doc`), and **releases have no npm provenance.**
+
+Full reasons and a method-by-method migration table: [DEPRECATION.md](https://github.com/dhiashalabi/frappe-js-client/blob/master/DEPRECATION.md).
+
 [![npm version](https://badge.fury.io/js/frappe-js-client.svg)](https://badge.fury.io/js/frappe-js-client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)

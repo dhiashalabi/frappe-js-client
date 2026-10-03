@@ -1,5 +1,10 @@
 # frappe-codegen
 
+> [!CAUTION]
+> **`frappe-codegen` is deprecated**, together with [`frappe-js-client`](https://www.npmjs.com/package/frappe-js-client).
+> It gets no new features and no fixes. Its replacement, `@frappeforge/codegen`, is not published yet;
+> until it is, this version keeps working. See [DEPRECATION.md](https://github.com/dhiashalabi/frappe-js-client/blob/master/DEPRECATION.md).
+
 Reads DocType metadata from a **live Frappe site** and emits typed TypeScript interfaces for
 [`frappe-js-client`](https://www.npmjs.com/package/frappe-js-client), so
 `createFrappeClient<GeneratedDocTypes>(...)` infers `db.getDoc('ToDo', name)` instead of

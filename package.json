@@ -3,7 +3,7 @@
     "private": true,
     "description": "Zero-dependency TypeScript/JavaScript client for Frappe Framework REST APIs (v14, v15, v16), plus frappe-codegen.",
     "license": "MIT",
-    "packageManager": "pnpm@12.3.4",
+    "packageManager": "pnpm@12.4.2",
     "engines": {
         "node": ">=20",
         "pnpm": ">=11"
@@ -25,6 +25,7 @@
         "test:integration": "pnpm --filter frappe-js-client run test:integration",
         "test:live": "pnpm --filter frappe-js-client run test:live",
         "test:browser": "pnpm --filter frappe-js-client run build && playwright test",
+        "test:browser:live": "BROWSER_LIVE=1 playwright test",
         "coverage": "pnpm --filter frappe-js-client run coverage",
         "lint": "pnpm -r --filter=./packages/* run lint",
         "lint:fix": "pnpm -r --filter=./packages/* run lint:fix",
