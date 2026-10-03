@@ -95,6 +95,12 @@ const config: Config = {
     ],
 
     themeConfig: {
+        announcementBar: {
+            id: 'deprecated',
+            content:
+                '<b>frappe-js-client is deprecated.</b> Use <a href="https://www.npmjs.com/package/@frappeforge/client">@frappeforge/client</a> — <a href="https://github.com/dhiashalabi/frappe-js-client/blob/master/DEPRECATION.md">why, and how to migrate</a>.',
+            isCloseable: false,
+        },
         colorMode: {
             respectPrefersColorScheme: true,
         },
