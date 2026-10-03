@@ -146,7 +146,7 @@
         "@microsoft/api-extractor": "^7.59.1",
         "@types/node": "^26.4.1",
         "@vitest/coverage-v8": "^5.0.0",
-        "dependency-cruiser": "^18.2.0",
+        "dependency-cruiser": "^18.4.0",
         "eslint": "^10.10.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-simple-import-sort": "^14.0.0",
