@@ -22,3 +22,10 @@ allowBuilds:
 overrides:
     serialize-javascript: ^7.0.3
     image-size: npm:image-size-next@^2.1.0
+
+# High advisories with no patched release, reachable only through the docs site's Docusaurus
+# build tooling (never shipped in a published package). Remove each one once a fix is released.
+auditConfig:
+    ignoreGhsas:
+        - GHSA-ch52-4w7c-c8xp # http-cache-semantics, via @docusaurus/core > update-notifier
+        - GHSA-vfj7-8cjw-p6xm # braces, via @docusaurus/utils > micromatch
