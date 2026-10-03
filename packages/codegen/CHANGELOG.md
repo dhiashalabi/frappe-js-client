@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1
+
+### Patch Changes
+
+- [#25](https://github.com/dhiashalabi/frappe-js-client/pull/25) [`27816fb`](https://github.com/dhiashalabi/frappe-js-client/commit/27816fba48d84a569c1fb7c323f6b9b93e3c482a) Thanks [@dhiashalabi](https://github.com/dhiashalabi)! - Deprecate `frappe-js-client` and `frappe-codegen`. They get no new features and no fixes, including security fixes. Use [`@frappeforge/client`](https://www.npmjs.com/package/@frappeforge/client) instead; see [DEPRECATION.md](https://github.com/dhiashalabi/frappe-js-client/blob/master/DEPRECATION.md) for the reasons and a migration table.
+- Updated dependencies [[`27816fb`](https://github.com/dhiashalabi/frappe-js-client/commit/27816fba48d84a569c1fb7c323f6b9b93e3c482a), [`fec85a7`](https://github.com/dhiashalabi/frappe-js-client/commit/fec85a7b92a794b224585b6ab19603b5bd24e8f9)]:
+    - frappe-js-client@3.5.0
+
 ## 1.1.0
 
 ### Minor Changes
