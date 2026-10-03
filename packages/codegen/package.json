@@ -71,7 +71,7 @@
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.18.5",
         "@eslint/js": "^10.0.1",
-        "@types/node": "^26.4.1",
+        "@types/node": "^26.6.3",
         "@vitest/coverage-v8": "^5.0.0",
         "eslint": "^10.10.0",
         "eslint-config-prettier": "^10.1.8",
