@@ -145,7 +145,7 @@
         "@eslint/js": "^10.0.1",
         "@microsoft/api-extractor": "^7.59.1",
         "@types/node": "^26.4.1",
-        "@vitest/coverage-v8": "^5.0.0",
+        "@vitest/coverage-v8": "^5.0.2",
         "dependency-cruiser": "^18.2.0",
         "eslint": "^10.10.0",
         "eslint-config-prettier": "^10.1.8",
@@ -157,7 +157,7 @@
         "tsup": "^8.5.1",
         "typescript": "~6.0.3",
         "typescript-eslint": "^8.70.0",
-        "vitest": "^5.0.0"
+        "vitest": "^5.0.2"
     },
     "publishConfig": {
         "access": "public"
